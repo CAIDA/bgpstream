@@ -64,8 +64,6 @@ BGPStream_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
       return NULL;
     }
 
-  /** @todo init bgpstream_record here? */
-
   return (PyObject *)self;
 }
 
@@ -76,30 +74,75 @@ BGPStream_init(BGPStreamObject *self,
   return 0;
 }
 
-/** @todo add methods to set filters */
-
-/** @todo add methods to start stream */
-/*
-  if (bgpstream_init(self->bs) < 0) {
-    return -1;
-  }
-*/
-
 static PyObject *
-BGPStream_next_record(BGPStreamObject *self)
+BGPStream_add_filter(BGPStreamObject *self, PyObject *args, PyObject *kwds)
+{
+  /* args: FILTER_TYPE (string), FILTER_VALUE (string) */
+  static char *kwlist[] = {"type", "value", NULL};
+  static char *filtertype_strs[] = {
+    "project",
+    "collector",
+    "record-type",
+    NULL
+  };
+  static int filtertype_vals[] = {
+    BS_PROJECT,
+    BS_COLLECTOR,
+    BS_BGP_TYPE,
+    -1,
+  };
+
+  const char *filter_type;
+  const char *value;
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist,
+				   &filter_type, &value)) {
+    return NULL;
+  }
+
+  int i;
+  int filter_val = -1;
+  for (i=0; filtertype_strs[i] != NULL; i++) {
+    if (strcmp(filtertype_strs[i], filter_type) == 0) {
+      filter_val = filtertype_vals[i];
+      break;
+    }
+  }
+  if (filter_val == -1) {
+    return PyErr_Format(PyExc_TypeError,
+			"Invalid filter type: %s", filter_type);
+  }
+
+  bgpstream_add_filter(self->bs, filter_val, value);
+
+  Py_RETURN_NONE;
+}
+
+/** Start the bgpstream.
+ *
+ * Corresponds to bgpstream_init (so as not to be confused with Python's
+ * __init__ method)
+ */
+static PyObject *
+BGPStream_start(BGPStreamObject *self)
+{
+  if (bgpstream_init(self->bs) < 0) {
+    PyErr_SetString(PyExc_RuntimeError, "Could not start stream");
+    return NULL;
+  }
+  Py_RETURN_NONE;
+}
+
+
+/** Corresponds to bgpstream_get_next_record */
+static PyObject *
+BGPStream_get_next_record(BGPStreamObject *self)
 {
   bgpstream_record_t *bsr;
   int ret;
 
   PyObject *result;
 
-  /** @todo move into _start method! */
-  if (bgpstream_init(self->bs) < 0) {
-    PyErr_SetString(PyExc_RuntimeError, "Could not start stream");
-    return NULL;
-  }
-
-  /** @todo actually create a BGPStreamRecord object and return that */
+  /** @todo actually create a BGPRecord object and return that */
 
   if ((bsr = bgpstream_create_record()) == NULL) {
     PyErr_SetString(PyExc_MemoryError, "Could not create a new record");
@@ -108,7 +151,8 @@ BGPStream_next_record(BGPStreamObject *self)
 
   ret = bgpstream_get_next_record(self->bs, bsr);
   if (ret < 0) {
-    PyErr_SetString(PyExc_RuntimeError, "Could not get next record");
+    PyErr_SetString(PyExc_RuntimeError,
+		    "Could not get next record (is the stream started?)");
     return NULL;
   } else if (ret == 0) {
     /* end of stream */
@@ -122,15 +166,25 @@ BGPStream_next_record(BGPStreamObject *self)
 			 bsr->attributes.dump_project,
 			 bsr->attributes.dump_collector,
 			 bsr->attributes.record_time);
+
+  /** @todo move record destructor to BGPRecord object */
+  bgpstream_destroy_record(bsr);
+
   return result; /* could be NULL, but an exception will have been raised */
 }
 
 static PyMethodDef BGPStream_methods[] = {
-    {"next_record", (PyCFunction)BGPStream_next_record, METH_NOARGS,
-     "Get the next BGPStreamRecord from the stream, or None if "
-     "end-of-stream has been reached"
-    },
-    {NULL}  /* Sentinel */
+  {"start", (PyCFunction)BGPStream_start, METH_NOARGS,
+   "Start the BGPStream."},
+
+  {"add_filter", (PyCFunction)BGPStream_add_filter, METH_VARARGS | METH_KEYWORDS,
+   "Add a filter to an un-started stream."},
+
+  {"get_next_record", (PyCFunction)BGPStream_get_next_record, METH_NOARGS,
+   "Get the next BGPStreamRecord from the stream, or None if end-of-stream has "
+   "been reached"},
+
+  {NULL}  /* Sentinel */
 };
 
 static PyTypeObject BGPStreamType = {
@@ -188,13 +242,12 @@ static char *module_docstring =
 PyMODINIT_FUNC
 init_pybgpstream(void)
 {
-    PyObject* m;
+  PyObject *m;
 
     if (PyType_Ready(&BGPStreamType) < 0)
         return;
 
     m = Py_InitModule3("_pybgpstream", module_methods, module_docstring);
-
     if (m == NULL)
       return;
 
