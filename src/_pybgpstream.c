@@ -223,6 +223,14 @@ BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+/** Enable blocking mode */
+static PyObject *
+BGPStream_set_blocking(BGPStreamObject *self)
+{
+  bgpstream_set_blocking(self->bs);
+  Py_RETURN_NONE;
+}
+
 /** Start the bgpstream.
  *
  * Corresponds to bgpstream_init (so as not to be confused with Python's
@@ -281,13 +289,6 @@ BGPStream_get_next_record(BGPStreamObject *self)
 
 static PyMethodDef BGPStream_methods[] = {
   {
-    "start",
-   (PyCFunction)BGPStream_start,
-   METH_NOARGS,
-   "Start the BGPStream."
-  },
-
-  {
     "add_filter",
     (PyCFunction)BGPStream_add_filter,
     METH_VARARGS,
@@ -313,6 +314,20 @@ static PyMethodDef BGPStream_methods[] = {
     (PyCFunction)BGPStream_set_data_interface_option,
     METH_VARARGS,
     "Set a data interface option"
+  },
+
+  {
+    "set_blocking",
+    (PyCFunction)BGPStream_set_blocking,
+    METH_NOARGS,
+    "Enable blocking mode"
+  },
+
+  {
+    "start",
+   (PyCFunction)BGPStream_start,
+   METH_NOARGS,
+   "Start the BGPStream."
   },
 
   {
