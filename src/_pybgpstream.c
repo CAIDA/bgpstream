@@ -74,11 +74,11 @@ BGPStream_init(BGPStreamObject *self,
   return 0;
 }
 
+/** Add a filter to the bgpstream. */
 static PyObject *
-BGPStream_add_filter(BGPStreamObject *self, PyObject *args, PyObject *kwds)
+BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
 {
   /* args: FILTER_TYPE (string), FILTER_VALUE (string) */
-  static char *kwlist[] = {"type", "value", NULL};
   static char *filtertype_strs[] = {
     "project",
     "collector",
@@ -94,8 +94,7 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args, PyObject *kwds)
 
   const char *filter_type;
   const char *value;
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "ss", kwlist,
-				   &filter_type, &value)) {
+  if (!PyArg_ParseTuple(args, "ss", &filter_type, &value)) {
     return NULL;
   }
 
@@ -113,6 +112,28 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args, PyObject *kwds)
   }
 
   bgpstream_add_filter(self->bs, filter_val, value);
+
+  Py_RETURN_NONE;
+}
+
+/** Add a time filter to the bgpstream. */
+static PyObject *
+BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
+{
+  /* args: from (int), until (int) */
+
+  uint32_t filter_start, filter_stop;
+  if (!PyArg_ParseTuple(args, "II", &filter_start, &filter_stop)) {
+    return NULL;
+  }
+
+  /* now, we have to convert these ints back to strings. sigh */
+  char filter_start_str[11], filter_stop_str[11];
+  snprintf(filter_start_str, 11, "%u", filter_start);
+  snprintf(filter_stop_str, 11, "%u", filter_stop);
+
+  bgpstream_add_interval_filter(self->bs, BS_TIME_INTERVAL,
+				filter_start_str, filter_stop_str);
 
   Py_RETURN_NONE;
 }
@@ -177,8 +198,12 @@ static PyMethodDef BGPStream_methods[] = {
   {"start", (PyCFunction)BGPStream_start, METH_NOARGS,
    "Start the BGPStream."},
 
-  {"add_filter", (PyCFunction)BGPStream_add_filter, METH_VARARGS | METH_KEYWORDS,
+  {"add_filter", (PyCFunction)BGPStream_add_filter, METH_VARARGS,
    "Add a filter to an un-started stream."},
+
+  {"add_interval_filter", (PyCFunction)BGPStream_add_interval_filter,
+   METH_VARARGS,
+   "Add an interval filter to an un-started stream."},
 
   {"get_next_record", (PyCFunction)BGPStream_get_next_record, METH_NOARGS,
    "Get the next BGPStreamRecord from the stream, or None if end-of-stream has "
