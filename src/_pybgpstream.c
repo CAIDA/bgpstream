@@ -146,7 +146,7 @@ BGPStream_set_data_interface(BGPStreamObject *self, PyObject *args)
   static char *datasource_strs[] = {
     "mysql",
     "custom-list",
-    "csv-file",
+    "csvfile",
     NULL,
   };
   static int datasource_vals[] = {
@@ -175,6 +175,50 @@ BGPStream_set_data_interface(BGPStreamObject *self, PyObject *args)
   }
 
   bgpstream_set_data_interface(self->bs, datasource_val);
+
+  Py_RETURN_NONE;
+}
+
+/** Set a data interface option */
+static PyObject *
+BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
+{
+  /* args: option_type (string), option_value (string) */
+  static char *optiontype_strs[] = {
+    "mysql-db",
+    "mysql-user",
+    "mysql-host",
+    "csvfile-file",
+    NULL
+  };
+  static int optiontype_vals[] = {
+    BS_MYSQL_DB,
+    BS_MYSQL_USER,
+    BS_MYSQL_HOST,
+    BS_CSVFILE_FILE,
+    -1,
+  };
+
+  char *option_type;
+  char *value;
+  if (!PyArg_ParseTuple(args, "ss", &option_type, &value)) {
+    return NULL;
+  }
+
+  int i;
+  int option_val = -1;
+  for (i=0; optiontype_strs[i] != NULL; i++) {
+    if (strcmp(optiontype_strs[i], option_type) == 0) {
+      option_val = optiontype_vals[i];
+      break;
+    }
+  }
+  if (option_val == -1) {
+    return PyErr_Format(PyExc_TypeError,
+			"Invalid data interface option type: %s", option_type);
+  }
+
+  bgpstream_set_data_interface_options(self->bs, option_val, value);
 
   Py_RETURN_NONE;
 }
@@ -262,6 +306,13 @@ static PyMethodDef BGPStream_methods[] = {
     (PyCFunction)BGPStream_set_data_interface,
     METH_VARARGS,
     "Set the data interface used to discover dump files"
+  },
+
+  {
+    "set_data_interface_option",
+    (PyCFunction)BGPStream_set_data_interface_option,
+    METH_VARARGS,
+    "Set a data interface option"
   },
 
   {
