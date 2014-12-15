@@ -138,6 +138,47 @@ BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+/** Set the data interface */
+static PyObject *
+BGPStream_set_data_interface(BGPStreamObject *self, PyObject *args)
+{
+  /* args: datasource (string) */
+  static char *datasource_strs[] = {
+    "mysql",
+    "custom-list",
+    "csv-file",
+    NULL,
+  };
+  static int datasource_vals[] = {
+    BS_MYSQL,
+    BS_CUSTOMLIST,
+    BS_CSVFILE,
+    -1,
+  };
+
+  const char *datasource;
+  if (!PyArg_ParseTuple(args, "s", &datasource)) {
+    return NULL;
+  }
+
+  int i;
+  int datasource_val = -1;
+  for (i=0; datasource_strs[i] != NULL; i++) {
+    if (strcmp(datasource_strs[i], datasource) == 0) {
+      datasource_val = datasource_vals[i];
+      break;
+    }
+  }
+  if (datasource_val == -1) {
+    return PyErr_Format(PyExc_TypeError,
+			"Invalid datasource: %s", datasource);
+  }
+
+  bgpstream_set_data_interface(self->bs, datasource_val);
+
+  Py_RETURN_NONE;
+}
+
 /** Start the bgpstream.
  *
  * Corresponds to bgpstream_init (so as not to be confused with Python's
@@ -195,19 +236,41 @@ BGPStream_get_next_record(BGPStreamObject *self)
 }
 
 static PyMethodDef BGPStream_methods[] = {
-  {"start", (PyCFunction)BGPStream_start, METH_NOARGS,
-   "Start the BGPStream."},
+  {
+    "start",
+   (PyCFunction)BGPStream_start,
+   METH_NOARGS,
+   "Start the BGPStream."
+  },
 
-  {"add_filter", (PyCFunction)BGPStream_add_filter, METH_VARARGS,
-   "Add a filter to an un-started stream."},
+  {
+    "add_filter",
+    (PyCFunction)BGPStream_add_filter,
+    METH_VARARGS,
+    "Add a filter to an un-started stream."
+  },
 
-  {"add_interval_filter", (PyCFunction)BGPStream_add_interval_filter,
-   METH_VARARGS,
-   "Add an interval filter to an un-started stream."},
+  {
+    "add_interval_filter",
+    (PyCFunction)BGPStream_add_interval_filter,
+    METH_VARARGS,
+   "Add an interval filter to an un-started stream."
+  },
 
-  {"get_next_record", (PyCFunction)BGPStream_get_next_record, METH_NOARGS,
-   "Get the next BGPStreamRecord from the stream, or None if end-of-stream has "
-   "been reached"},
+  {
+    "set_data_interface",
+    (PyCFunction)BGPStream_set_data_interface,
+    METH_VARARGS,
+    "Set the data interface used to discover dump files"
+  },
+
+  {
+    "get_next_record",
+    (PyCFunction)BGPStream_get_next_record,
+    METH_NOARGS,
+    "Get the next BGPStreamRecord from the stream, or None if end-of-stream "
+    "has been reached"
+  },
 
   {NULL}  /* Sentinel */
 };
