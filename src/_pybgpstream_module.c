@@ -33,7 +33,7 @@ static PyMethodDef module_methods[] = {
 };
 
 static char *module_docstring =
-  "Module that provides an low-level interface to libbgpstream";
+  "Module that provides a low-level interface to libbgpstream";
 
 #ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
