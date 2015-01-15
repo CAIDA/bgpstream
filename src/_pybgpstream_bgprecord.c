@@ -27,12 +27,7 @@
 
 #include <bgpstream_lib.h>
 
-typedef struct {
-  PyObject_HEAD
-
-  /* BGP Stream Record instance Handle */
-  bgpstream_record_t *rec;
-} BGPRecordObject;
+#include "_pybgpstream_bgprecord.h"
 
 #define BGPRecordDocstring "BGPRecord object"
 
@@ -120,11 +115,7 @@ static PyTypeObject BGPRecordType = {
   BGPRecord_new,             /* tp_new */
 };
 
-PyObject *_pybgpstream_bgpstream_get_BGPRecordType()
+PyTypeObject *_pybgpstream_bgpstream_get_BGPRecordType()
 {
-  if (PyType_Ready(&BGPRecordType) < 0)
-    return NULL;
-
-  Py_INCREF(&BGPRecordType);
-  return (PyObject *)&BGPRecordType;
+  return &BGPRecordType;
 }

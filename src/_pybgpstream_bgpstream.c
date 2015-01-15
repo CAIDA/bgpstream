@@ -27,6 +27,8 @@
 
 #include <bgpstream_lib.h>
 
+#include "_pybgpstream_bgprecord.h"
+
 typedef struct {
   PyObject_HEAD
 
@@ -249,42 +251,35 @@ BGPStream_start(BGPStreamObject *self)
 
 /** Corresponds to bgpstream_get_next_record */
 static PyObject *
-BGPStream_get_next_record(BGPStreamObject *self)
+BGPStream_get_next_record(BGPStreamObject *self, PyObject *args)
 {
-  bgpstream_record_t *bsr;
+  BGPRecordObject *pyrec = NULL;
   int ret;
 
-  PyObject *result;
-
-  /** @todo actually create a BGPRecord object and return that */
-
-  if ((bsr = bgpstream_create_record()) == NULL) {
-    PyErr_SetString(PyExc_MemoryError, "Could not create a new record");
+  /* get the BGPRecord argument */
+  if (!PyArg_ParseTuple(args, "O!",
+                        _pybgpstream_bgpstream_get_BGPRecordType(),
+                        &pyrec)) {
     return NULL;
   }
 
-  ret = bgpstream_get_next_record(self->bs, bsr);
+  if (!pyrec->rec) {
+    PyErr_SetString(PyExc_RuntimeError, "Invalid BGPRecord object");
+    return NULL;
+  }
+
+  ret = bgpstream_get_next_record(self->bs, pyrec->rec);
+
   if (ret < 0) {
     PyErr_SetString(PyExc_RuntimeError,
 		    "Could not get next record (is the stream started?)");
     return NULL;
   } else if (ret == 0) {
     /* end of stream */
-    Py_RETURN_NONE;
+    Py_RETURN_FALSE;
   }
 
-  /* bsr is available */
-
-  /* for now, just return a tuple of (PROJECT, COLLECTOR, TIME) */
-  result = Py_BuildValue("ssl",
-			 bsr->attributes.dump_project,
-			 bsr->attributes.dump_collector,
-			 bsr->attributes.record_time);
-
-  /** @todo move record destructor to BGPRecord object */
-  bgpstream_destroy_record(bsr);
-
-  return result; /* could be NULL, but an exception will have been raised */
+  Py_RETURN_TRUE;
 }
 
 static PyMethodDef BGPStream_methods[] = {
@@ -333,7 +328,7 @@ static PyMethodDef BGPStream_methods[] = {
   {
     "get_next_record",
     (PyCFunction)BGPStream_get_next_record,
-    METH_NOARGS,
+    METH_VARARGS,
     "Get the next BGPStreamRecord from the stream, or None if end-of-stream "
     "has been reached"
   },
@@ -383,11 +378,7 @@ static PyTypeObject BGPStreamType = {
   BGPStream_new,             /* tp_new */
 };
 
-PyObject *_pybgpstream_bgpstream_get_BGPStreamType()
+PyTypeObject *_pybgpstream_bgpstream_get_BGPStreamType()
 {
-  if (PyType_Ready(&BGPStreamType) < 0)
-    return NULL;
-
-  Py_INCREF(&BGPStreamType);
-  return (PyObject *)&BGPStreamType;
+  return &BGPStreamType;
 }

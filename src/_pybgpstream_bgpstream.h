@@ -29,6 +29,6 @@
 #define ___PYBGPSTREAM_BGPSTREAM_H
 
 /** Expose the BGPStreamType structure */
-PyObject *_pybgpstream_bgpstream_get_BGPStreamType();
+PyTypeObject *_pybgpstream_bgpstream_get_BGPStreamType();
 
 #endif /* ___PYBGPSTREAM_BGPSTREAM_H */

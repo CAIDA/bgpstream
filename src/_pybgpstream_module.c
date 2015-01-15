@@ -32,6 +32,16 @@ static PyMethodDef module_methods[] = {
     {NULL}  /* Sentinel */
 };
 
+#define ADD_OBJECT(objname)                                             \
+  do {                                                                  \
+    if ((obj = _pybgpstream_bgpstream_get_##objname##Type()) == NULL)   \
+      return;                                                           \
+    if (PyType_Ready(obj) < 0)                                          \
+      return;                                                           \
+    Py_INCREF(obj);                                                     \
+    PyModule_AddObject(_pybgpstream, #objname, (PyObject*)obj);         \
+  } while(0)
+
 static char *module_docstring =
   "Module that provides a low-level interface to libbgpstream";
 
@@ -42,7 +52,7 @@ PyMODINIT_FUNC
 init_pybgpstream(void)
 {
   PyObject *_pybgpstream;
-  PyObject *obj;
+  PyTypeObject *obj;
 
   _pybgpstream = Py_InitModule3("_pybgpstream",
                                 module_methods,
@@ -51,12 +61,8 @@ init_pybgpstream(void)
     return;
 
   /* BGPStream object */
-  if (!(obj = _pybgpstream_bgpstream_get_BGPStreamType()))
-    return;
-  PyModule_AddObject(_pybgpstream, "BGPStream", obj);
+  ADD_OBJECT(BGPStream);
 
   /* BGPRecord object */
-  if (!(obj = _pybgpstream_bgpstream_get_BGPRecordType()))
-    return;
-  PyModule_AddObject(_pybgpstream, "BGPRecord", obj);
+  ADD_OBJECT(BGPRecord);
 }

@@ -23,12 +23,21 @@
  *
  */
 
-#include <Python.h>
-
 #ifndef ___PYBGPSTREAM_BGPRECORD_H
 #define ___PYBGPSTREAM_BGPRECORD_H
 
+#include <Python.h>
+
+#include <bgpstream_lib.h>
+
+typedef struct {
+  PyObject_HEAD
+
+  /* BGP Stream Record instance Handle */
+  bgpstream_record_t *rec;
+} BGPRecordObject;
+
 /** Expose the BGPRecordType structure */
-PyObject *_pybgpstream_bgpstream_get_BGPRecordType();
+PyTypeObject *_pybgpstream_bgpstream_get_BGPRecordType();
 
 #endif /* ___PYBGPSTREAM_BGPRECORD_H */
