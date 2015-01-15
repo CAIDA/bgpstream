@@ -383,28 +383,11 @@ static PyTypeObject BGPStreamType = {
   BGPStream_new,             /* tp_new */
 };
 
-static PyMethodDef module_methods[] = {
-    {NULL}  /* Sentinel */
-};
-
-static char *module_docstring =
-  "Module that provides an low-level interface to libbgpstream";
-
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
-#define PyMODINIT_FUNC void
-#endif
-PyMODINIT_FUNC
-init_pybgpstream(void)
+PyObject *_pybgpstream_bgpstream_get_BGPStreamType()
 {
-  PyObject *m;
+  if (PyType_Ready(&BGPStreamType) < 0)
+    return NULL;
 
-    if (PyType_Ready(&BGPStreamType) < 0)
-        return;
-
-    m = Py_InitModule3("_pybgpstream", module_methods, module_docstring);
-    if (m == NULL)
-      return;
-
-    Py_INCREF(&BGPStreamType);
-    PyModule_AddObject(m, "BGPStream", (PyObject *)&BGPStreamType);
+  Py_INCREF(&BGPStreamType);
+  return (PyObject *)&BGPStreamType;
 }
