@@ -68,9 +68,42 @@ BGPRecord_init(BGPRecordObject *self,
   return 0;
 }
 
+/* attributes */
+
+/* project */
+static PyObject *
+BGPRecord_get_project(BGPRecordObject *self, void *closure)
+{
+  return Py_BuildValue("s", self->rec->attributes.dump_project);
+}
+
+/** collector */
+/** type */
+/** dump_time */
+/** record_time */
+
+/* get status */
+
+/* get dump position */
+
+/* get elems */
+
 
 static PyMethodDef BGPRecord_methods[] = {
   {NULL}  /* Sentinel */
+};
+
+static PyGetSetDef BGPRecord_getsetters[] = {
+
+  /* attributes.dump_project */
+  {
+    "project",
+    (getter)BGPRecord_get_project, NULL,
+    "Dump Project",
+    NULL
+  },
+
+  {NULL} /* Sentinel */
 };
 
 static PyTypeObject BGPRecordType = {
@@ -104,7 +137,7 @@ static PyTypeObject BGPRecordType = {
   0,		               /* tp_iternext */
   BGPRecord_methods,             /* tp_methods */
   0,             /* tp_members */
-  0,                         /* tp_getset */
+  BGPRecord_getsetters,                 /* tp_getset */
   0,                         /* tp_base */
   0,                         /* tp_dict */
   0,                         /* tp_descr_get */
