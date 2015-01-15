@@ -77,17 +77,108 @@ BGPRecord_get_project(BGPRecordObject *self, void *closure)
   return Py_BuildValue("s", self->rec->attributes.dump_project);
 }
 
-/** collector */
-/** type */
-/** dump_time */
-/** record_time */
+/* collector */
+static PyObject *
+BGPRecord_get_collector(BGPRecordObject *self, void *closure)
+{
+  return Py_BuildValue("s", self->rec->attributes.dump_collector);
+}
+
+/* type */
+static PyObject *
+BGPRecord_get_type(BGPRecordObject *self, void *closure)
+{
+  switch(self->rec->attributes.dump_type)
+    {
+    case BGPSTREAM_UPDATE:
+      return Py_BuildValue("s", "update");
+      break;
+
+    case BGPSTREAM_RIB:
+      return Py_BuildValue("s", "rib");
+      break;
+
+    default:
+      return Py_BuildValue("s", "unknown");
+    }
+
+  return NULL;
+}
+
+/* dump_time */
+static PyObject *
+BGPRecord_get_dump_time(BGPRecordObject *self, void *closure)
+{
+  return Py_BuildValue("l", self->rec->attributes.dump_time);
+}
+
+/* record_time */
+static PyObject *
+BGPRecord_get_record_time(BGPRecordObject *self, void *closure)
+{
+  return Py_BuildValue("l", self->rec->attributes.record_time);
+}
 
 /* get status */
+static PyObject *
+BGPRecord_get_status(BGPRecordObject *self, void *closure)
+{
+  switch(self->rec->status)
+    {
+    case VALID_RECORD:
+      return Py_BuildValue("s", "valid");
+      break;
+
+    case FILTERED_SOURCE:
+      return Py_BuildValue("s", "filtered-source");
+      break;
+
+    case EMPTY_SOURCE:
+      return Py_BuildValue("s", "empty-source");
+      break;
+
+    case CORRUPTED_SOURCE:
+      return Py_BuildValue("s", "corrupted-source");
+      break;
+
+    case CORRUPTED_RECORD:
+      return Py_BuildValue("s", "corrupted-record");
+      break;
+
+    default:
+      return Py_BuildValue("s", "unknown");
+    }
+
+  return NULL;
+}
 
 /* get dump position */
+static PyObject *
+BGPRecord_get_dump_position(BGPRecordObject *self, void *closure)
+{
+  switch(self->rec->dump_pos)
+    {
+    case DUMP_START:
+      return Py_BuildValue("s", "start");
+      break;
+
+    case DUMP_MIDDLE:
+      return Py_BuildValue("s", "middle");
+      break;
+
+    case DUMP_END:
+      return Py_BuildValue("s", "end");
+      break;
+
+    default:
+      return Py_BuildValue("s", "unknown");
+    }
+
+  return NULL;
+}
 
 /* get elems */
-
+/** @todo! */
 
 static PyMethodDef BGPRecord_methods[] = {
   {NULL}  /* Sentinel */
@@ -100,6 +191,54 @@ static PyGetSetDef BGPRecord_getsetters[] = {
     "project",
     (getter)BGPRecord_get_project, NULL,
     "Dump Project",
+    NULL
+  },
+
+  /* attributes.dump_collector */
+  {
+    "collector",
+    (getter)BGPRecord_get_collector, NULL,
+    "Dump Collector",
+    NULL
+  },
+
+  /* attributes.dump_type */
+  {
+    "type",
+    (getter)BGPRecord_get_type, NULL,
+    "Dump Type",
+    NULL
+  },
+
+  /* attributes.dump_time */
+  {
+    "dump_time",
+    (getter)BGPRecord_get_dump_time, NULL,
+    "Dump Time",
+    NULL
+  },
+
+  /* attributes.record_time */
+  {
+    "record_time",
+    (getter)BGPRecord_get_record_time, NULL,
+    "Record Time",
+    NULL
+  },
+
+  /* status */
+  {
+    "status",
+    (getter)BGPRecord_get_status, NULL,
+    "Status",
+    NULL
+  },
+
+  /* attributes.dump_position */
+  {
+    "dump_position",
+    (getter)BGPRecord_get_dump_position, NULL,
+    "Dump Position",
     NULL
   },
 
