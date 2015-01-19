@@ -1,17 +1,16 @@
-.. pybgpstream documentation master file, created by
-   sphinx-quickstart on Mon Jan 19 11:07:23 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to pybgpstream's documentation!
-=======================================
+pybgpstream 1.0 Documentation
+=============================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-
+   intro
+   tutorial
+   api
+   changelog
+   license
 
 Indices and tables
 ==================
