@@ -46,7 +46,71 @@ get_ip_str(bl_addr_storage_t *ip) {
 	    get_in_addr(ip),
 	    ip_str, INET6_ADDRSTRLEN);
 
-  return Py_BuildValue("s", ip_str);
+  return PyString_FromString(ip_str);
+}
+
+static PyObject *
+get_pfx_str(bl_pfx_storage_t *pfx) {
+  char pfx_str[INET6_ADDRSTRLEN+3] = "";
+  char *p = pfx_str;
+
+  inet_ntop(pfx->address.version,
+	    get_in_addr(&pfx->address),
+	    pfx_str, INET6_ADDRSTRLEN);
+
+  while(*p != '\0')
+    p++;
+
+  sprintf(p, "/%"PRIu8, pfx->mask_len);
+
+  return PyString_FromString(pfx_str);
+}
+
+static PyObject *
+get_aspath_str(bl_aspath_storage_t *aspath) {
+  int i;
+  // assuming 10 char per ASN, then this will hold >400 hops
+  char buf[4096] = "";
+  char *p = buf;
+  size_t remain = 4096 - 1;
+  int written = 0;
+
+  if(aspath->type == BL_AS_NUMERIC && aspath->hop_count > 0) {
+    for(i=0; i < aspath->hop_count; i++) {
+      written = snprintf(p, remain, (i==0) ? "%"PRIu32 : " %"PRIu32,
+			 aspath->numeric_aspath[i]);
+      remain -= written;
+      p += written;
+      assert(remain > 0);
+    }
+    return PyString_FromString(buf);
+  } else if(aspath->type == BL_AS_STRING) {
+    return PyString_FromString(aspath->str_aspath);
+  }
+
+  Py_RETURN_NONE;
+}
+
+static PyObject *
+get_peerstate_str(bl_peerstate_type_t state) {
+  switch(state) {
+  case BL_PEERSTATE_IDLE:
+    return PyString_FromString("idle");
+  case BL_PEERSTATE_CONNECT:
+    return PyString_FromString("connect");
+  case BL_PEERSTATE_ACTIVE:
+    return PyString_FromString("active");
+  case BL_PEERSTATE_OPENSENT:
+    return PyString_FromString("open-sent");
+  case BL_PEERSTATE_OPENCONFIRM:
+    return PyString_FromString("open-confirm");
+  case BL_PEERSTATE_ESTABLISHED:
+    return PyString_FromString("established");
+  default:
+    break;
+  }
+
+  Py_RETURN_NONE;
 }
 
 static void
@@ -92,8 +156,6 @@ BGPElem_get_type(BGPElemObject *self, void *closure)
     default:
       return Py_BuildValue("s", "unknown");
     }
-
-  return NULL;
 }
 
 /* timestamp */
@@ -104,6 +166,8 @@ BGPElem_get_time(BGPElemObject *self, void *closure)
 }
 
 /* peer address */
+/** @todo consider using something like netaddr
+    (http://pythonhosted.org/netaddr/) */
 static PyObject *
 BGPElem_get_peer_address(BGPElemObject *self, void *closure)
 {
@@ -117,14 +181,57 @@ BGPElem_get_peer_asn(BGPElemObject *self, void *closure)
   return Py_BuildValue("k", self->elem->peer_asnumber);
 }
 
-/** TYPE DEPENDENT FIELDS (TODO) */
+/** Type-dependent field dict */
+static PyObject *
+BGPElem_get_fields(BGPElemObject *self, void *closure)
+{
+  PyObject *dict;
 
-/* prefix */
-/* next hop */
-/* as path */
-/* old state */
-/* new state */
+  /* create the dictionary */
+  if((dict = PyDict_New()) == NULL)
+    return NULL;
 
+  switch(self->elem->type)
+    {
+    case BL_RIB_ELEM:
+    case BL_ANNOUNCEMENT_ELEM:
+      /* next hop */
+      if(PyDict_SetItem(dict, PyString_FromString("next-hop"),
+			get_ip_str(&self->elem->nexthop)) == -1)
+	return NULL;
+
+      /* as path */
+      if(PyDict_SetItem(dict, PyString_FromString("as-path"),
+			get_aspath_str(&self->elem->aspath)) == -1)
+	return NULL;
+
+      /* FALLTHROUGH */
+
+    case BL_WITHDRAWAL_ELEM:
+      /* prefix */
+      if(PyDict_SetItem(dict, PyString_FromString("prefix"),
+			get_pfx_str(&self->elem->prefix)) == -1)
+	return NULL;
+      break;
+
+    case BL_PEERSTATE_ELEM:
+      /* old state */
+      if(PyDict_SetItem(dict, PyString_FromString("old-state"),
+			get_peerstate_str(self->elem->old_state)) == -1)
+	return NULL;
+      /* new state */
+      if(PyDict_SetItem(dict, PyString_FromString("new-state"),
+			get_peerstate_str(self->elem->new_state)) == -1)
+	return NULL;
+      break;
+
+    case BL_UNKNOWN_ELEM:
+    default:
+      break;
+    }
+
+  return dict;
+}
 
 static PyMethodDef BGPElem_methods[] = {
   {NULL}  /* Sentinel */
@@ -161,6 +268,14 @@ static PyGetSetDef BGPElem_getsetters[] = {
     "peer_asn",
     (getter)BGPElem_get_peer_asn, NULL,
     "Peer ASN",
+    NULL
+  },
+
+  /* Type-Specific Fields */
+  {
+    "fields",
+    (getter)BGPElem_get_fields, NULL,
+    "Type-Specific Fields",
     NULL
   },
 
