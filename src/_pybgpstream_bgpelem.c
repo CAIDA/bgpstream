@@ -27,67 +27,47 @@
 
 #include <bgpstream_lib.h>
 
-#include "_pybgpstream_bgprecord.h"
 #include "_pybgpstream_bgpelem.h"
 
-#define BGPRecordDocstring "BGPRecord object"
-
+#define BGPElemDocstring "BGPElem object"
 
 static void
-BGPRecord_dealloc(BGPRecordObject *self)
+BGPElem_dealloc(BGPElemObject *self)
 {
-  if(self->rec != NULL)
+  if(self->elem != NULL)
     {
-      bgpstream_destroy_record(self->rec);
+      bgpstream_destroy_elem_queue(self->elem);
     }
   self->ob_type->tp_free((PyObject*)self);
 }
 
-static PyObject *
-BGPRecord_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-  BGPRecordObject *self;
-
-  self = (BGPRecordObject *)type->tp_alloc(type, 0);
-  if(self == NULL) {
-    return NULL;
-  }
-
-  if ((self->rec = bgpstream_create_record()) == NULL)
-    {
-      Py_DECREF(self);
-      return NULL;
-    }
-
-  return (PyObject *)self;
-}
-
 static int
-BGPRecord_init(BGPRecordObject *self,
+BGPElem_init(BGPElemObject *self,
 	       PyObject *args, PyObject *kwds)
 {
   return 0;
 }
 
+#if 0
 /* attributes */
 
 /* project */
 static PyObject *
-BGPRecord_get_project(BGPRecordObject *self, void *closure)
+BGPElem_get_project(BGPElemObject *self, void *closure)
 {
   return Py_BuildValue("s", self->rec->attributes.dump_project);
 }
 
 /* collector */
 static PyObject *
-BGPRecord_get_collector(BGPRecordObject *self, void *closure)
+BGPElem_get_collector(BGPElemObject *self, void *closure)
 {
   return Py_BuildValue("s", self->rec->attributes.dump_collector);
 }
 
 /* type */
 static PyObject *
-BGPRecord_get_type(BGPRecordObject *self, void *closure)
+BGPElem_get_type(BGPElemObject *self, void *closure)
 {
   switch(self->rec->attributes.dump_type)
     {
@@ -108,25 +88,25 @@ BGPRecord_get_type(BGPRecordObject *self, void *closure)
 
 /* dump_time */
 static PyObject *
-BGPRecord_get_dump_time(BGPRecordObject *self, void *closure)
+BGPElem_get_dump_time(BGPElemObject *self, void *closure)
 {
   return Py_BuildValue("l", self->rec->attributes.dump_time);
 }
 
-/* record_time */
+/* elem_time */
 static PyObject *
-BGPRecord_get_record_time(BGPRecordObject *self, void *closure)
+BGPElem_get_elem_time(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("l", self->rec->attributes.record_time);
+  return Py_BuildValue("l", self->rec->attributes.elem_time);
 }
 
 /* get status */
 static PyObject *
-BGPRecord_get_status(BGPRecordObject *self, void *closure)
+BGPElem_get_status(BGPElemObject *self, void *closure)
 {
   switch(self->rec->status)
     {
-    case VALID_RECORD:
+    case VALID_ELEM:
       return Py_BuildValue("s", "valid");
       break;
 
@@ -142,8 +122,8 @@ BGPRecord_get_status(BGPRecordObject *self, void *closure)
       return Py_BuildValue("s", "corrupted-source");
       break;
 
-    case CORRUPTED_RECORD:
-      return Py_BuildValue("s", "corrupted-record");
+    case CORRUPTED_ELEM:
+      return Py_BuildValue("s", "corrupted-elem");
       break;
 
     default:
@@ -155,7 +135,7 @@ BGPRecord_get_status(BGPRecordObject *self, void *closure)
 
 /* get dump position */
 static PyObject *
-BGPRecord_get_dump_position(BGPRecordObject *self, void *closure)
+BGPElem_get_dump_position(BGPElemObject *self, void *closure)
 {
   switch(self->rec->dump_pos)
     {
@@ -178,61 +158,21 @@ BGPRecord_get_dump_position(BGPRecordObject *self, void *closure)
   return NULL;
 }
 
-/* get elems (return list of BGPElem objects) */
-static PyObject *
-BGPRecord_get_elems(BGPRecordObject *self)
-{
-  bl_elem_t *q_head;
-  bl_elem_t *this;
+/* get elems */
+/** @todo! */
+#endif
 
-  PyObject *pylist;
-  PyObject *pyelem;
-
-  if((pylist = PyList_New(0)) == NULL) {
-    return NULL;
-  }
-
-  q_head = bgpstream_get_elem_queue(self->rec);
-
-  /* now build a list out of the queue */
-  while(q_head != NULL) {
-    /* pop off the head of the list */
-    this = q_head;
-    q_head = this->next;
-    this->next = NULL;
-
-    if((pyelem = BGPElem_new(this)) == NULL) {
-      PyErr_SetString(PyExc_RuntimeError,
-                      "Could not create BGPElem object");
-      return NULL;
-    }
-
-    /* now insert 'this' into py list */
-    if(PyList_Append(pylist, pyelem) == -1)
-      return NULL;
-  }
-
-  return pylist;
-}
-
-static PyMethodDef BGPRecord_methods[] = {
-
-  {
-    "get_elems",
-    (PyCFunction)BGPRecord_get_elems,
-    METH_NOARGS,
-    "Get list of BGPElem objects"
-  },
-
+static PyMethodDef BGPElem_methods[] = {
   {NULL}  /* Sentinel */
 };
 
-static PyGetSetDef BGPRecord_getsetters[] = {
+#if 0
+static PyGetSetDef BGPElem_getsetters[] = {
 
   /* attributes.dump_project */
   {
     "project",
-    (getter)BGPRecord_get_project, NULL,
+    (getter)BGPElem_get_project, NULL,
     "Dump Project",
     NULL
   },
@@ -240,7 +180,7 @@ static PyGetSetDef BGPRecord_getsetters[] = {
   /* attributes.dump_collector */
   {
     "collector",
-    (getter)BGPRecord_get_collector, NULL,
+    (getter)BGPElem_get_collector, NULL,
     "Dump Collector",
     NULL
   },
@@ -248,7 +188,7 @@ static PyGetSetDef BGPRecord_getsetters[] = {
   /* attributes.dump_type */
   {
     "type",
-    (getter)BGPRecord_get_type, NULL,
+    (getter)BGPElem_get_type, NULL,
     "Dump Type",
     NULL
   },
@@ -256,23 +196,23 @@ static PyGetSetDef BGPRecord_getsetters[] = {
   /* attributes.dump_time */
   {
     "dump_time",
-    (getter)BGPRecord_get_dump_time, NULL,
+    (getter)BGPElem_get_dump_time, NULL,
     "Dump Time",
     NULL
   },
 
-  /* attributes.record_time */
+  /* attributes.elem_time */
   {
-    "record_time",
-    (getter)BGPRecord_get_record_time, NULL,
-    "Record Time",
+    "elem_time",
+    (getter)BGPElem_get_elem_time, NULL,
+    "Elem Time",
     NULL
   },
 
   /* status */
   {
     "status",
-    (getter)BGPRecord_get_status, NULL,
+    (getter)BGPElem_get_status, NULL,
     "Status",
     NULL
   },
@@ -280,21 +220,22 @@ static PyGetSetDef BGPRecord_getsetters[] = {
   /* attributes.dump_position */
   {
     "dump_position",
-    (getter)BGPRecord_get_dump_position, NULL,
+    (getter)BGPElem_get_dump_position, NULL,
     "Dump Position",
     NULL
   },
 
   {NULL} /* Sentinel */
 };
+#endif
 
-static PyTypeObject BGPRecordType = {
+static PyTypeObject BGPElemType = {
   PyObject_HEAD_INIT(NULL)
   0,                                    /* ob_size */
-  "_pybgpstream.BGPRecord",             /* tp_name */
-  sizeof(BGPRecordObject), /* tp_basicsize */
+  "_pybgpstream.BGPElem",             /* tp_name */
+  sizeof(BGPElemObject), /* tp_basicsize */
   0,                                    /* tp_itemsize */
-  (destructor)BGPRecord_dealloc,        /* tp_dealloc */
+  (destructor)BGPElem_dealloc,        /* tp_dealloc */
   0,                                    /* tp_print */
   0,                                    /* tp_getattr */
   0,                                    /* tp_setattr */
@@ -310,27 +251,42 @@ static PyTypeObject BGPRecordType = {
   0,                                    /* tp_setattro */
   0,                                    /* tp_as_buffer */
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
-  BGPRecordDocstring,      /* tp_doc */
+  BGPElemDocstring,      /* tp_doc */
   0,		               /* tp_traverse */
   0,		               /* tp_clear */
   0,		               /* tp_richcompare */
   0,		               /* tp_weaklistoffset */
   0,		               /* tp_iter */
   0,		               /* tp_iternext */
-  BGPRecord_methods,             /* tp_methods */
+  BGPElem_methods,             /* tp_methods */
   0,             /* tp_members */
-  BGPRecord_getsetters,                 /* tp_getset */
+  0,//BGPElem_getsetters,                 /* tp_getset */
   0,                         /* tp_base */
   0,                         /* tp_dict */
   0,                         /* tp_descr_get */
   0,                         /* tp_descr_set */
   0,                         /* tp_dictoffset */
-  (initproc)BGPRecord_init,  /* tp_init */
+  (initproc)BGPElem_init,  /* tp_init */
   0,                         /* tp_alloc */
-  BGPRecord_new,             /* tp_new */
+  0,             /* tp_new */
 };
 
-PyTypeObject *_pybgpstream_bgpstream_get_BGPRecordType()
+PyTypeObject *_pybgpstream_bgpstream_get_BGPElemType()
 {
-  return &BGPRecordType;
+  return &BGPElemType;
+}
+
+/* only available to c code */
+PyObject *BGPElem_new(bl_elem_t *elem)
+{
+  BGPElemObject *self;
+
+  self = (BGPElemObject *)(BGPElemType.tp_alloc(&BGPElemType, 0));
+  if(self == NULL) {
+    return NULL;
+  }
+
+  self->elem = elem;
+
+  return (PyObject *)self;
 }

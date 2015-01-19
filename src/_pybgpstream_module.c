@@ -27,6 +27,7 @@
 
 #include "_pybgpstream_bgpstream.h"
 #include "_pybgpstream_bgprecord.h"
+#include "_pybgpstream_bgpelem.h"
 
 static PyMethodDef module_methods[] = {
     {NULL}  /* Sentinel */
@@ -65,4 +66,7 @@ init_pybgpstream(void)
 
   /* BGPRecord object */
   ADD_OBJECT(BGPRecord);
+
+  /* BGPRecord object */
+  ADD_OBJECT(BGPElem);
 }

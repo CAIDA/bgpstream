@@ -23,22 +23,24 @@
  *
  */
 
-#ifndef ___PYBGPSTREAM_BGPRECORD_H
-#define ___PYBGPSTREAM_BGPRECORD_H
+#ifndef ___PYBGPSTREAM_BGPELEM_H
+#define ___PYBGPSTREAM_BGPELEM_H
 
 #include <Python.h>
 
-#include <bgpstream_lib.h>
+#include <bl_bgp_utils.h>
 
 typedef struct {
   PyObject_HEAD
 
-  /* BGP Stream Record instance Handle */
-  bgpstream_record_t *rec;
+  bl_elem_t *elem;
 
-} BGPRecordObject;
+} BGPElemObject;
 
-/** Expose the BGPRecordType structure */
-PyTypeObject *_pybgpstream_bgpstream_get_BGPRecordType();
+/** Expose the BGPElemType structure */
+PyTypeObject *_pybgpstream_bgpstream_get_BGPElemType();
 
-#endif /* ___PYBGPSTREAM_BGPRECORD_H */
+/** Expose our new function as it is not exposed to Python */
+PyObject *BGPElem_new(bl_elem_t *elem);
+
+#endif /* ___PYBGPSTREAM_BGPELEM_H */

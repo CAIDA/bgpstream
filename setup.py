@@ -4,7 +4,8 @@ _pybgpstream_module = Extension("_pybgpstream",
                                 libraries = ["bgpstream"],
                                 sources = ["src/_pybgpstream_module.c",
                                            "src/_pybgpstream_bgpstream.c",
-                                           "src/_pybgpstream_bgprecord.c"])
+                                           "src/_pybgpstream_bgprecord.c",
+                                           "src/_pybgpstream_bgpelem.c"])
 
 setup(name = "_pybgpstream",
       description = "TODO",
