@@ -31,6 +31,24 @@
 
 #define BGPElemDocstring "BGPElem object"
 
+static void *get_in_addr(bl_addr_storage_t *ip) {
+  assert(ip->version != BL_ADDR_TYPE_UNKNOWN);
+  return ip->version == BL_ADDR_IPV4
+    ? (void *) &(ip->ipv4)
+    : (void *) &(ip->ipv6);
+}
+
+static PyObject *
+get_ip_str(bl_addr_storage_t *ip) {
+  char ip_str[INET6_ADDRSTRLEN] = "";
+
+  inet_ntop(ip->version,
+	    get_in_addr(ip),
+	    ip_str, INET6_ADDRSTRLEN);
+
+  return Py_BuildValue("s", ip_str);
+}
+
 static void
 BGPElem_dealloc(BGPElemObject *self)
 {
@@ -48,37 +66,29 @@ BGPElem_init(BGPElemObject *self,
   return 0;
 }
 
-#if 0
-/* attributes */
-
-/* project */
-static PyObject *
-BGPElem_get_project(BGPElemObject *self, void *closure)
-{
-  return Py_BuildValue("s", self->rec->attributes.dump_project);
-}
-
-/* collector */
-static PyObject *
-BGPElem_get_collector(BGPElemObject *self, void *closure)
-{
-  return Py_BuildValue("s", self->rec->attributes.dump_collector);
-}
-
 /* type */
 static PyObject *
 BGPElem_get_type(BGPElemObject *self, void *closure)
 {
-  switch(self->rec->attributes.dump_type)
+  switch(self->elem->type)
     {
-    case BGPSTREAM_UPDATE:
-      return Py_BuildValue("s", "update");
-      break;
-
-    case BGPSTREAM_RIB:
+    case BL_RIB_ELEM:
       return Py_BuildValue("s", "rib");
       break;
 
+    case BL_ANNOUNCEMENT_ELEM:
+      return Py_BuildValue("s", "announcement");
+      break;
+
+    case BL_WITHDRAWAL_ELEM:
+      return Py_BuildValue("s", "withdrawal");
+      break;
+
+    case BL_PEERSTATE_ELEM:
+      return Py_BuildValue("s", "peerstate");
+      break;
+
+    case BL_UNKNOWN_ELEM:
     default:
       return Py_BuildValue("s", "unknown");
     }
@@ -86,148 +96,76 @@ BGPElem_get_type(BGPElemObject *self, void *closure)
   return NULL;
 }
 
-/* dump_time */
+/* timestamp */
 static PyObject *
-BGPElem_get_dump_time(BGPElemObject *self, void *closure)
+BGPElem_get_time(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("l", self->rec->attributes.dump_time);
+  return Py_BuildValue("k", self->elem->timestamp);
 }
 
-/* elem_time */
+/* peer address */
 static PyObject *
-BGPElem_get_elem_time(BGPElemObject *self, void *closure)
+BGPElem_get_peer_address(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("l", self->rec->attributes.elem_time);
+  return get_ip_str(&self->elem->peer_address);
 }
 
-/* get status */
+/* peer as number */
 static PyObject *
-BGPElem_get_status(BGPElemObject *self, void *closure)
+BGPElem_get_peer_asn(BGPElemObject *self, void *closure)
 {
-  switch(self->rec->status)
-    {
-    case VALID_ELEM:
-      return Py_BuildValue("s", "valid");
-      break;
-
-    case FILTERED_SOURCE:
-      return Py_BuildValue("s", "filtered-source");
-      break;
-
-    case EMPTY_SOURCE:
-      return Py_BuildValue("s", "empty-source");
-      break;
-
-    case CORRUPTED_SOURCE:
-      return Py_BuildValue("s", "corrupted-source");
-      break;
-
-    case CORRUPTED_ELEM:
-      return Py_BuildValue("s", "corrupted-elem");
-      break;
-
-    default:
-      return Py_BuildValue("s", "unknown");
-    }
-
-  return NULL;
+  return Py_BuildValue("k", self->elem->peer_asnumber);
 }
 
-/* get dump position */
-static PyObject *
-BGPElem_get_dump_position(BGPElemObject *self, void *closure)
-{
-  switch(self->rec->dump_pos)
-    {
-    case DUMP_START:
-      return Py_BuildValue("s", "start");
-      break;
+/** TYPE DEPENDENT FIELDS (TODO) */
 
-    case DUMP_MIDDLE:
-      return Py_BuildValue("s", "middle");
-      break;
+/* prefix */
+/* next hop */
+/* as path */
+/* old state */
+/* new state */
 
-    case DUMP_END:
-      return Py_BuildValue("s", "end");
-      break;
-
-    default:
-      return Py_BuildValue("s", "unknown");
-    }
-
-  return NULL;
-}
-
-/* get elems */
-/** @todo! */
-#endif
 
 static PyMethodDef BGPElem_methods[] = {
   {NULL}  /* Sentinel */
 };
 
-#if 0
 static PyGetSetDef BGPElem_getsetters[] = {
 
-  /* attributes.dump_project */
-  {
-    "project",
-    (getter)BGPElem_get_project, NULL,
-    "Dump Project",
-    NULL
-  },
-
-  /* attributes.dump_collector */
-  {
-    "collector",
-    (getter)BGPElem_get_collector, NULL,
-    "Dump Collector",
-    NULL
-  },
-
-  /* attributes.dump_type */
+  /* type */
   {
     "type",
     (getter)BGPElem_get_type, NULL,
-    "Dump Type",
+    "Type",
     NULL
   },
 
-  /* attributes.dump_time */
+  /* timestamp */
   {
-    "dump_time",
-    (getter)BGPElem_get_dump_time, NULL,
-    "Dump Time",
+    "time",
+    (getter)BGPElem_get_time, NULL,
+    "Time",
     NULL
   },
 
-  /* attributes.elem_time */
+  /* Peer Address */
   {
-    "elem_time",
-    (getter)BGPElem_get_elem_time, NULL,
-    "Elem Time",
+    "peer_address",
+    (getter)BGPElem_get_peer_address, NULL,
+    "Peer IP Address",
     NULL
   },
 
-  /* status */
+  /* peer ASN */
   {
-    "status",
-    (getter)BGPElem_get_status, NULL,
-    "Status",
-    NULL
-  },
-
-  /* attributes.dump_position */
-  {
-    "dump_position",
-    (getter)BGPElem_get_dump_position, NULL,
-    "Dump Position",
+    "peer_asn",
+    (getter)BGPElem_get_peer_asn, NULL,
+    "Peer ASN",
     NULL
   },
 
   {NULL} /* Sentinel */
 };
-#endif
 
 static PyTypeObject BGPElemType = {
   PyObject_HEAD_INIT(NULL)
@@ -260,7 +198,7 @@ static PyTypeObject BGPElemType = {
   0,		               /* tp_iternext */
   BGPElem_methods,             /* tp_methods */
   0,             /* tp_members */
-  0,//BGPElem_getsetters,                 /* tp_getset */
+  BGPElem_getsetters,                 /* tp_getset */
   0,                         /* tp_base */
   0,                         /* tp_dict */
   0,                         /* tp_descr_get */
