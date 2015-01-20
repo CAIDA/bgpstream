@@ -263,7 +263,7 @@ static PyGetSetDef BGPRecord_getsetters[] = {
 
   /* attributes.record_time */
   {
-    "record_time",
+    "time",
     (getter)BGPRecord_get_record_time, NULL,
     "Record Time",
     NULL
