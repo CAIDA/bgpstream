@@ -7,6 +7,7 @@ Contents:
    :maxdepth: 1
 
    intro
+   install
    tutorial
    api
    changelog
