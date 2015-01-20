@@ -42,8 +42,7 @@ open _build/html/index.html
 
 To test the installation you can use the python shell (on `loki` or `thor`):
 
-~~~
-python
+```python
 >>> from _pybgpstream import BGPStream, BGPRecord, BGPElem
 >>> stream = BGPStream()
 >>> rec = BGPRecord()
@@ -73,4 +72,4 @@ record_cnt: 8735143
 >>> print "elems_cnt: " + str(elems_cnt)
 elems_cnt: 48068956
 >>>
-~~~
+```
