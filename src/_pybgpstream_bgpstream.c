@@ -109,7 +109,7 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
     }
   }
   if (filter_val == -1) {
-    return PyErr_Format(PyExc_TypeError,
+    return PyErr_Format(PyExc_ValueError,
 			"Invalid filter type: %s", filter_type);
   }
 
@@ -172,7 +172,7 @@ BGPStream_set_data_interface(BGPStreamObject *self, PyObject *args)
     }
   }
   if (datasource_val == -1) {
-    return PyErr_Format(PyExc_TypeError,
+    return PyErr_Format(PyExc_ValueError,
 			"Invalid datasource: %s", datasource);
   }
 
@@ -216,7 +216,7 @@ BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
     }
   }
   if (option_val == -1) {
-    return PyErr_Format(PyExc_TypeError,
+    return PyErr_Format(PyExc_ValueError,
 			"Invalid data interface option type: %s", option_type);
   }
 
