@@ -28,7 +28,7 @@
 
 #include <Python.h>
 
-#include <bgpstream_lib.h>
+#include <bgpstream.h>
 
 typedef struct {
   PyObject_HEAD

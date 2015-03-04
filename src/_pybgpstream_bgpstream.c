@@ -25,7 +25,7 @@
 
 #include <Python.h>
 
-#include <bgpstream_lib.h>
+#include <bgpstream.h>
 
 #include "_pybgpstream_bgprecord.h"
 
@@ -44,7 +44,7 @@ BGPStream_dealloc(BGPStreamObject *self)
 {
   if(self->bs != NULL)
     {
-      bgpstream_close(self->bs);
+      bgpstream_stop(self->bs);
       bgpstream_destroy(self->bs);
     }
   self->ob_type->tp_free((PyObject*)self);
@@ -88,9 +88,9 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
     NULL
   };
   static int filtertype_vals[] = {
-    BS_PROJECT,
-    BS_COLLECTOR,
-    BS_BGP_TYPE,
+    BGPSTREAM_FILTER_TYPE_PROJECT,
+    BGPSTREAM_FILTER_TYPE_COLLECTOR,
+    BGPSTREAM_FILTER_TYPE_RECORD_TYPE,
     -1,
   };
 
@@ -129,17 +129,12 @@ BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
     return NULL;
   }
 
-  /* now, we have to convert these ints back to strings. sigh */
-  char filter_start_str[11], filter_stop_str[11];
-  snprintf(filter_start_str, 11, "%u", filter_start);
-  snprintf(filter_stop_str, 11, "%u", filter_stop);
-
-  bgpstream_add_interval_filter(self->bs, BS_TIME_INTERVAL,
-				filter_start_str, filter_stop_str);
+  bgpstream_add_interval_filter(self->bs, filter_start, filter_stop);
 
   Py_RETURN_NONE;
 }
 
+#if 0
 /** Set the data interface */
 static PyObject *
 BGPStream_set_data_interface(BGPStreamObject *self, PyObject *args)
@@ -224,6 +219,7 @@ BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
 
   Py_RETURN_NONE;
 }
+#endif
 
 /** Enable blocking mode */
 static PyObject *
@@ -241,7 +237,7 @@ BGPStream_set_blocking(BGPStreamObject *self)
 static PyObject *
 BGPStream_start(BGPStreamObject *self)
 {
-  if (bgpstream_init(self->bs) < 0) {
+  if (bgpstream_start(self->bs) < 0) {
     PyErr_SetString(PyExc_RuntimeError, "Could not start stream");
     return NULL;
   }
@@ -296,7 +292,7 @@ static PyMethodDef BGPStream_methods[] = {
     METH_VARARGS,
    "Add an interval filter to an un-started stream."
   },
-
+#if 0
   {
     "set_data_interface",
     (PyCFunction)BGPStream_set_data_interface,
@@ -310,7 +306,7 @@ static PyMethodDef BGPStream_methods[] = {
     METH_VARARGS,
     "Set a data interface option"
   },
-
+#endif
   {
     "set_blocking",
     (PyCFunction)BGPStream_set_blocking,

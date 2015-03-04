@@ -28,12 +28,12 @@
 
 #include <Python.h>
 
-#include <bl_bgp_utils.h>
+#include <bgpstream_utils.h>
 
 typedef struct {
   PyObject_HEAD
 
-  bl_elem_t *elem;
+  bgpstream_elem_t *elem;
 
 } BGPElemObject;
 
@@ -41,6 +41,6 @@ typedef struct {
 PyTypeObject *_pybgpstream_bgpstream_get_BGPElemType();
 
 /** Expose our new function as it is not exposed to Python */
-PyObject *BGPElem_new(bl_elem_t *elem);
+PyObject *BGPElem_new(bgpstream_elem_t *elem);
 
 #endif /* ___PYBGPSTREAM_BGPELEM_H */

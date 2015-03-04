@@ -25,7 +25,7 @@
 
 #include <Python.h>
 
-#include <bgpstream_lib.h>
+#include <bgpstream.h>
 
 #include "_pybgpstream_bgprecord.h"
 #include "_pybgpstream_bgpelem.h"
