@@ -32,13 +32,12 @@
 
 #define BGPRecordDocstring "BGPRecord object"
 
-
 static void
 BGPRecord_dealloc(BGPRecordObject *self)
 {
   if(self->rec != NULL)
     {
-      bgpstream_destroy_record(self->rec);
+      bgpstream_record_destroy(self->rec);
     }
   self->ob_type->tp_free((PyObject*)self);
 }
@@ -53,11 +52,10 @@ BGPRecord_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return NULL;
   }
 
-  if ((self->rec = bgpstream_create_record()) == NULL)
-    {
-      Py_DECREF(self);
-      return NULL;
-    }
+  if((self->rec = bgpstream_record_create()) == NULL) {
+    Py_DECREF(self);
+    return NULL;
+  }
 
   return (PyObject *)self;
 }
@@ -126,23 +124,23 @@ BGPRecord_get_status(BGPRecordObject *self, void *closure)
 {
   switch(self->rec->status)
     {
-    case VALID_RECORD:
+    case BGPSTREAM_RECORD_STATUS_VALID_RECORD:
       return Py_BuildValue("s", "valid");
       break;
 
-    case FILTERED_SOURCE:
+    case BGPSTREAM_RECORD_STATUS_FILTERED_SOURCE:
       return Py_BuildValue("s", "filtered-source");
       break;
 
-    case EMPTY_SOURCE:
+    case BGPSTREAM_RECORD_STATUS_EMPTY_SOURCE:
       return Py_BuildValue("s", "empty-source");
       break;
 
-    case CORRUPTED_SOURCE:
+    case BGPSTREAM_RECORD_STATUS_CORRUPTED_SOURCE:
       return Py_BuildValue("s", "corrupted-source");
       break;
 
-    case CORRUPTED_RECORD:
+    case BGPSTREAM_RECORD_STATUS_CORRUPTED_RECORD:
       return Py_BuildValue("s", "corrupted-record");
       break;
 
@@ -159,15 +157,15 @@ BGPRecord_get_dump_position(BGPRecordObject *self, void *closure)
 {
   switch(self->rec->dump_pos)
     {
-    case DUMP_START:
+    case BGPSTREAM_DUMP_START:
       return Py_BuildValue("s", "start");
       break;
 
-    case DUMP_MIDDLE:
+    case BGPSTREAM_DUMP_MIDDLE:
       return Py_BuildValue("s", "middle");
       break;
 
-    case DUMP_END:
+    case BGPSTREAM_DUMP_END:
       return Py_BuildValue("s", "end");
       break;
 
@@ -178,50 +176,33 @@ BGPRecord_get_dump_position(BGPRecordObject *self, void *closure)
   return NULL;
 }
 
-/* get elems (return list of BGPElem objects) */
+/* get next elem */
 static PyObject *
-BGPRecord_get_elems(BGPRecordObject *self)
+BGPRecord_get_next_elem(BGPRecordObject *self)
 {
-  bl_elem_t *q_head;
-  bl_elem_t *this;
+  bgpstream_elem_t *elem;
 
-  PyObject *pylist;
   PyObject *pyelem;
 
-  if((pylist = PyList_New(0)) == NULL) {
+  if((elem = bgpstream_record_get_next_elem(self->rec)) == NULL)
+    Py_RETURN_NONE;
+
+  if((pyelem = BGPElem_new(elem)) == NULL) {
+    PyErr_SetString(PyExc_RuntimeError,
+                    "Could not create BGPElem object");
     return NULL;
   }
 
-  q_head = bgpstream_get_elem_queue(self->rec);
-
-  /* now build a list out of the queue */
-  while(q_head != NULL) {
-    /* pop off the head of the list */
-    this = q_head;
-    q_head = this->next;
-    this->next = NULL;
-
-    if((pyelem = BGPElem_new(this)) == NULL) {
-      PyErr_SetString(PyExc_RuntimeError,
-                      "Could not create BGPElem object");
-      return NULL;
-    }
-
-    /* now insert 'this' into py list */
-    if(PyList_Append(pylist, pyelem) == -1)
-      return NULL;
-  }
-
-  return pylist;
+  return pyelem;
 }
 
 static PyMethodDef BGPRecord_methods[] = {
 
   {
-    "get_elems",
-    (PyCFunction)BGPRecord_get_elems,
+    "get_next_elem",
+    (PyCFunction)BGPRecord_get_next_elem,
     METH_NOARGS,
-    "Get list of BGPElem objects"
+    "Get next BGP Elem from the Record"
   },
 
   {NULL}  /* Sentinel */

@@ -25,101 +25,48 @@
 
 #include <Python.h>
 
-#include <bgpstream_lib.h>
+#include <bgpstream.h>
 
 #include "_pybgpstream_bgpelem.h"
 
 #define BGPElemDocstring "BGPElem object"
 
-static void *get_in_addr(bl_addr_storage_t *ip) {
-  assert(ip->version != BL_ADDR_TYPE_UNKNOWN);
-  return ip->version == BL_ADDR_IPV4
-    ? (void *) &(ip->ipv4)
-    : (void *) &(ip->ipv6);
-}
-
 static PyObject *
-get_ip_str(bl_addr_storage_t *ip) {
+get_ip_pystr(bgpstream_ip_addr_t *ip) {
   char ip_str[INET6_ADDRSTRLEN] = "";
-
-  inet_ntop(ip->version,
-	    get_in_addr(ip),
-	    ip_str, INET6_ADDRSTRLEN);
-
+  bgpstream_addr_ntop(ip_str, INET6_ADDRSTRLEN, ip);
   return PyString_FromString(ip_str);
 }
 
 static PyObject *
-get_pfx_str(bl_pfx_storage_t *pfx) {
+get_pfx_pystr(bgpstream_pfx_t *pfx) {
   char pfx_str[INET6_ADDRSTRLEN+3] = "";
-  char *p = pfx_str;
-
-  inet_ntop(pfx->address.version,
-	    get_in_addr(&pfx->address),
-	    pfx_str, INET6_ADDRSTRLEN);
-
-  while(*p != '\0')
-    p++;
-
-  sprintf(p, "/%"PRIu8, pfx->mask_len);
-
+  if(bgpstream_pfx_snprintf(pfx_str, INET6_ADDRSTRLEN+3, pfx) == NULL)
+    return NULL;
   return PyString_FromString(pfx_str);
 }
 
 static PyObject *
-get_aspath_str(bl_aspath_storage_t *aspath) {
-  int i;
+get_aspath_pystr(bgpstream_as_path_t *aspath) {
   // assuming 10 char per ASN, then this will hold >400 hops
   char buf[4096] = "";
-  char *p = buf;
-  size_t remain = 4096 - 1;
-  int written = 0;
-
-  if(aspath->type == BL_AS_NUMERIC && aspath->hop_count > 0) {
-    for(i=0; i < aspath->hop_count; i++) {
-      written = snprintf(p, remain, (i==0) ? "%"PRIu32 : " %"PRIu32,
-			 aspath->numeric_aspath[i]);
-      remain -= written;
-      p += written;
-      assert(remain > 0);
-    }
-    return PyString_FromString(buf);
-  } else if(aspath->type == BL_AS_STRING) {
-    return PyString_FromString(aspath->str_aspath);
-  }
-
-  Py_RETURN_NONE;
+  if(bgpstream_as_path_snprintf(buf, 4096, aspath) >= 4096)
+    return NULL;
+  return PyString_FromString(buf);
 }
 
 static PyObject *
-get_peerstate_str(bl_peerstate_type_t state) {
-  switch(state) {
-  case BL_PEERSTATE_IDLE:
-    return PyString_FromString("idle");
-  case BL_PEERSTATE_CONNECT:
-    return PyString_FromString("connect");
-  case BL_PEERSTATE_ACTIVE:
-    return PyString_FromString("active");
-  case BL_PEERSTATE_OPENSENT:
-    return PyString_FromString("open-sent");
-  case BL_PEERSTATE_OPENCONFIRM:
-    return PyString_FromString("open-confirm");
-  case BL_PEERSTATE_ESTABLISHED:
-    return PyString_FromString("established");
-  default:
-    break;
-  }
-
-  Py_RETURN_NONE;
+get_peerstate_pystr(bgpstream_elem_peerstate_t state) {
+  char buf[128] = "";
+  if(bgpstream_elem_peerstate_snprintf(buf, 128, state) >= 128)
+    return NULL;
+  return PyString_FromString(buf);
 }
 
 static void
 BGPElem_dealloc(BGPElemObject *self)
 {
-  if(self->elem != NULL)
-    {
-      bgpstream_destroy_elem_queue(self->elem);
-    }
+  bgpstream_elem_clear(&self->elem);
   self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -134,35 +81,17 @@ BGPElem_init(BGPElemObject *self,
 static PyObject *
 BGPElem_get_type(BGPElemObject *self, void *closure)
 {
-  switch(self->elem->type)
-    {
-    case BL_RIB_ELEM:
-      return Py_BuildValue("s", "rib");
-      break;
-
-    case BL_ANNOUNCEMENT_ELEM:
-      return Py_BuildValue("s", "announcement");
-      break;
-
-    case BL_WITHDRAWAL_ELEM:
-      return Py_BuildValue("s", "withdrawal");
-      break;
-
-    case BL_PEERSTATE_ELEM:
-      return Py_BuildValue("s", "peerstate");
-      break;
-
-    case BL_UNKNOWN_ELEM:
-    default:
-      return Py_BuildValue("s", "unknown");
-    }
+  char buf[128] = "";
+  if(bgpstream_elem_type_snprintf(buf, 128, self->elem.type) >= 128)
+    return NULL;
+  return PyString_FromString(buf);
 }
 
 /* timestamp */
 static PyObject *
 BGPElem_get_time(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("k", self->elem->timestamp);
+  return Py_BuildValue("k", self->elem.timestamp);
 }
 
 /* peer address */
@@ -171,14 +100,14 @@ BGPElem_get_time(BGPElemObject *self, void *closure)
 static PyObject *
 BGPElem_get_peer_address(BGPElemObject *self, void *closure)
 {
-  return get_ip_str(&self->elem->peer_address);
+  return get_ip_pystr((bgpstream_ip_addr_t *)&self->elem.peer_address);
 }
 
 /* peer as number */
 static PyObject *
 BGPElem_get_peer_asn(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("k", self->elem->peer_asnumber);
+  return Py_BuildValue("k", self->elem.peer_asnumber);
 }
 
 /** Type-dependent field dict */
@@ -191,41 +120,43 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
   if((dict = PyDict_New()) == NULL)
     return NULL;
 
-  switch(self->elem->type)
+  switch(self->elem.type)
     {
-    case BL_RIB_ELEM:
-    case BL_ANNOUNCEMENT_ELEM:
+    case BGPSTREAM_ELEM_TYPE_RIB:
+    case BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT:
       /* next hop */
       if(PyDict_SetItem(dict, PyString_FromString("next-hop"),
-			get_ip_str(&self->elem->nexthop)) == -1)
+			get_ip_pystr((bgpstream_ip_addr_t *)
+                                     &self->elem.nexthop)) == -1)
 	return NULL;
 
       /* as path */
       if(PyDict_SetItem(dict, PyString_FromString("as-path"),
-			get_aspath_str(&self->elem->aspath)) == -1)
+			get_aspath_pystr(&self->elem.aspath)) == -1)
 	return NULL;
 
       /* FALLTHROUGH */
 
-    case BL_WITHDRAWAL_ELEM:
+    case BGPSTREAM_ELEM_TYPE_WITHDRAWAL:
       /* prefix */
       if(PyDict_SetItem(dict, PyString_FromString("prefix"),
-			get_pfx_str(&self->elem->prefix)) == -1)
+			get_pfx_pystr((bgpstream_pfx_t *)
+                                      &self->elem.prefix)) == -1)
 	return NULL;
       break;
 
-    case BL_PEERSTATE_ELEM:
+    case BGPSTREAM_ELEM_TYPE_PEERSTATE:
       /* old state */
       if(PyDict_SetItem(dict, PyString_FromString("old-state"),
-			get_peerstate_str(self->elem->old_state)) == -1)
+			get_peerstate_pystr(self->elem.old_state)) == -1)
 	return NULL;
       /* new state */
       if(PyDict_SetItem(dict, PyString_FromString("new-state"),
-			get_peerstate_str(self->elem->new_state)) == -1)
+			get_peerstate_pystr(self->elem.new_state)) == -1)
 	return NULL;
       break;
 
-    case BL_UNKNOWN_ELEM:
+    case BGPSTREAM_ELEM_TYPE_UNKNOWN:
     default:
       break;
     }
@@ -330,7 +261,7 @@ PyTypeObject *_pybgpstream_bgpstream_get_BGPElemType()
 }
 
 /* only available to c code */
-PyObject *BGPElem_new(bl_elem_t *elem)
+PyObject *BGPElem_new(bgpstream_elem_t *elem)
 {
   BGPElemObject *self;
 
@@ -339,7 +270,11 @@ PyObject *BGPElem_new(bl_elem_t *elem)
     return NULL;
   }
 
-  self->elem = elem;
+  bgpstream_elem_clear(&self->elem);
+  if(bgpstream_elem_copy(&self->elem, elem) == NULL) {
+    Py_DECREF(self);
+    return NULL;
+  }
 
   return (PyObject *)self;
 }
