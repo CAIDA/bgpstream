@@ -52,12 +52,20 @@ BGPStream
       :raises TypeError: if the start or end times are not ints
 
 
-   .. py:method:: set_data_interface(interface)
+   .. py:method:: get_data_interfaces()
+
+      Gets a list of information about the available data interfaces.
+      Each item in the list will have three fields: `id`, `name`, and
+      `description`. The value of the `name` field can be used in subsequent
+      calls to :py:meth:`set_data_interface`.
+
+   .. py:method:: set_data_interface(interface-name)
 
       Sets the data interface to stream BGP Records from.
 
-      :param str interface: The data interface to use, can be one of `mysql`,
-		   	    `custom-list`, `csvfile`
+      :param str interface: The data interface to use, must be one of the `name`
+                            fields in the result of
+                            :py:meth:`get_data_interfaces`.
       :raises TypeError: if the interface is not a basestring
       :raises ValueError: if the given interface is not valid
 
@@ -159,15 +167,14 @@ BGPRecord
       'start', 'middle', 'end', 'unknown'. *(basestring, readonly)*
 
 
-   .. py:method:: get_elems()
+   .. py:method:: get_next_elem()
 
-      Construct a list of the :py:class:`BGPElem` objects that comprise this
-      record. Calling this method may be expensive, so it is advisable to call
-      it only once per record, storing the result locally if multiple accesses
-      into the list are needed.
+      Get the next :py:class:`BGPElem` from this record. Will return
+      :py:class:`None` when all the elems have been read.
 
-      :return: a list of :py:class:`BGPElem` objects
-      :rtype: list
+      :return: a :py:class:`BGPElem` object, or `None` if there are no more
+               elems to read.
+      :rtype: :py:class:`BGPElem`
       :raises RuntimeError: if a BGPElem object could not be created
 
 
@@ -178,7 +185,7 @@ BGPElem
 .. py:class:: BGPElem
 
    The BGP Elem class represents a single element obtained from a BGP Record
-   instance using the :py:meth:`BGPRecord.get_elems` method.
+   instance using the :py:meth:`BGPRecord.get_next_elem` method.
 
    All attributes are read-only.
 
