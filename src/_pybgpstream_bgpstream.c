@@ -146,13 +146,13 @@ BGPStream_get_data_interfaces(BGPStreamObject *self)
   int i;
   bgpstream_data_interface_info_t *info = NULL;
 
+  id_cnt = bgpstream_get_data_interfaces(self->bs, &ids);
+
   /* create the list */
-  if((list = PyList_New(id_cnt)) == NULL)
+  if((list = PyList_New(0)) == NULL)
     return NULL;
 
-  id_cnt = bgpstream_get_data_interfaces(self->bs, &ids);
   for(i=0; i<id_cnt; i++) {
-
     /* create the dictionary */
     if((dict = PyDict_New()) == NULL)
       return NULL;
@@ -188,67 +188,105 @@ BGPStream_get_data_interfaces(BGPStreamObject *self)
 static PyObject *
 BGPStream_set_data_interface(BGPStreamObject *self, PyObject *args)
 {
-  int id;
-  char *name;
+  const char *name;
   if (!PyArg_ParseTuple(args, "s", &name)) {
     return NULL;
   }
 
+  int id;
   if((id = bgpstream_get_data_interface_id_by_name(self->bs, name)) == 0) {
     return PyErr_Format(PyExc_ValueError,
 			"Invalid data interface: %s", name);
   }
-
   bgpstream_set_data_interface(self->bs, id);
 
   Py_RETURN_NONE;
 }
 
-#if 0
-/** Set a data interface option */
+/** Get the list of interface options that are available for the given
+    interface */
 static PyObject *
-BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
+BGPStream_get_data_interface_options(BGPStreamObject *self, PyObject *args)
 {
-  /* args: option_type (string), option_value (string) */
-  static char *optiontype_strs[] = {
-    "mysql-db",
-    "mysql-user",
-    "mysql-host",
-    "csvfile-file",
-    NULL
-  };
-  static int optiontype_vals[] = {
-    BS_MYSQL_DB,
-    BS_MYSQL_USER,
-    BS_MYSQL_HOST,
-    BS_CSVFILE_FILE,
-    -1,
-  };
-
-  char *option_type;
-  char *value;
-  if (!PyArg_ParseTuple(args, "ss", &option_type, &value)) {
+  const char *name;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
     return NULL;
   }
 
-  int i;
-  int option_val = -1;
-  for (i=0; optiontype_strs[i] != NULL; i++) {
-    if (strcmp(optiontype_strs[i], option_type) == 0) {
-      option_val = optiontype_vals[i];
-      break;
-    }
-  }
-  if (option_val == -1) {
+  int id;
+  if((id = bgpstream_get_data_interface_id_by_name(self->bs, name)) == 0) {
     return PyErr_Format(PyExc_ValueError,
-			"Invalid data interface option type: %s", option_type);
+			"Invalid data interface: %s", name);
   }
 
-  bgpstream_set_data_interface_options(self->bs, option_val, value);
+  int opt_cnt = 0;
+  bgpstream_data_interface_option_t *options;
+  opt_cnt = bgpstream_get_data_interface_options(self->bs, id, &options);
+
+  /* create the list */
+  PyObject *list;
+  if((list = PyList_New(0)) == NULL)
+    return NULL;
+
+  int i;
+  PyObject *dict;
+  for(i=0; i<opt_cnt; i++) {
+    /* create the dictionary */
+    if((dict = PyDict_New()) == NULL)
+      return NULL;
+
+    /* name */
+    if(PyDict_SetItem(dict, PyString_FromString("name"),
+                      PyString_FromString(options[i].name)) == -1)
+      return NULL;
+
+    /* description */
+    if(PyDict_SetItem(dict, PyString_FromString("description"),
+                      PyString_FromString(options[i].description)) == -1)
+      return NULL;
+
+    /* add dict to list */
+    if(PyList_Append(list, dict) == -1)
+      return NULL;
+  }
+
+  fprintf(stderr, "done\n");
+
+  return list;
+}
+
+/** Set a data interface option (takes interface, opt-name, opt-val) */
+static PyObject *
+BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
+{
+  const char *interface_name;
+  const char *opt_name;
+  const char *opt_value;
+
+  if(!PyArg_ParseTuple(args, "sss", &interface_name, &opt_name, &opt_value)) {
+    return NULL;
+  }
+
+  int id;
+  if((id =
+      bgpstream_get_data_interface_id_by_name(self->bs, interface_name)) == 0) {
+    return PyErr_Format(PyExc_ValueError,
+			"Invalid data interface: %s", interface_name);
+  }
+
+  bgpstream_data_interface_option_t *opt;
+  if((opt =
+      bgpstream_get_data_interface_option_by_name(self->bs,
+                                                  id,
+                                                  opt_name)) == NULL) {
+    return PyErr_Format(PyExc_ValueError,
+			"Invalid data interface option: %s", opt_name);
+  }
+
+  bgpstream_set_data_interface_option(self->bs, opt, opt_value);
 
   Py_RETURN_NONE;
 }
-#endif
 
 /** Enable blocking mode */
 static PyObject *
@@ -333,14 +371,18 @@ static PyMethodDef BGPStream_methods[] = {
     METH_VARARGS,
     "Set the data interface used to discover dump files"
   },
-#if 0
+  {
+    "get_data_interface_options",
+    (PyCFunction)BGPStream_get_data_interface_options,
+    METH_VARARGS,
+    "Get a list of options available for the given data interface"
+  },
   {
     "set_data_interface_option",
     (PyCFunction)BGPStream_set_data_interface_option,
     METH_VARARGS,
     "Set a data interface option"
   },
-#endif
   {
     "set_blocking",
     (PyCFunction)BGPStream_set_blocking,
