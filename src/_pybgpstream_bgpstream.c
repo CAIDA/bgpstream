@@ -134,6 +134,17 @@ BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+#define ADD_TO_DICT(key_str, value_exp)                 \
+  do {                                                  \
+    PyObject *key = PyString_FromString(key_str);       \
+    PyObject *value = (value_exp);                      \
+    if(PyDict_SetItem(dict, key, value) == -1)          \
+      return NULL;                                      \
+    Py_DECREF(key);                                     \
+    Py_DECREF(value);                                   \
+  }                                                     \
+  while(0)
+
 /** Get information about available data interfaces */
 static PyObject *
 BGPStream_get_data_interfaces(BGPStreamObject *self)
@@ -162,23 +173,18 @@ BGPStream_get_data_interfaces(BGPStreamObject *self)
     /* add info to dict */
 
     /* id */
-    if(PyDict_SetItem(dict, PyString_FromString("id"),
-                      PyInt_FromLong(ids[i])) == -1)
-      return NULL;
+    ADD_TO_DICT("id", PyInt_FromLong(ids[i]));
 
     /* name */
-    if(PyDict_SetItem(dict, PyString_FromString("name"),
-                      PyString_FromString(info->name)) == -1)
-      return NULL;
+    ADD_TO_DICT("name", PyString_FromString(info->name));
 
     /* description */
-    if(PyDict_SetItem(dict, PyString_FromString("description"),
-                      PyString_FromString(info->description)) == -1)
-      return NULL;
+    ADD_TO_DICT("description", PyString_FromString(info->description));
 
     /* add dict to list */
     if(PyList_Append(list, dict) == -1)
       return NULL;
+    Py_DECREF(dict);
   }
 
   return list;
@@ -236,21 +242,16 @@ BGPStream_get_data_interface_options(BGPStreamObject *self, PyObject *args)
       return NULL;
 
     /* name */
-    if(PyDict_SetItem(dict, PyString_FromString("name"),
-                      PyString_FromString(options[i].name)) == -1)
-      return NULL;
+    ADD_TO_DICT("name", PyString_FromString(options[i].name));
 
     /* description */
-    if(PyDict_SetItem(dict, PyString_FromString("description"),
-                      PyString_FromString(options[i].description)) == -1)
-      return NULL;
+    ADD_TO_DICT("description", PyString_FromString(options[i].description));
 
     /* add dict to list */
     if(PyList_Append(list, dict) == -1)
       return NULL;
+    Py_DECREF(dict);
   }
-
-  fprintf(stderr, "done\n");
 
   return list;
 }

@@ -110,6 +110,17 @@ BGPElem_get_peer_asn(BGPElemObject *self, void *closure)
   return Py_BuildValue("k", self->elem.peer_asnumber);
 }
 
+#define ADD_TO_DICT(key_str, value_exp)                 \
+  do {                                                  \
+    PyObject *key = PyString_FromString(key_str);       \
+    PyObject *value = (value_exp);                      \
+    if(PyDict_SetItem(dict, key, value) == -1)          \
+      return NULL;                                      \
+    Py_DECREF(key);                                     \
+    Py_DECREF(value);                                   \
+  }                                                     \
+  while(0)
+
 /** Type-dependent field dict */
 static PyObject *
 BGPElem_get_fields(BGPElemObject *self, void *closure)
@@ -125,35 +136,26 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
     case BGPSTREAM_ELEM_TYPE_RIB:
     case BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT:
       /* next hop */
-      if(PyDict_SetItem(dict, PyString_FromString("next-hop"),
-			get_ip_pystr((bgpstream_ip_addr_t *)
-                                     &self->elem.nexthop)) == -1)
-	return NULL;
+      ADD_TO_DICT("next-hop",
+                  get_ip_pystr((bgpstream_ip_addr_t *)&self->elem.nexthop));
 
       /* as path */
-      if(PyDict_SetItem(dict, PyString_FromString("as-path"),
-			get_aspath_pystr(&self->elem.aspath)) == -1)
-	return NULL;
+      ADD_TO_DICT("as-path", get_aspath_pystr(&self->elem.aspath));
 
       /* FALLTHROUGH */
 
     case BGPSTREAM_ELEM_TYPE_WITHDRAWAL:
       /* prefix */
-      if(PyDict_SetItem(dict, PyString_FromString("prefix"),
-			get_pfx_pystr((bgpstream_pfx_t *)
-                                      &self->elem.prefix)) == -1)
-	return NULL;
+      ADD_TO_DICT("prefix",
+                  get_pfx_pystr((bgpstream_pfx_t *)&self->elem.prefix));
       break;
 
     case BGPSTREAM_ELEM_TYPE_PEERSTATE:
       /* old state */
-      if(PyDict_SetItem(dict, PyString_FromString("old-state"),
-			get_peerstate_pystr(self->elem.old_state)) == -1)
-	return NULL;
+      ADD_TO_DICT("old-state", get_peerstate_pystr(self->elem.old_state));
+
       /* new state */
-      if(PyDict_SetItem(dict, PyString_FromString("new-state"),
-			get_peerstate_pystr(self->elem.new_state)) == -1)
-	return NULL;
+      ADD_TO_DICT("new-state", get_peerstate_pystr(self->elem.new_state));
       break;
 
     case BGPSTREAM_ELEM_TYPE_UNKNOWN:
@@ -161,7 +163,7 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
       break;
     }
 
-  return dict;
+  return Py_BuildValue("N", dict);
 }
 
 static PyMethodDef BGPElem_methods[] = {
