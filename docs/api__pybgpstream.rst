@@ -59,26 +59,45 @@ BGPStream
       `description`. The value of the `name` field can be used in subsequent
       calls to :py:meth:`set_data_interface`.
 
-   .. py:method:: set_data_interface(interface-name)
+   .. py:method:: set_data_interface(interface_name)
 
       Sets the data interface to stream BGP Records from.
 
-      :param str interface: The data interface to use, must be one of the `name`
-                            fields in the result of
-                            :py:meth:`get_data_interfaces`.
+      :param str interface_name: The data interface to use, must be one of the
+                                 `name` fields in the result of
+                                 :py:meth:`get_data_interfaces`.
       :raises TypeError: if the interface is not a basestring
       :raises ValueError: if the given interface is not valid
 
 
-   .. py:method:: set_data_interface_option(type, value)
+   .. py:method:: get_data_interface_options(interface_name)
+
+      Gets a dictionary of options for the given data interface. (Availabie data
+      interfaces may be discovered using :py:meth:`get_data_interfaces`.)
+
+      :param str interface_name: The data interface to use, must be one of the
+                                 `name` fields in the result of
+                                 :py:meth:`get_data_interfaces`.
+      :return: A dictionary of options for the given data interface.
+      :rtype: dictionary
+      :raises TypeError: if interface_name is not a basestring
+      :raises ValueError: if the given interface name is not valid
+
+   .. py:method:: set_data_interface_option(interface_name, opt_name, opt_value)
 
       Sets a data interface option.
 
-      :param str type: The option to set, can be one of `mysql-db`,
-		       `mysql-user`, `mysql-host`, `csvfile-file`.
-      :param str value: The value to set the option to.
-      :raises TypeError: if the type or value are not basestrings
-      :raises ValueError: if the given type is not valid
+      :param str interface_name: The data interface to use, must be one of the
+                                 `name` fields in the result of
+                                 :py:meth:`get_data_interfaces`.
+      :param str opt_name: The option to set, must be one of the `name` fields
+                           in the result of
+                           :py:meth:`get_data_interface_options` for the given
+                           data interface.
+      :param str opt_value: The option value to set.
+      :raises TypeError: if any of the parameters are not basestrings
+      :raises ValueError: if the given data interface, or option name is not
+                          valid
 
 
    .. py:method:: set_blocking()
