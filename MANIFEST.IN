@@ -1,1 +1,3 @@
 include src/*.h
+include examples/test_updates.py
+inclue examples/ris.rrc06.updates.1427846400.gz
