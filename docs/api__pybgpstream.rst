@@ -38,6 +38,17 @@ BGPStream
       :raises ValueError: if the type is not valid
 
 
+   .. py:method:: add_rib_period_filter(period)
+
+      Set the RIB period filter for the current stream. Configure the
+      minimum BGP time interval between two consecutive RIB  files
+      that belong to the same collector. This information can be
+      modified once the stream has started.
+
+      :param int period: the period (in seconds)
+      :raises TypeError: if the start or end period is not int
+
+      
    .. py:method:: add_interval_filter(start, stop)
 
       Add an interval filter to an unstarted BGP Stream instance. Only those

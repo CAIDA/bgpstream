@@ -8,7 +8,7 @@ archive of BGP routing information.
  - :doc:`api__pybgpstream`, a low-level (almost) direct interface to the C API of
    `libbgpstream`_
  - :doc:`api_pybgpstream`, a high-level 'Pythonic' interface to the functionality
-   provided by `libbgpstream`_
+   provided by `libbgpstream`_ (work in progress...)
 
 .. _libbgpstream: https://github.com/caida/bgpstream
 
