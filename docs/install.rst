@@ -18,7 +18,7 @@ find it, you can do something like:
 
 ::
 
-   python setup.py build_ext --include-dirs=$HOME/testing/bgpstream/include:$HOME/testing/bgpstream/include --library-dirs=$HOME/testing/bgpstream/lib
+   python setup.py build_ext --include-dirs=$HOME/testing/bgpstream/include --library-dirs=$HOME/testing/bgpstream/lib
    python setup.py install --user
 
    

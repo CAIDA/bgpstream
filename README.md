@@ -25,7 +25,7 @@ If  libbgpstream is not installed into a directory where Python can
 find it, you can do something like:
 
 ~~~
-python setup.py build_ext --include-dirs=$HOME/testing/bgpdump/include:$HOME/testing/bgpstream/include --library-dirs=$HOME/testing/bgpstream/lib
+python setup.py build_ext --include-dirs=$HOME/testing/bgpstream/include --library-dirs=$HOME/testing/bgpstream/lib
 python setup.py install --user
 ~~~
 
@@ -44,7 +44,7 @@ To test the installation you can run the test_updates.py example
 `LD_LIBRARY_PATH=$HOME/testing/bgpstream/lib:$LD_LIBRARY_PATH`):
 
 ```engine='bash'
-python examples/test_updates.py
+python examples/tutorial_print.py
 singlefile_ds 202.249.2.185 25152 A 192.108.199.0/24
 singlefile_ds 2001:200:0:fe00::6249:0 25152 A 2a02:2158::/32
 singlefile_ds 2001:200:0:fe00::6249:0 25152 A 2a02:2158::/32
