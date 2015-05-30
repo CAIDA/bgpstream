@@ -118,6 +118,23 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+
+/** Add a rib period filter to the bgpstream. */
+static PyObject *
+BGPStream_add_rib_period_filter(BGPStreamObject *self, PyObject *args)
+{
+  /* args: period (int) */
+
+  uint32_t filter_period;
+  if (!PyArg_ParseTuple(args, "I", &filter_period)) {
+    return NULL;
+  }
+
+  bgpstream_add_rib_period_filter(self->bs, filter_period);
+
+  Py_RETURN_NONE;
+}
+
 /** Add a time filter to the bgpstream. */
 static PyObject *
 BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
@@ -352,6 +369,13 @@ static PyMethodDef BGPStream_methods[] = {
     (PyCFunction)BGPStream_add_filter,
     METH_VARARGS,
     "Add a filter to an un-started stream."
+  },
+
+  {
+    "add_rib_period_filter",
+    (PyCFunction)BGPStream_add_rib_period_filter,
+    METH_VARARGS,
+    "Set the RIB period filter for the current stream."
   },
 
   {
