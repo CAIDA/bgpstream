@@ -21,8 +21,31 @@ find it, you can do something like:
    python setup.py build_ext --include-dirs=$HOME/testing/bgpstream/include --library-dirs=$HOME/testing/bgpstream/lib
    python setup.py install --user
 
+
+Run the tutorial print  script to check whether pybgpstream is
+installed correctly:
+
+::
+
+   $ python examples/tutorial_print.py
+
+If you receive this error:
+
+::
    
-You can also build the documentation (`sphinx` is required) like this:
+   ImportError: libbgpstream.so.1: cannot open shared object file: No such file or directory
+
+then run:
+
+::
+
+   $ export LD_LIBRARY_PATH=$HOME/testing/bgpstream/lib:$LD_LIBRARY_PATH
+   $python examples/tutorial_print.py
+
+
+   
+You can also build this documentation (`sphinx` is required) using the
+following commands:
 
 ::
    
@@ -32,6 +55,6 @@ You can also build the documentation (`sphinx` is required) like this:
 
 
 
-Work in progress...
-
-See https://pythonhosted.org/netaddr/installation.html for ideas
+.. Work in progress
+   See https://pythonhosted.org/netaddr/installation.html for ideas
+   

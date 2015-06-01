@@ -5,10 +5,17 @@ archive of BGP routing information.
  - `_pybgpstream`, a low-level (almost) direct interface to the C API of
    [libbgpstream](https://github.com/caida/bgpstream)
  - `pybgpstream`, a high-level 'Pythonic' interface to the functionality
-   provided by `_pybgpstream`
+   provided by `_pybgpstream` (work in progress)
 
 
-Quick Start
+Please take a look at http://www.caida.org/~chiara/bgpstream-doc/pybgpstream/
+to read the latest version of the documentation.
+
+
+
+Work in Progress...
+
+Quick Start - internal use
 -----------
 
 pybgpstream is still in active development so is not available in PyPI, pip,
