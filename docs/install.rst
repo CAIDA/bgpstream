@@ -2,9 +2,13 @@ Installation
 ============
 
 pybgpstream is still in active development so is not available in PyPI, pip,
-etc. To install, you will first need to have built and installed
-[libbgpstream](https://github.com/caida/bgpstream).
-Then, you will need to unzip the pybgpstream distribution and do
+etc.
+
+It can be downloaded `here 
+<http://www.caida.org/~chiara/bgpstream-doc/_pybgpstream-1.0.tar.gz>`_.
+
+To install, you will first need to have built and installed
+bgpstream. Then, you will need to unzip the pybgpstream distribution and do
 something like this:
 
 ::
