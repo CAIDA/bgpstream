@@ -26,7 +26,7 @@ print to standard output the information contained in the records and in the ele
           stream.set_data_interface('singlefile')
           
           # select the MRT file to be read by the singlefile datasource
-          stream.set_data_interface_option('singlefile', 'upd-file','./examples/ris.rrc06.updates.1427846400.gz')
+          stream.set_data_interface_option('singlefile', 'upd-file','./ris.rrc06.updates.1427846400.gz')
           
           # select the time interval to process  Wed Apr  1 00:02:50 UTC 2015 -> Wed Apr  1 00:04:30
           stream.add_interval_filter(1427846570, 1427846670)
@@ -45,9 +45,11 @@ print to standard output the information contained in the records and in the ele
               
 
 The code above generate the following output:
+
 ::
 
-   $ python examples/tutorial_print.py
+   $ cd examples/
+   $ python tutorial_print.py
    ...
    singlefile_ds.singlefile_ds 1427846668 A 202.249.2.185 25152 A {'next-hop': '202.249.2.185', 'prefix': '131.255.48.0/24', 'as-path': '25152 2914 3549 262717 262278'}
    singlefile_ds.singlefile_ds 1427846668 A 202.249.2.185 25152 A {'next-hop': '202.249.2.185', 'prefix': '131.255.49.0/24', 'as-path': '25152 2914 3549 262717 262278'}
@@ -82,10 +84,10 @@ update file
           stream.set_data_interface('singlefile')
           
           # select a RIB MRT file
-          stream.set_data_interface_option('singlefile', 'rib-file','./examples/ris.rrc06.ribs.1427846400.gz')
+          stream.set_data_interface_option('singlefile', 'rib-file','./ris.rrc06.ribs.1427846400.gz')
 
           # select an update MRT file
-          stream.set_data_interface_option('singlefile', 'upd-file','./examples/ris.rrc06.updates.1427846400.gz')
+          stream.set_data_interface_option('singlefile', 'upd-file','./ris.rrc06.updates.1427846400.gz')
           
 **csvfile**: bgpstream reads information about the available mrt data from a CSV
 file that complies with the following format:
@@ -100,7 +102,7 @@ See 'examples/bgp_data.csv' for a complete example.
           stream.set_data_interface('csvfile')
           
           # path to the file containing the sqlite database
-          stream.set_data_interface_option('csvfile', 'csv-file','./examples/bgp_data.csv')
+          stream.set_data_interface_option('csvfile', 'csv-file','./bgp_data.csv')
 
 **sqlite**: bgpstream reads information about the available mrt data
 from a SQLite database. A compliant sqlite database can be
@@ -115,7 +117,7 @@ See 'examples/bgp_data.db'.
           stream.set_data_interface('sqlite')
           
           # path to the file containing the sqlite database
-          stream.set_data_interface_option('sqlite', 'db-file','./examples/bgp_data.db')
+          stream.set_data_interface_option('sqlite', 'db-file','./bgp_data.db')
 
 
 **mysql**: bgpstream reads information about the available mrt data
@@ -228,4 +230,13 @@ each RIB entry
          print "Processed ", rib_entries, " rib entries"
          print "Found ", len(as_topology), " AS adjacencies"
 
+
+A similar example is included in the distribution (examples/topology.py):
+
+::
+
+   $ cd examples
+   $ python topology.py 
+   Processed  558680  rib entries
+   Found  72031  AS adjacencies
 

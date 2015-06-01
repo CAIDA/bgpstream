@@ -1,4 +1,22 @@
-#!/usr/bin/env python
+#
+ # This file is part of bgpstream
+ #
+ # Copyright (C) 2015 The Regents of the University of California.
+ # Authors: Alistair King, Chiara Orsini
+ #
+ # All rights reserved.
+ #
+ # This code has been developed by CAIDA at UC San Diego.
+ # For more information, contact bgpstream-info@caida.org
+ #
+ # This source code is proprietary to the CAIDA group at UC San Diego and may
+ # not be redistributed, published or disclosed without prior permission from
+ # CAIDA.
+ #
+ # Report any bugs, questions or comments to bgpstream-info@caida.org
+ #
+
+ #!/usr/bin/env python
 
 from _pybgpstream import BGPStream, BGPRecord, BGPElem
 
@@ -12,7 +30,7 @@ rec = BGPRecord()
 stream.set_data_interface('singlefile')
 
 # select the MRT file to be read by the singlefile datasource
-stream.set_data_interface_option('singlefile', 'upd-file','./examples/ris.rrc06.updates.1427846400.gz')
+stream.set_data_interface_option('singlefile', 'upd-file','./ris.rrc06.updates.1427846400.gz')
 
 # select the time interval to process  Wed Apr  1 00:02:50 UTC 2015 -> Wed Apr  1 00:04:30
 stream.add_interval_filter(1427846570, 1427846670)
