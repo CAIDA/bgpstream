@@ -30,19 +30,32 @@ rec = BGPRecord()
 stream.set_data_interface('singlefile')
 
 # select the MRT file to be read by the singlefile datasource
-stream.set_data_interface_option('singlefile', 'upd-file','./ris.rrc06.updates.1427846400.gz')
+stream.set_data_interface_option('singlefile', 'rib-file','./ris.rrc06.ribs.1427846400.gz')
 
-# select the time interval to process  Wed Apr  1 00:02:50 UTC 2015 -> Wed Apr  1 00:04:30
-stream.add_interval_filter(1427846570, 1427846670)
+# No filters needed
 
 # start the stream
 stream.start()
 
-# print the stream
+as_topology = set()
+rib_entries = 0
+
+# Process data
 while(stream.get_next_record(rec)):
-    print rec.status, rec.project +"."+ rec.collector, rec.time
-    elem = rec.get_next_elem()
-    while(elem):
-        print "\t", elem.type, elem.peer_address, elem.peer_asn, elem.type, elem.fields
-        elem = rec.get_next_elem()
-        
+     elem = rec.get_next_elem()
+     while(elem):
+         rib_entries += 1
+         # get the AS path
+         path = elem.fields['as-path']
+         # get the list of ASes in the path
+         ases = path.split(" ")
+         for i in range(0,len(ases)-1):
+             # avoid multiple prepended ASes
+             if(ases[i] != ases[i+1]):
+                 as_topology.add(tuple(sorted([ases[i],ases[i+1]])))
+         # get next elem
+         elem = rec.get_next_elem()
+
+# Output results
+print "Processed ", rib_entries, " rib entries"
+print "Found ", len(as_topology), " AS adjacencies"
