@@ -134,7 +134,7 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
                   get_ip_pystr((bgpstream_ip_addr_t *)&self->elem.nexthop));
 
       /* as path */
-      ADD_TO_DICT("as-path", get_aspath_pystr(&self->elem.aspath));
+      ADD_TO_DICT("as-path", get_aspath_pystr(self->elem.aspath));
 
       /* FALLTHROUGH */
 
