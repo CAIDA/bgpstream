@@ -60,7 +60,7 @@ get_peerstate_pystr(bgpstream_elem_peerstate_t state) {
 static void
 BGPElem_dealloc(BGPElemObject *self)
 {
-  bgpstream_elem_clear(&self->elem);
+  bgpstream_elem_destroy(self->elem);
   self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -76,7 +76,7 @@ static PyObject *
 BGPElem_get_type(BGPElemObject *self, void *closure)
 {
   char buf[128] = "";
-  if(bgpstream_elem_type_snprintf(buf, 128, self->elem.type) >= 128)
+  if(bgpstream_elem_type_snprintf(buf, 128, self->elem->type) >= 128)
     return NULL;
   return PyString_FromString(buf);
 }
@@ -85,7 +85,7 @@ BGPElem_get_type(BGPElemObject *self, void *closure)
 static PyObject *
 BGPElem_get_time(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("k", self->elem.timestamp);
+  return Py_BuildValue("k", self->elem->timestamp);
 }
 
 /* peer address */
@@ -94,14 +94,14 @@ BGPElem_get_time(BGPElemObject *self, void *closure)
 static PyObject *
 BGPElem_get_peer_address(BGPElemObject *self, void *closure)
 {
-  return get_ip_pystr((bgpstream_ip_addr_t *)&self->elem.peer_address);
+  return get_ip_pystr((bgpstream_ip_addr_t *)&self->elem->peer_address);
 }
 
 /* peer as number */
 static PyObject *
 BGPElem_get_peer_asn(BGPElemObject *self, void *closure)
 {
-  return Py_BuildValue("k", self->elem.peer_asnumber);
+  return Py_BuildValue("k", self->elem->peer_asnumber);
 }
 
 #define ADD_TO_DICT(key_str, value_exp)                 \
@@ -125,31 +125,31 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
   if((dict = PyDict_New()) == NULL)
     return NULL;
 
-  switch(self->elem.type)
+  switch(self->elem->type)
     {
     case BGPSTREAM_ELEM_TYPE_RIB:
     case BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT:
       /* next hop */
       ADD_TO_DICT("next-hop",
-                  get_ip_pystr((bgpstream_ip_addr_t *)&self->elem.nexthop));
+                  get_ip_pystr((bgpstream_ip_addr_t *)&self->elem->nexthop));
 
       /* as path */
-      ADD_TO_DICT("as-path", get_aspath_pystr(self->elem.aspath));
+      ADD_TO_DICT("as-path", get_aspath_pystr(self->elem->aspath));
 
       /* FALLTHROUGH */
 
     case BGPSTREAM_ELEM_TYPE_WITHDRAWAL:
       /* prefix */
       ADD_TO_DICT("prefix",
-                  get_pfx_pystr((bgpstream_pfx_t *)&self->elem.prefix));
+                  get_pfx_pystr((bgpstream_pfx_t *)&self->elem->prefix));
       break;
 
     case BGPSTREAM_ELEM_TYPE_PEERSTATE:
       /* old state */
-      ADD_TO_DICT("old-state", get_peerstate_pystr(self->elem.old_state));
+      ADD_TO_DICT("old-state", get_peerstate_pystr(self->elem->old_state));
 
       /* new state */
-      ADD_TO_DICT("new-state", get_peerstate_pystr(self->elem.new_state));
+      ADD_TO_DICT("new-state", get_peerstate_pystr(self->elem->new_state));
       break;
 
     case BGPSTREAM_ELEM_TYPE_UNKNOWN:
@@ -266,8 +266,11 @@ PyObject *BGPElem_new(bgpstream_elem_t *elem)
     return NULL;
   }
 
-  bgpstream_elem_clear(&self->elem);
-  if(bgpstream_elem_copy(&self->elem, elem) == NULL) {
+  if ((self->elem = bgpstream_elem_create()) == NULL) {
+    return NULL;
+  }
+
+  if(bgpstream_elem_copy(self->elem, elem) == NULL) {
     Py_DECREF(self);
     return NULL;
   }
