@@ -95,8 +95,11 @@
  */
 typedef enum bgpcorsaro_plugin_id
 {
+  /** Prefix Monitor plugin */
+  BGPCORSARO_PLUGIN_ID_PFXMONITOR       = 1,
+
   /** Pacifier plugin */
-  BGPCORSARO_PLUGIN_ID_PACIFIER         = 1,
+  BGPCORSARO_PLUGIN_ID_PACIFIER         = 2,
 
   /** Maximum plugin ID assigned */
   BGPCORSARO_PLUGIN_ID_MAX              = BGPCORSARO_PLUGIN_ID_PACIFIER

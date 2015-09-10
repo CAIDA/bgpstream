@@ -35,6 +35,10 @@
 #include "bgpcorsaro_plugin.h"
 
 /* include the plugins that have been enabled */
+#ifdef WITH_PLUGIN_PFXMONITOR
+#include "bgpcorsaro_pfxmonitor.h"
+#endif
+
 #ifdef WITH_PLUGIN_PACIFIER
 #include "bgpcorsaro_pacifier.h"
 #endif

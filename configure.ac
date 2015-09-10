@@ -207,6 +207,7 @@ AC_MSG_RESULT([$with_plugin_timing])
 # they will be run.                                                            #
 ################################################################################
 
+ED_WITH_PLUGIN([bgpcorsaro_pfxmonitor],[pfxmonitor],[PFXMONITOR],[yes])
 ED_WITH_PLUGIN([bgpcorsaro_pacifier],[pacifier],[PACIFIER],[yes])
 
 # this MUST go after all the ED_WITH_PLUGIN macro calls
