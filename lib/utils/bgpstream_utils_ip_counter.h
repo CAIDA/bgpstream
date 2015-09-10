@@ -85,11 +85,12 @@ uint64_t bgpstream_ip_counter_get_ipcount(bgpstream_ip_counter_t *ipc,
  *
  * @param counter        pointer to the IP Counter
  * @param pfx            prefix to compare
+ * @param more_specific  it is set to 1 if the prefix is a more specific
  * @return               number of unique IPs in the IP Counter that 
  *                       overlap with pfx
  */
 uint64_t bgpstream_ip_counter_is_overlapping(bgpstream_ip_counter_t *ipc,
-                                             bgpstream_pfx_t *pfx);
+                                             bgpstream_pfx_t *pfx, uint8_t *more_specific);
 
 /** Empty the IP Counter
  *

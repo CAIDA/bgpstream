@@ -335,6 +335,7 @@ bgpstream_ip_counter_add(bgpstream_ip_counter_t *ipc,
   uint32_t start;
   uint32_t end;
   uint32_t mask;
+  unsigned char * tmp;
   uint64_t start_ms = 0;
   uint64_t start_ls = 0;
   uint64_t end_ms = 0;
@@ -354,8 +355,10 @@ bgpstream_ip_counter_add(bgpstream_ip_counter_t *ipc,
     {
       if(pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV6)
         {
-          start_ms = ntohll(*((uint64_t *) &((bgpstream_ipv6_pfx_t *)pfx)->address.ipv6.s6_addr[0]));
-          start_ls = ntohll(*((uint64_t *) &((bgpstream_ipv6_pfx_t *)pfx)->address.ipv6.s6_addr[8]));
+          tmp = &((bgpstream_ipv6_pfx_t *)pfx)->address.ipv6.s6_addr[0];
+          start_ms = ntohll(*((uint64_t *)tmp));
+          tmp = &((bgpstream_ipv6_pfx_t *)pfx)->address.ipv6.s6_addr[8];
+          start_ls = ntohll(*((uint64_t *)tmp));
           /* printf("+++++++++  %"PRIu64" %"PRIu64"\n", start_ms, start_ls); */
           if(pfx->mask_len > 64)
             {
@@ -394,20 +397,24 @@ bgpstream_ip_counter_add(bgpstream_ip_counter_t *ipc,
 
 uint32_t
 bgpstream_ip_counter_is_overlapping4(bgpstream_ip_counter_t *ipc,
-                                     bgpstream_ipv4_pfx_t *pfx)
+                                     bgpstream_ipv4_pfx_t *pfx,
+                                     uint8_t *more_specific)
 {  
   v4pfx_int_t *current = ipc->v4list;
   uint32_t start = 0;
   uint32_t end = 0;
   uint32_t len = 0;
+  uint32_t pfx_size;
   uint32_t overlap_count = 0;
+  *more_specific = 0;
   len = 32 - pfx->mask_len;
   start = ntohl(pfx->address.ipv4.s_addr);
   start = (start >> len) << len;
   end = 0;
   end = ~end;
   end = (end >> len) << len;
-  end = start | (~end);  
+  end = start | (~end);
+  pfx_size = end - start + 1;
   /* intersection endpoints */
   uint32_t int_start;
   uint32_t int_end;
@@ -434,6 +441,10 @@ bgpstream_ip_counter_is_overlapping4(bgpstream_ip_counter_t *ipc,
         {
           int_end = end;
         }
+      if((int_end - int_start + 1) == pfx_size)
+        {
+          *more_specific = 1;
+        }
       overlap_count += int_end - int_start + 1;
       current = current->next;      
     }
@@ -443,7 +454,8 @@ bgpstream_ip_counter_is_overlapping4(bgpstream_ip_counter_t *ipc,
 
 uint64_t
 bgpstream_ip_counter_is_overlapping6(bgpstream_ip_counter_t *ipc,
-                                     bgpstream_ipv6_pfx_t *pfx)
+                                     bgpstream_ipv6_pfx_t *pfx,
+                                     uint8_t *more_specific)
 {  
   v6pfx_int_t *current = ipc->v6list;
   v6pfx_int_t *previous = ipc->v6list;
@@ -454,11 +466,17 @@ bgpstream_ip_counter_is_overlapping6(bgpstream_ip_counter_t *ipc,
   uint64_t end_ls = 0;
   uint64_t mask_ms;
   uint64_t mask_ls;
+  unsigned char * tmp;
   uint64_t overlap_count = 0;
+  uint64_t pfx_size;
+  *more_specific = 0;
+    
 
+  tmp = &(pfx->address.ipv6.s6_addr[0]);
+  start_ms = ntohll(*((uint64_t *)tmp));
+  tmp = &(pfx->address.ipv6.s6_addr[8]);
+  start_ls = ntohll(*((uint64_t *)tmp));
 
-  start_ms = ntohll(*((uint64_t *) &(pfx->address.ipv6.s6_addr[0])));
-  start_ls = ntohll(*((uint64_t *) &(pfx->address.ipv6.s6_addr[8])));
   /* printf("+++++++++  %"PRIu64" %"PRIu64"\n", start_ms, start_ls); */
   if(pfx->mask_len > 64)
     {
@@ -487,7 +505,9 @@ bgpstream_ip_counter_is_overlapping6(bgpstream_ip_counter_t *ipc,
   start_ls = start_ls & mask_ls;
   end_ls = start_ls | (~mask_ls);
   /* printf("LS:  %"PRIu64" %"PRIu64"\n", start_ls, end_ls); */
-  
+
+  pfx_size = end_ms - start_ms + 1;
+
   /* intersection endpoints 
    * (only most significant)*/
   uint64_t int_start_ms;  
@@ -538,11 +558,19 @@ bgpstream_ip_counter_is_overlapping6(bgpstream_ip_counter_t *ipc,
           if(current->start_ms != previous->start_ms ||
              current->end_ms != previous->end_ms)
             {
+              if((int_end_ms - int_start_ms + 1) == pfx_size)
+                {
+                  *more_specific = 1;
+                }
               overlap_count += int_end_ms - int_start_ms + 1;
             }
         }
       else
         {
+          if((int_end_ms - int_start_ms + 1) == pfx_size)
+            {
+              *more_specific = 1;
+            }
           overlap_count += int_end_ms - int_start_ms + 1;          
         }
       previous = current;
@@ -553,17 +581,18 @@ bgpstream_ip_counter_is_overlapping6(bgpstream_ip_counter_t *ipc,
 
 uint64_t
 bgpstream_ip_counter_is_overlapping(bgpstream_ip_counter_t *ipc,
-                                    bgpstream_pfx_t *pfx)
-{  
+                                    bgpstream_pfx_t *pfx, uint8_t *more_specific)
+{
+  *more_specific = 0;
   if(pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV4)
     {
-      return bgpstream_ip_counter_is_overlapping4(ipc, (bgpstream_ipv4_pfx_t *)pfx);
+      return bgpstream_ip_counter_is_overlapping4(ipc, (bgpstream_ipv4_pfx_t *)pfx, more_specific);
     }
   else
     {
       if(pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV6)
         {
-          return bgpstream_ip_counter_is_overlapping6(ipc, (bgpstream_ipv6_pfx_t *)pfx);
+          return bgpstream_ip_counter_is_overlapping6(ipc, (bgpstream_ipv6_pfx_t *)pfx, more_specific);
         }
     }
   return 0;
