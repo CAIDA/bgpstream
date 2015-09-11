@@ -113,6 +113,19 @@ int bgpstream_pfx_storage_set_insert(bgpstream_pfx_storage_set_t *set,
   return 0;
 }
 
+int bgpstream_pfx_storage_set_exists(bgpstream_pfx_storage_set_t *set,
+                                     bgpstream_pfx_storage_t *pfx)
+{
+  khiter_t k;
+  if((k = kh_get(bgpstream_pfx_storage_set, set->hash, *pfx)) ==
+     kh_end(set->hash))
+    {
+      return 0;
+    }
+  return 1;
+}
+
+
 int bgpstream_pfx_storage_set_size(bgpstream_pfx_storage_set_t *set)
 {
   return kh_size(set->hash);
@@ -185,6 +198,19 @@ int bgpstream_ipv4_pfx_set_insert(bgpstream_ipv4_pfx_set_t *set,
   return 0;
 }
 
+int bgpstream_ipv4_pfx_set_exists(bgpstream_ipv4_pfx_set_t *set,
+                                  bgpstream_ipv4_pfx_t *pfx)
+{
+  khiter_t k;
+  if((k = kh_get(bgpstream_ipv4_pfx_set, set->hash, *pfx)) ==
+     kh_end(set->hash))
+    {
+      return 0;
+    }
+  return 1;
+}
+
+
 int bgpstream_ipv4_pfx_set_size(bgpstream_ipv4_pfx_set_t *set)
 {
   return kh_size(set->hash);
@@ -244,7 +270,7 @@ bgpstream_ipv6_pfx_set_t *bgpstream_ipv6_pfx_set_create()
 }
 
 int bgpstream_ipv6_pfx_set_insert(bgpstream_ipv6_pfx_set_t *set,
-                                      bgpstream_ipv6_pfx_t *pfx)
+                                  bgpstream_ipv6_pfx_t *pfx)
 {
   int khret;
   khiter_t k;
@@ -255,6 +281,18 @@ int bgpstream_ipv6_pfx_set_insert(bgpstream_ipv6_pfx_set_t *set,
       return 1;
     }
   return 0;
+}
+
+int bgpstream_ipv6_pfx_set_exists(bgpstream_ipv6_pfx_set_t *set,
+                                  bgpstream_ipv6_pfx_t *pfx)
+{
+  khiter_t k;
+  if((k = kh_get(bgpstream_ipv6_pfx_set, set->hash, *pfx)) ==
+     kh_end(set->hash))
+    {
+      return 0;
+    }
+  return 1;
 }
 
 int bgpstream_ipv6_pfx_set_size(bgpstream_ipv6_pfx_set_t *set)

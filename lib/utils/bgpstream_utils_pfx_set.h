@@ -74,7 +74,16 @@ bgpstream_pfx_storage_set_t *bgpstream_pfx_storage_set_create();
  * error occurred
  */
 int bgpstream_pfx_storage_set_insert(bgpstream_pfx_storage_set_t *set,
-                                      bgpstream_pfx_storage_t *pfx);
+                                     bgpstream_pfx_storage_t *pfx);
+
+/** Check whether a prefix exists in the set
+ *
+ * @param set           pointer to the prefix set
+ * @param pfx          prefix to insert in the set
+ * @return 0 if the prefix is not in the set, 1 if it is in the set
+ */
+int bgpstream_pfx_storage_set_exists(bgpstream_pfx_storage_set_t *set,
+                                     bgpstream_pfx_storage_t *pfx);
 
 /** Get the number of prefixes in the given set
  *
@@ -125,7 +134,16 @@ bgpstream_ipv4_pfx_set_t *bgpstream_ipv4_pfx_set_create();
  * This function takes a copy of the prefix before it is inserted in the set.
  */
 int bgpstream_ipv4_pfx_set_insert(bgpstream_ipv4_pfx_set_t *set,
-                                      bgpstream_ipv4_pfx_t *pfx);
+                                  bgpstream_ipv4_pfx_t *pfx);
+
+/** Check whether a prefix exists in the set
+ *
+ * @param set           pointer to the prefix set
+ * @param pfx          prefix to insert in the set
+ * @return 0 if the prefix is not in the set, 1 if it is in the set
+ */
+int bgpstream_ipv4_pfx_set_exists(bgpstream_ipv4_pfx_set_t *set,
+                                     bgpstream_ipv4_pfx_t *pfx);
 
 /** Get the number of prefixes in the given set
  *
@@ -171,7 +189,16 @@ bgpstream_ipv6_pfx_set_t *bgpstream_ipv6_pfx_set_create();
  * error occurred
  */
 int bgpstream_ipv6_pfx_set_insert(bgpstream_ipv6_pfx_set_t *set,
-                                      bgpstream_ipv6_pfx_t *pfx);
+                                  bgpstream_ipv6_pfx_t *pfx);
+
+/** Check whether a prefix exists in the set
+ *
+ * @param set           pointer to the prefix set
+ * @param pfx          prefix to insert in the set
+ * @return 0 if the prefix is not in the set, 1 if it is in the set
+ */
+int bgpstream_ipv6_pfx_set_exists(bgpstream_ipv6_pfx_set_t *set,
+                                  bgpstream_ipv6_pfx_t *pfx);
 
 /** Get the number of prefixes in the given set
  *
