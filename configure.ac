@@ -153,7 +153,7 @@ fi
 
 # csvfile options
 if test "x$with_di_csvfile" == xyes; then
-   BS_DI_OPT(csvfile-csv-file, CSVFILE_CSV_FILE, CSV file listing the MRT data to read, bgp_data.csv)
+   BS_DI_OPT(csvfile-csv-file, CSVFILE_CSV_FILE, CSV file listing the MRT data to read, not-set)
 fi
 
 AC_MSG_NOTICE([---------------------------------])
