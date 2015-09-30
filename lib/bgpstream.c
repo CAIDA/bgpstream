@@ -243,6 +243,9 @@ void bgpstream_add_interval_filter(bgpstream_t *bs,
   if(bs == NULL || (bs != NULL && bs->status != BGPSTREAM_STATUS_ALLOCATED)) {
     return; // nothing to customize
   }
+  if(end_time == BGPSTREAM_FOREVER) {
+    bgpstream_set_live_mode(bs);
+  }
   bgpstream_filter_mgr_interval_filter_add(bs->filter_mgr, begin_time, end_time);
   bgpstream_debug("BS: set_filter end");
 }
@@ -389,8 +392,8 @@ bgpstream_get_data_interface_id(bgpstream_t *bs)
 /* configure the interface so that it blocks
  * waiting for new data
  */
-void bgpstream_set_blocking(bgpstream_t *bs) {
-  bgpstream_debug("BS: set_blocking start");
+void bgpstream_set_live_mode(bgpstream_t *bs) {
+  bgpstream_debug("BS: set_live_mode start");
   if(bs == NULL || (bs != NULL && bs->status != BGPSTREAM_STATUS_ALLOCATED)) {
     return; // nothing to customize
   }

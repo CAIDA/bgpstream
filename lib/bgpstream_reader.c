@@ -107,7 +107,8 @@ static bool bgpstream_reader_filter_bd_entry(const BGPDUMP_ENTRY * const bd_entr
     tif = filter_mgr->time_intervals;
     while(tif != NULL) {      
       if(current_entry_time >= tif->begin_time &&
-	 current_entry_time <= tif->end_time) {
+         (tif->end_time == BGPSTREAM_FOREVER ||
+          current_entry_time <= tif->end_time)) {
 	bgpstream_debug("\t\tBSR: filter entry: OK");  
 	return true;
       }

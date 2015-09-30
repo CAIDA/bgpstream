@@ -49,8 +49,8 @@
 #define OPTION_CMD_CNT 1024
 
 struct window {
-  char *start;
-  char *end;
+  uint32_t start;
+  uint32_t end;
 };
 
 /* default gap limit */
@@ -172,7 +172,7 @@ static void usage()
     }
   
   fprintf(stderr,
-	  "usage: bgpcorsaro -w <start,end> -O outfile -B back-end [<options>]\n"
+	  "usage: bgpcorsaro -w <start>[,<end>] -O outfile -B back-end [<options>]\n"
 	  "Available options are:\n"
           "   -d <interface> use the given bgpstream data interface to find available data\n"
           "                   available data interfaces are:\n");
@@ -185,15 +185,17 @@ static void usage()
 	  "   -p <project>   process records from only the given project (routeviews, ris)*\n"
 	  "   -c <collector> process records from only the given collector*\n"
 	  "   -t <type>      process records with only the given type (ribs, updates)*\n"
-	  "   -w <start,end> process records only within the given time window*\n"
+          "   -w <start>[,<end>]\n"
+          "                  process records within the given time window\n"
+          "                    (omitting the end parameter enables live mode)*\n"
           "   -P <period>    process a rib files every <period> seconds (bgp time)\n"
-	  "   -b             make blocking requests for BGP records\n"
+	  "   -l             enable live mode (make blocking requests for BGP records)\n"
 	  "                  allows bgpcorsaro to be used to process data in real-time\n"
           "\n"
 	  "   -i <interval>  distribution interval in seconds (default: %d)\n"
 	  "   -a             align the end time of the first interval\n"
           "   -g <gap-limit> maximum allowed gap between packets (0 is no limit) (default: %d)\n"
-	  "   -l             disable logging to a file\n"
+	  "   -L             disable logging to a file\n"
           "\n",
           GAP_LIMIT_DEFAULT,
           BGPCORSARO_INTERVAL_DEFAULT);
@@ -263,7 +265,7 @@ int main(int argc, char *argv[])
   int interface_options_cnt = 0;
 
   int rib_period = 0;
-  int blocking = 0;
+  int live = 0;
 
   int rc = 0;
 
@@ -282,7 +284,7 @@ int main(int argc, char *argv[])
   assert(datasource_id != 0);
 
   while(prevoptind = optind,
-    	(opt = getopt(argc, argv, ":d:o:p:c:t:w:P:bi:ag:lx:n:O:r:R:hv?")) >= 0)
+        (opt = getopt(argc, argv, ":d:o:p:c:t:w:P:i:ag:lLx:n:O:r:R:hv?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -355,15 +357,15 @@ int main(int argc, char *argv[])
 	  /* split the window into a start and end */
 	  if((endp = strchr(optarg, ',')) == NULL)
 	    {
-	      fprintf(stderr, "ERROR: Malformed time window (%s)\n", optarg);
-	      fprintf(stderr, "ERROR: Expecting start,end\n");
-	      usage();
-	      exit(-1);
+              windows[windows_cnt].end = BGPSTREAM_FOREVER;
 	    }
-	  *endp = '\0';
-	  endp++;
-	  windows[windows_cnt].start = strdup(optarg);
-	  windows[windows_cnt].end =  strdup(endp);
+          else
+            {
+              *endp = '\0';
+              endp++;
+              windows[windows_cnt].end =  atoi(endp);
+            }
+	  windows[windows_cnt].start = atoi(optarg);
 	  windows_cnt++;
 	  break;
 
@@ -383,8 +385,8 @@ int main(int argc, char *argv[])
 	  rib_period = atoi(optarg);
 	  break;
 
-	case 'b':
-	  blocking = 1;
+	case 'l':
+	  live = 1;
 	  break;
 
         case 'g':
@@ -401,7 +403,7 @@ int main(int argc, char *argv[])
 	  interval = atoi(optarg);
 	  break;
 
-	case 'l':
+	case 'L':
 	  logfile_disable = 1;
 	  break;
 
@@ -615,14 +617,12 @@ int main(int argc, char *argv[])
   int current_time = 0;
   for(i=0; i<windows_cnt; i++)
     {
-      bgpstream_add_interval_filter(stream, atoi(windows[i].start), atoi(windows[i].end));
-      current_time =  atoi(windows[i].start);
+      bgpstream_add_interval_filter(stream, windows[i].start, windows[i].end);
+      current_time =  windows[i].start;
       if(minimum_time == 0 || current_time < minimum_time)
 	{
 	  minimum_time = current_time;
 	}
-      free(windows[i].start);
-      free(windows[i].end);
     }
 
   /* frequencies */
@@ -631,10 +631,10 @@ int main(int argc, char *argv[])
       bgpstream_add_rib_period_filter(stream, rib_period);
     }
 
-  /* blocking */
-  if(blocking != 0)
+  /* live mode */
+  if(live != 0)
     {
-      bgpstream_set_blocking(stream);
+      bgpstream_set_live_mode(stream);
     }
 
   bgpstream_set_data_interface(stream, datasource_id);

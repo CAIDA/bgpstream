@@ -193,7 +193,8 @@ bgpstream_csvfile_datasource_filter_ok(bgpstream_csvfile_datasource_t* csvfile_d
       // filetime (we consider 15 mins before to consider routeviews updates
       // and 120 seconds to have some margins)
       if(csvfile_ds->filetime >= (tif->begin_time - 15*60 - 120) &&
-	 csvfile_ds->filetime <= tif->end_time) {
+         (tif->end_time == BGPSTREAM_FOREVER ||
+          csvfile_ds->filetime <= tif->end_time)) {
 	all_false = false;
 	break;
       }

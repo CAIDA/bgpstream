@@ -132,7 +132,8 @@ int bgpstream_filter_mgr_validate(bgpstream_filter_mgr_t *filter_mgr) {
     tif = filter_mgr->time_intervals;
 
     while(tif != NULL) {
-      if(tif->begin_time > tif->end_time) {
+      if(tif->end_time != BGPSTREAM_FOREVER &&
+         tif->begin_time > tif->end_time) {
         /* invalid interval */
         fprintf(stderr, "ERROR: Interval %"PRIu32",%"PRIu32" is invalid\n",
                 tif->begin_time, tif->end_time);

@@ -184,24 +184,31 @@ bgpstream_sqlite_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
       APPEND_STR(" ( ");
 
       // BEGIN TIME
-      APPEND_STR(" (bgp_data.file_time >=  ");     
+      APPEND_STR(" (bgp_data.file_time >=  ");
       interval_str[0] = '\0';
-      if((written = snprintf(interval_str, MAX_INTERVAL_LEN, "%"PRIu32, tif->begin_time)) < MAX_INTERVAL_LEN)
+      if((written =
+          snprintf(interval_str, MAX_INTERVAL_LEN,
+                   "%"PRIu32, tif->begin_time)) < MAX_INTERVAL_LEN)
         {
           APPEND_STR(interval_str);
-        }                      
+        }
       APPEND_STR("  - time_span.time_span - 120 )");
       APPEND_STR("  AND  ");
 
       // END TIME
-      APPEND_STR(" (bgp_data.file_time <=  ");
-      interval_str[0] = '\0';
-      if((written = snprintf(interval_str, MAX_INTERVAL_LEN, "%"PRIu32, tif->end_time)) < MAX_INTERVAL_LEN)
+      if(tif->end_time != BGPSTREAM_FOREVER)
         {
-          APPEND_STR(interval_str);
-        }                      
-      APPEND_STR(") ");
-      APPEND_STR(" ) ");
+          APPEND_STR(" (bgp_data.file_time <=  ");
+          interval_str[0] = '\0';
+          if((written =
+              snprintf(interval_str, MAX_INTERVAL_LEN,
+                       "%"PRIu32, tif->end_time)) < MAX_INTERVAL_LEN)
+            {
+              APPEND_STR(interval_str);
+            }
+          APPEND_STR(") ");
+          APPEND_STR(" ) ");
+        }
 
       tif = tif->next;
       if(tif!= NULL) {
@@ -210,7 +217,7 @@ bgpstream_sqlite_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
     }
       APPEND_STR(" )");
   }
-  
+
   /*  comment on 120 seconds: */
   /*  sometimes it happens that ribs or updates carry a filetime which is not */
   /*  compliant with the expected filetime (e.g. : */
