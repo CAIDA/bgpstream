@@ -216,6 +216,19 @@ int bgpstream_addr_storage_equal(bgpstream_addr_storage_t *addr1,
                                  bgpstream_addr_storage_t *ip2);
 
 
+
+/** Convert a string into an address storage
+ *
+ * @param addr_str     pointer a string representing an IP address
+ * @param addr         pointer to an address storage
+ * @return the pointer to an initialized address storage, NULL if the
+ *         address is not valid
+ */
+bgpstream_addr_storage_t *
+bgpstream_str2addr(char *addr_str, bgpstream_addr_storage_t *addr);
+
+
+
 /** Returns the index associated to an IP version
  * @param v             enum rapresenting the IP address version
  * @return the index associated with the IP version, 255 if

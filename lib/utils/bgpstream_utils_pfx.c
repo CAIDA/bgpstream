@@ -23,6 +23,8 @@
 
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 
 #include "khash.h"
 
@@ -123,4 +125,58 @@ int bgpstream_pfx_storage_equal(bgpstream_pfx_storage_t *pfx1,
       return bgpstream_addr_storage_equal(&pfx1->address, &pfx2->address);
     }
   return 0;
+}
+
+
+bgpstream_pfx_storage_t *
+bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx)
+{
+  if(pfx_str == NULL || pfx == NULL)
+    {
+      return NULL;
+    }
+
+  char pfx_copy[INET6_ADDRSTRLEN+3];
+  char *endptr = NULL;
+
+  /* strncpy() functions copy at most len characters from src into
+   * dst.  If src is less than len characters long, the remainder of
+   * dst is filled with `\0' characters.  Otherwise, dst is not
+   * terminated. */
+  strncpy(pfx_copy, pfx_str, INET6_ADDRSTRLEN+3);
+  if(pfx_copy[INET6_ADDRSTRLEN+3-1] != '\0')
+    {
+      fprintf(stderr, "%s is not a prefix\n", pfx_copy);
+      return NULL;
+    }
+  
+  /* get pointer to ip/mask divisor */
+  char *found = strchr(pfx_copy, '/');
+  if(found == NULL)
+    {
+      fprintf(stderr, "%s is not a prefix\n", pfx_copy);
+      return NULL;
+    }
+
+  *found = '\0';
+  /* get the ip address */
+  if(bgpstream_str2addr(pfx_copy, &pfx->address) == NULL)
+    {
+      return NULL;
+    }
+
+  /* get the mask len */
+  errno = 0;
+  unsigned long int r = strtoul(found+1, &endptr, 10);
+  int ret = errno;
+  if(!(endptr != NULL  && *endptr == '\0') ||
+     r == 0 || ret != 0 ||
+     (pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV4 && r > 32) ||
+     (pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV6 && r > 128) )
+    {
+      fprintf(stderr, "%s - invalid mask\n", pfx_str);
+      return NULL;
+    }
+  pfx->mask_len = (uint8_t) r;
+  return pfx;
 }

@@ -26,13 +26,17 @@ AM_CPPFLAGS = 	-I$(top_srcdir) \
 	 	-I$(top_srcdir)/lib/utils \
 	 	-I$(top_srcdir)/common
 
-TESTS = bgpstream-test
+TESTS = bgpstream-test bgpstream-test-utilities
 
-check_PROGRAMS =  bgpstream-test
+check_PROGRAMS =  bgpstream-test bgpstream-test-utilities
 
 bgpstream_test_SOURCES = bgpstream-test.c
 bgpstream_test_LDADD   = -lbgpstream
 bgpstream_test_LDFLAGS = -L$(top_builddir)/lib
+
+bgpstream_test_utilities_SOURCES = bgpstream-test-utilities.c
+bgpstream_test_utilities_LDADD   = -lbgpstream
+bgpstream_test_utilities_LDFLAGS = -L$(top_builddir)/lib
 
 ACLOCAL_AMFLAGS = -I m4
 

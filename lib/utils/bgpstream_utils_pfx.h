@@ -199,6 +199,17 @@ int bgpstream_pfx_storage_equal(bgpstream_pfx_storage_t *pfx1,
 #define bgpstream_ipv6_pfx_storage_equal_val(arg1, arg2) \
         bgpstream_ipv6_pfx_equal(&(arg1), &(arg2))
 
+
+/** Convert a string into a prefix storage
+ *
+ * @param pfx_str     pointer a string representing an IP prefix
+ * @param pfx         pointer to a prefix storage
+ * @return the pointer to an initialized pfx storage, NULL if the
+ *         prefix is not valid
+ */
+bgpstream_pfx_storage_t *
+bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx);
+
 /** @} */
 
 #endif /* __BGPSTREAM_UTILS_PFX_H */

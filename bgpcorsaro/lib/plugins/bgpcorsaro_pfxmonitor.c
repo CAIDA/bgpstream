@@ -348,48 +348,6 @@ process_pfx_info(struct bgpcorsaro_pfxmonitor_state_t *state,
   return 0;
 }
 
-static void
-add_new_prefix(bgpstream_ip_counter_t *poi, char* pfx_string)
-{
-  if(pfx_string == NULL)
-    {
-      return;
-    }
-  int j;
-  bgpstream_pfx_storage_t pfx_st;
-  pfx_st.address.version = BGPSTREAM_ADDR_VERSION_UNKNOWN;
-  for(j=0; j< strlen(pfx_string); j++)
-    {
-      if(pfx_string[j] == '.')
-        {
-          pfx_st.address.version = BGPSTREAM_ADDR_VERSION_IPV4;
-        }
-      if(pfx_string[j] == ':')
-        {
-          pfx_st.address.version = BGPSTREAM_ADDR_VERSION_IPV6;
-        }
-      if(pfx_string[j] == '/')
-        {
-          pfx_st.mask_len = atoi(&pfx_string[j+1]);
-          pfx_string[j] = '\0';
-          break;
-        }
-    }
-  if(pfx_st.address.version == BGPSTREAM_ADDR_VERSION_IPV4)
-    {
-      inet_pton(BGPSTREAM_ADDR_VERSION_IPV4, pfx_string, &pfx_st.address.ipv4);
-      bgpstream_ip_counter_add(poi, (bgpstream_pfx_t *) &pfx_st);
-    }
-  else
-    {
-      if(pfx_st.address.version == BGPSTREAM_ADDR_VERSION_IPV6)
-        {
-          inet_pton(BGPSTREAM_ADDR_VERSION_IPV6,pfx_string, &pfx_st.address.ipv6);
-          bgpstream_ip_counter_add(poi, (bgpstream_pfx_t *) &pfx_st);
-        }
-    }
-}
-
 static int
 add_prefixes_from_file(bgpstream_ip_counter_t *poi, char* pfx_file_string)
 {
@@ -397,14 +355,15 @@ add_prefixes_from_file(bgpstream_ip_counter_t *poi, char* pfx_file_string)
   char pfx_line[MAX_LOG_BUFFER_LEN];
   io_t *file = NULL;
 
+  bgpstream_pfx_storage_t pfx_st;
+
   if(pfx_file_string != NULL)
     {
        if((file = wandio_create(pfx_file_string)) == NULL)
 	{
 	  fprintf(stderr, "ERROR: Could not open prefix file (%s)\n", pfx_file_string);
 	  return -1;
-	}
-       
+	}       
        while(wandio_fgets(file, &pfx_line, MAX_LOG_BUFFER_LEN, 1) > 0)
          {
            /* treat # as comment line, and ignore empty lines */
@@ -412,8 +371,10 @@ add_prefixes_from_file(bgpstream_ip_counter_t *poi, char* pfx_file_string)
              {
                continue;
              }
-           
-           add_new_prefix(poi, pfx_line);           
+           if(bgpstream_str2pfx(pfx_line, &pfx_st) != NULL)
+             {
+               bgpstream_ip_counter_add(poi, (bgpstream_pfx_t *) &pfx_st);
+             }
 	}
        wandio_destroy(file);
        return 0;       
@@ -445,6 +406,7 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
   bgpcorsaro_plugin_t *plugin = PLUGIN(bgpcorsaro);
   struct bgpcorsaro_pfxmonitor_state_t *state = STATE(bgpcorsaro);
   int opt;
+  bgpstream_pfx_storage_t pfx_st;
   char *tmp_string = NULL;
   int ret = 0;
   if(plugin->argc <= 0)
@@ -489,7 +451,10 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
 	  break;
         case 'l':
           tmp_string = strdup(optarg);
-	  add_new_prefix(state->poi, tmp_string);
+          if(bgpstream_str2pfx(tmp_string, &pfx_st) != NULL)
+             {
+               bgpstream_ip_counter_add(state->poi, (bgpstream_pfx_t *) &pfx_st);
+             }
           free(tmp_string);
 	  break;
         case 'L':

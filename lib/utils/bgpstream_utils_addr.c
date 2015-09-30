@@ -24,6 +24,11 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdint.h>
+ #include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <stdio.h>
+
 
 #include "khash.h"
 
@@ -111,6 +116,50 @@ int bgpstream_ipv6_addr_equal(bgpstream_ipv6_addr_t *addr1,
           (memcmp(&(addr1->ipv6.s6_addr[8]),
                   &(addr2->ipv6.s6_addr[8]),
                   sizeof(uint64_t)) == 0));
+}
+
+
+bgpstream_addr_storage_t *
+bgpstream_str2addr(char *addr_str, bgpstream_addr_storage_t *addr)
+{
+  if(addr_str == NULL || addr == NULL)
+    {
+      return NULL;
+    }
+
+  /* http://man7.org/linux/man-pages/man3/getaddrinfo.3.html */
+
+  struct addrinfo *result;
+  int s;
+  s = getaddrinfo(addr_str, NULL /*service*/, NULL /*hints*/, &result);
+  if (s != 0)
+    {
+      fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
+      return NULL;
+    }
+
+  /* selecting the first result */
+  if(result != NULL)
+    {
+      addr->version = result->ai_family;
+      switch(addr->version)
+        {
+        case BGPSTREAM_ADDR_VERSION_IPV4:
+          addr->ipv4 = ((struct sockaddr_in*) result->ai_addr)->sin_addr;
+          break;
+        case BGPSTREAM_ADDR_VERSION_IPV6:
+          addr->ipv6 = ((struct sockaddr_in6*) result->ai_addr)->sin6_addr;
+          break;
+        default:
+          fprintf(stderr, "Unknown family\n");
+          freeaddrinfo(result);
+          return NULL;
+        }
+      freeaddrinfo(result);      
+      return addr;
+    }
+  
+  return NULL;
 }
 
 uint8_t
