@@ -302,9 +302,9 @@ BGPStream_set_data_interface_option(BGPStreamObject *self, PyObject *args)
 
 /** Enable blocking mode */
 static PyObject *
-BGPStream_set_blocking(BGPStreamObject *self)
+BGPStream_set_live_mode(BGPStreamObject *self)
 {
-  bgpstream_set_blocking(self->bs);
+  bgpstream_set_live_mode(self->bs);
   Py_RETURN_NONE;
 }
 
@@ -403,10 +403,10 @@ static PyMethodDef BGPStream_methods[] = {
     "Set a data interface option"
   },
   {
-    "set_blocking",
-    (PyCFunction)BGPStream_set_blocking,
+    "set_live_mode",
+    (PyCFunction)BGPStream_set_live_mode,
     METH_NOARGS,
-    "Enable blocking mode"
+    "Enable live mode"
   },
 
   {
