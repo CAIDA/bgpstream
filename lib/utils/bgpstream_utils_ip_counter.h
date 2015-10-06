@@ -25,6 +25,7 @@
 #ifndef __BGPSTREAM_UTILS_IPCNT_H
 #define __BGPSTREAM_UTILS_IPCNT_H
 
+#include <stdint.h>
 
 #include "bgpstream_utils_pfx.h"
 

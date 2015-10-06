@@ -44,15 +44,16 @@
 /** @} */
 
 /* Include all utility headers */
-#include "bgpstream_utils_addr.h"         /** < IP Address utilities */
-#include "bgpstream_utils_addr_set.h"     /** < IP Address Set utilities */
-#include "bgpstream_utils_as_path.h"      /** < AS Path utilities */
-#include "bgpstream_utils_as_path_store.h"/** < AS Path Store utilities */
-#include "bgpstream_utils_id_set.h"       /** < ID Set utilities */
-#include "bgpstream_utils_peer_sig_map.h" /** < Peer Signature utilities */
-#include "bgpstream_utils_pfx.h"          /** < Prefix utilities */
-#include "bgpstream_utils_pfx_set.h"      /** < Prefix Set utilities */
-#include "bgpstream_utils_str_set.h"      /** < String Set utilities */
+#include "bgpstream_utils_addr.h"          /*< IP Address utilities */
+#include "bgpstream_utils_addr_set.h"      /*< IP Address Set utilities */
+#include "bgpstream_utils_as_path.h"       /*< AS Path utilities */
+#include "bgpstream_utils_as_path_store.h" /*< AS Path Store utilities */
+#include "bgpstream_utils_id_set.h"        /*< ID Set utilities */
+#include "bgpstream_utils_ip_counter.h"    /*< IP Overlap Counter */
+#include "bgpstream_utils_peer_sig_map.h"  /*< Peer Signature utilities */
+#include "bgpstream_utils_pfx.h"           /*< Prefix utilities */
+#include "bgpstream_utils_pfx_set.h"       /*< Prefix Set utilities */
+#include "bgpstream_utils_str_set.h"       /*< String Set utilities */
 
 #endif /* __BGPSTREAM_UTILS_H */
 
