@@ -42,10 +42,8 @@ bin_PROGRAMS = bgpcorsaro
 bgpcorsaro_SOURCES = \
 	bgpcorsaro.c
 
-bgpcorsaro_LDADD = -lbgpcorsaro
-
-bgpcorsaro_LDFLAGS = -L$(top_builddir)/lib \
-		     -L$(top_builddir)/bgpcorsaro/lib
+bgpcorsaro_LDADD = $(top_builddir)/lib/libbgpstream.la \
+		   $(top_builddir)/bgpcorsaro/lib/libbgpcorsaro.la
 
 ACLOCAL_AMFLAGS = -I m4
 

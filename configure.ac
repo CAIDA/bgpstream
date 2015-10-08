@@ -33,6 +33,18 @@ AC_DEFINE_UNQUOTED([BGPSTREAM_MINOR_VERSION],$BGPSTREAM_MINOR_VERSION,
 
 LT_INIT
 
+# Check if we should disable rpath.
+#
+# For advanced users: In certain configurations (e.g. when one of BGPStream's
+# dependencies is located in a directory which also holds an old
+# libbgpstream.so), the rpath attributes added by libtool cause problems with
+# make check (or indeed with any non-installed binaries) as rpath will be
+# preferred over LD_LIBRARY_PATH. This does not seem to be a problem with
+# clang. When using --disable-rpath you will likely need to set LD_LIBRARY_PATH
+# if you are using libraries in non-system locations. YMMV.
+#
+DISABLE_RPATH
+
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
