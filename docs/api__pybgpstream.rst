@@ -2,8 +2,7 @@ _pybgpstream
 ============
 
 This document describes the API of the _pybgpstream module, a low-level
-(almost) direct interface to the C `libbgpstream` library. For most uses, the
-`pybgpstream` module should be used instead.
+(almost) direct interface to the C `libbgpstream` library.
 
 .. py:module:: _pybgpstream
 
@@ -48,18 +47,19 @@ BGPStream
       :param int period: the period (in seconds)
       :raises TypeError: if the start or end period is not int
 
-      
+
    .. py:method:: add_interval_filter(start, stop)
 
       Add an interval filter to an unstarted BGP Stream instance. Only those
       records that fall within the given interval will be included in the
-      stream.
+      stream. Setting the `stop` parameter to `0` will enable live mode and
+      effectively set an endless interval.
 
       If multiple interval filters are added, then a record is included if it is
       inside **any** of the intervals.
 
       :param int start: The start time of the interval (inclusive)
-      :param int stop: The end time of the interval (exclusive)
+      :param int stop: The end time of the interval (inclusive)
       :raises TypeError: if the start or end times are not ints
 
 
@@ -111,9 +111,9 @@ BGPStream
                           valid
 
 
-   .. py:method:: set_blocking()
+   .. py:method:: set_live_mode()
 
-      Enables blocking mode. When this option is used, the stream will block
+      Enables live mode. When this option is used, the stream will block
       waiting for new data to arrive if the end of the interval has not been
       reached. In this way a stream can be used to monitor realtime data (i.e. a
       call to :py:meth:`get_next_record` will block until new data is
