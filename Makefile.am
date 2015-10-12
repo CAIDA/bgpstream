@@ -4,7 +4,7 @@
 # CAIDA, UC San Diego
 # bgpstream-info@caida.org
 #
-# Copyright (C) 2012 The Regents of the University of California.
+# Copyright (C) 2015 The Regents of the University of California.
 # Authors: Alistair King, Chiara Orsini
 #
 # This program is free software; you can redistribute it and/or modify it under
