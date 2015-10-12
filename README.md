@@ -14,9 +14,10 @@ To get started using BGPStream, either download the latest
 [release tarball](http://bgpstream.caida.org/download), or clone the
 [GitHub repository](https://github.com/CAIDA/bgpstream).
 
-You will also need the
-[wandio](http://research.wand.net.nz/software/libwandio.php) library installed
-before building BGPStream.
+You will also need the _libcurl_ and
+[wandio](http://research.wand.net.nz/software/libwandio.php) libraries installed
+before building BGPStream (libcurl **must** be installed prior to building
+wandio).
 
 In most cases, the following will be enough to build and install BGPStream:
 ~~~

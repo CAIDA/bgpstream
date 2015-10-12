@@ -108,10 +108,11 @@ LIBS="$PTHREAD_LIBS $LIBS"
 CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
-AC_SEARCH_LIBS([wandio_create], [wandio trace], [with_wandio=yes],
-                 [AC_MSG_ERROR(
-		 [libwandio required (included with libtrace since 3.0.15)]
-		 )])
+# check that wandio is installed and HTTP support is enabled
+AC_SEARCH_LIBS([wandio_create], [wandio], [with_wandio=yes],
+               [AC_MSG_ERROR(
+  [libwandio required (http://research.wand.net.nz/software/libwandio.php)]
+)])
 AM_CONDITIONAL([WITH_WANDIO], [test "x$with_wandio" == xyes])
 
 AC_MSG_NOTICE([])
@@ -128,6 +129,10 @@ fi
 
 # check for data interface dependencies
 AC_MSG_NOTICE([checking data interface dependencies...])
+
+if test "x$with_di_broker" == xyes; then
+  CHECK_WANDIO_HTTP("http://bgpstream.caida.org/broker")
+fi
 
 if test "x$with_di_sqlite" == xyes; then
    # check for sqlite library

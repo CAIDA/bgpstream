@@ -24,15 +24,8 @@
 #include "bgpstream.h"
 
 #include <stdio.h>
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdbool.h>
 #include <string.h>
+#include <wandio.h>
 
 #define SINGLEFILE_RECORDS 537347
 #define CSVFILE_RECORDS    559424
@@ -182,6 +175,17 @@ int main()
   datasource_id =
     bgpstream_get_data_interface_id_by_name(bs, "broker");
 #ifdef WITH_DATA_INTERFACE_BROKER
+  printf("Testing HTTP support/Internet connectivity...\n");
+  io_t *file = wandio_create(BGPSTREAM_DS_BROKER_URL);
+  if (file == NULL)
+    {
+      fprintf(stderr,
+              "ERROR: Failed to connect to BGPStream Broker via HTTP.\n"
+              "ERROR: Maybe wandio is built without HTTP support, "
+              "or there is no Internet connectivity\n");
+      return -1;
+    }
+
   bgpstream_set_data_interface(bs, datasource_id);
   bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_COLLECTOR, "route-views6");
   bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_RECORD_TYPE, "updates");
