@@ -23,6 +23,7 @@ TAGS
 *.tar.gz
 tools/bgpreader
 test/bgpstream-test
+test/bgpstream-test-utilities
 bgpcorsaro/tools/bgpcorsaro
 
 # doxygen files
