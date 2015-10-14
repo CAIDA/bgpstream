@@ -133,7 +133,7 @@ static bgpcorsaro_plugin_t *add_plugin(bgpcorsaro_plugin_manager_t *manager,
       bgpcorsaro_log_file(__func__, LOG(manager), "could not malloc plugin argv");
       return NULL;
     }
-  plugin->argv[0] = strndup(plugin->name, strlen(plugin->name));
+  plugin->argv[0] = strdup(plugin->name);
   plugin->argv[1] = NULL;
 
   if(tail != NULL)
