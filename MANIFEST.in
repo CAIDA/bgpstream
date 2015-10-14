@@ -1,7 +1,3 @@
 include src/*.h
 include examples/tutorial_print.py
 include examples/topology.py
-include examples/bgp_data.db
-include examples/bgp_data.csv
-include examples/ris.rrc06.updates.1427846400.gz
-include examples/ris.rrc06.ribs.1427846400.gz
