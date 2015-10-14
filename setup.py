@@ -1,4 +1,4 @@
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
 
 _pybgpstream_module = Extension("_pybgpstream",
                                 libraries = ["bgpstream"],
@@ -8,8 +8,22 @@ _pybgpstream_module = Extension("_pybgpstream",
                                            "src/_pybgpstream_bgpelem.c"])
 
 setup(name = "_pybgpstream",
-      description = "TODO",
-      version = "1.0",
+      description = "A Python interface to BGPStream",
+      long_description = "Provides a high-level interface for live and historical BGP data analysis. See http://bgpstream.caida.org for more information about BGPStream.",
+      version = "1.0.0",
       author = "Alistair King",
       author_email = "bgpstream-info@caida.org",
+      url="http://bgpstream.caida.org",
+      license="GPLv2",
+      classifiers=[
+          'Development Status :: 5 - Production/Stable',
+          'Environment :: Console',
+          'Intended Audience :: Science/Research',
+          'Intended Audience :: System Administrators',
+          'Intended Audience :: Telecommunications Industry',
+          'Intended Audience :: Information Technology',
+          'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+          'Operating System :: POSIX',
+          ],
+      keywords='_pybgpstream pybgpstream bgpstream bgp mrt routeviews route-views ris routing',
       ext_modules = [_pybgpstream_module,])
