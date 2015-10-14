@@ -1,5 +1,5 @@
-MANIFEST
-build/
-dist/
-docs/_build
-pybgpstream.egg-info/
+pybgpstream/MANIFEST
+pybgpstream/build/
+pybgpstream/dist/
+pybgpstream/docs/_build
+pybgpstream/pybgpstream.egg-info/
