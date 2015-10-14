@@ -2,4 +2,4 @@ MANIFEST
 build/
 dist/
 docs/_build
-_pybgpstream.egg-info/
+pybgpstream.egg-info/

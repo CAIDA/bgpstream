@@ -7,7 +7,7 @@ _pybgpstream_module = Extension("_pybgpstream",
                                            "src/_pybgpstream_bgprecord.c",
                                            "src/_pybgpstream_bgpelem.c"])
 
-setup(name = "_pybgpstream",
+setup(name = "pybgpstream",
       description = "A Python interface to BGPStream",
       long_description = "Provides a high-level interface for live and historical BGP data analysis. See http://bgpstream.caida.org for more information about BGPStream.",
       version = "1.0.0",
