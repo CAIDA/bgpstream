@@ -26,6 +26,13 @@ test/bgpstream-test
 test/bgpstream-test-utilities
 bgpcorsaro/tools/bgpcorsaro
 
+# pybgpstream build files
+pybgpstream/MANIFEST
+pybgpstream/build/
+pybgpstream/dist/
+pybgpstream/docs/_build
+pybgpstream/pybgpstream.egg-info/
+
 # doxygen files
 docs/doxygen/html
 docs/doxygen/latex
