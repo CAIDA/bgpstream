@@ -1,10 +1,10 @@
  SYNOPSIS
 #
-#   CHECK_WANDIO
+#   CHECK_WANDIO_HTTP
 #
 # DESCRIPTION
 #
-#   This macro
+#   This macro checks that WANDIO HTTP read support actually works.
 #
 # LICENSE
 #
@@ -45,7 +45,7 @@ AC_DEFUN([CHECK_WANDIO_HTTP],
   ],
   [with_wandio_http=yes],
   [AC_MSG_ERROR(
-      [wandio HTTP support required (install libcurl before building wandio)]
+      [wandio HTTP support required. Ensure you have a working Internet connection and that libcurl is installed before building wandio.]
     )
   ])
   LIBS=$LIBS_STASH
