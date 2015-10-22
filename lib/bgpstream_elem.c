@@ -223,8 +223,8 @@ int bgpstream_elem_peerstate_snprintf(char *buf, size_t len,
       }                                         \
  } while(0)
 
-char *bgpstream_elem_snprintf(char *buf, size_t len,
-                              bgpstream_elem_t *elem)
+char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
+                                     bgpstream_elem_t const *elem, int print_type)
 {
   assert(elem);
 
@@ -236,38 +236,35 @@ char *bgpstream_elem_snprintf(char *buf, size_t len,
 
   /* common fields */
 
-  // timestamp|peer_ip|peer_asn|message_type|
+  /* [message_type|]peer_asn|peer_ip| */
 
-  /* TIMESTAMP */
-  c = snprintf(buf_p, B_REMAIN, "%"PRIu32"|", elem->timestamp);
+  if(print_type)
+    {
+      /* MESSAGE TYPE */
+      c = bgpstream_elem_type_snprintf(buf_p, B_REMAIN, elem->type);
+      written += c;
+      buf_p += c;
+
+      if(B_FULL)
+        return NULL;
+      
+      ADD_PIPE;
+    }
+
+  /* PEER ASN */
+  c = snprintf(buf_p, B_REMAIN, "%"PRIu32, elem->peer_asnumber);
   written += c;
   buf_p += c;
-
-  if(B_FULL)
-    return NULL;
+  ADD_PIPE;
 
   /* PEER IP */
   if(bgpstream_addr_ntop(buf_p, B_REMAIN, &elem->peer_address) == NULL)
     return NULL;
   SEEK_STR_END;
-
-  /* PEER ASN */
-  c = snprintf(buf_p, B_REMAIN, "|%"PRIu32"|", elem->peer_asnumber);
-  written += c;
-  buf_p += c;
-
-  if(B_FULL)
-    return NULL;
-
-  /* MESSAGE TYPE */
-  c = bgpstream_elem_type_snprintf(buf_p, B_REMAIN, elem->type);
-  written += c;
-  buf_p += c;
-
-  if(B_FULL)
-    return NULL;
-
   ADD_PIPE;
+
+  if(B_FULL)
+    return NULL;
 
   /* conditional fields */
   switch(elem->type)
@@ -386,3 +383,8 @@ char *bgpstream_elem_snprintf(char *buf, size_t len,
   return buf;
 }
 
+char *bgpstream_elem_snprintf(char *buf, size_t len,
+                              bgpstream_elem_t const *elem)
+{
+  return bgpstream_elem_custom_snprintf(buf,len,elem, 1);
+}

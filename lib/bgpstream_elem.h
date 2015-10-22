@@ -230,7 +230,7 @@ int bgpstream_elem_peerstate_snprintf(char *buf, size_t len,
  * @return pointer to the start of the buffer if successful, NULL otherwise
  */
 char *bgpstream_elem_snprintf(char *buf, size_t len,
-                              bgpstream_elem_t *elem);
+                              const bgpstream_elem_t *elem);
 
 /** @} */
 

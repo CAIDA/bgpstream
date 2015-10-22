@@ -279,7 +279,7 @@ output_stats_and_reset(struct bgpcorsaro_pfxmonitor_state_t *state,
 /* set the origin ASN for a given prefix as observed by a given peer */
 static int
 set_pfx_peer_origin(struct bgpcorsaro_pfxmonitor_state_t *state,
-                    bgpstream_pfx_storage_t *pfx,
+                    const bgpstream_pfx_storage_t *pfx,
                     uint32_t peer_asn,
                     uint32_t origin_asn)
 {
@@ -319,7 +319,7 @@ set_pfx_peer_origin(struct bgpcorsaro_pfxmonitor_state_t *state,
 
 /* remove pfx/peer from state */
 static void rm_pfx_peer(struct bgpcorsaro_pfxmonitor_state_t *state,
-                       bgpstream_pfx_storage_t *pfx,
+                       const bgpstream_pfx_storage_t *pfx,
                        uint32_t peer_asn)
 {
   khiter_t k;
@@ -346,7 +346,7 @@ static void rm_pfx_peer(struct bgpcorsaro_pfxmonitor_state_t *state,
 
 static int
 process_overlapping_pfx(struct bgpcorsaro_pfxmonitor_state_t *state,
-                        bgpstream_elem_t *elem)
+                        const bgpstream_record_t * bs_record, const bgpstream_elem_t *elem)
 {
   char log_buffer[MAX_LOG_BUFFER_LEN] = "";
   bgpstream_as_path_seg_t *origin_seg = NULL;
@@ -378,7 +378,7 @@ process_overlapping_pfx(struct bgpcorsaro_pfxmonitor_state_t *state,
     }
 
   /* we always print all the info to the log */
-  bgpstream_elem_snprintf(log_buffer, MAX_LOG_BUFFER_LEN, elem);
+  bgpstream_record_elem_snprintf(log_buffer, MAX_LOG_BUFFER_LEN, bs_record, elem);
   wandio_printf(state->outfile, "%s\n", log_buffer);
   return 0;
 }
@@ -471,7 +471,7 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
             }
           else
             {
-              fprintf(stderr, "ERROR: could not set metric prefix\n");
+              fprintf(stderr, "Error: could not set metric prefix\n");
               usage(plugin);
               return -1;
             }
@@ -484,7 +484,7 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
             }
           else
             {
-              fprintf(stderr, "ERROR: could not set IP space name\n");
+              fprintf(stderr, "Error: could not set IP space name\n");
               usage(plugin);
               return -1;
             }
@@ -493,7 +493,7 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
         case 'l':
           if(bgpstream_str2pfx(optarg, &pfx_st) == NULL)
              {
-               fprintf(stderr, "ERROR: Could not parse prefix (%s)\n",
+               fprintf(stderr, "Error: Could not parse prefix (%s)\n",
                        optarg);
                usage(plugin);
                return -1;
@@ -522,6 +522,15 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
 	  usage(plugin);
 	  return -1;
 	}
+    }
+
+  /* if no prefixes were provided,  */
+  if(bgpstream_ip_counter_get_ipcount(state->poi, BGPSTREAM_ADDR_VERSION_IPV4) == 0 &&
+     bgpstream_ip_counter_get_ipcount(state->poi, BGPSTREAM_ADDR_VERSION_IPV6) == 0 )
+    {
+      fprintf(stderr, "Error: no valid prefixes provided\n");
+      usage(plugin);
+      return -1;
     }
 
   return 0;
@@ -569,14 +578,6 @@ int bgpcorsaro_pfxmonitor_init_output(bgpcorsaro_t *bgpcorsaro)
   /* parse the arguments */
   if(parse_args(bgpcorsaro) != 0)
     {
-      goto err;
-    }
-
-  /* if no prefixes were provided, exit */
-  if(bgpstream_ip_counter_get_ipcount(state->poi, BGPSTREAM_ADDR_VERSION_IPV4) == 0 &&
-     bgpstream_ip_counter_get_ipcount(state->poi, BGPSTREAM_ADDR_VERSION_IPV6) == 0 )
-    {
-      fprintf(stderr, "Error: no valid prefixes provided\n");
       goto err;
     }
   
@@ -817,7 +818,7 @@ int bgpcorsaro_pfxmonitor_process_record(bgpcorsaro_t *bgpcorsaro,
         }
 
       /* by here, confirmed as overlapping, process the elem */
-      process_overlapping_pfx(state, elem);
+      process_overlapping_pfx(state, bs_record, elem);
     }
 
   return 0;

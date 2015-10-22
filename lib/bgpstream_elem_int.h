@@ -40,6 +40,17 @@
  *
  * @{ */
 
+/** Write the string representation of the elem into the provided buffer
+ *
+ * @param buf           pointer to a char array
+ * @param len           length of the char array
+ * @param elem          pointer to a BGP Stream Elem to convert to string
+ * @param print_type    1 to print the elem type, 0 to ignore the elem type
+ * @return pointer to the start of the buffer if successful, NULL otherwise
+ */
+char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
+                                     const bgpstream_elem_t *elem, int print_type);
+
 
 /** @} */
 

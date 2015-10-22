@@ -210,6 +210,54 @@ bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record);
  */
 void bgpstream_record_print_mrt_data(bgpstream_record_t * const bs_record);
 
+/** Write the string representation of the record dump type into the provided
+ *  buffer
+ *
+ * @param buf           pointer to a char array
+ * @param len           length of the char array
+ * @param dump_type     BGP Stream Record dump type to convert to string
+ * @return the number of characters that would have been written if len was
+ * unlimited
+ */
+int bgpstream_record_dump_type_snprintf(char *buf, size_t len,
+                                        bgpstream_record_dump_type_t dump_type);
+
+/** Write the string representation of the record dump position into the provided
+ *  buffer
+ *
+ * @param buf           pointer to a char array
+ * @param len           length of the char array
+ * @param dump_pos      BGP Stream Record dump position to convert to string
+ * @return the number of characters that would have been written if len was
+ * unlimited
+ */
+int bgpstream_record_dump_pos_snprintf(char *buf, size_t len,
+                                        bgpstream_dump_position_t dump_pos);
+
+/** Write the string representation of the record status into the provided
+ *  buffer
+ *
+ * @param buf           pointer to a char array
+ * @param len           length of the char array
+ * @param status        BGP Stream Record status to convert to string
+ * @return the number of characters that would have been written if len was
+ * unlimited
+ */
+int bgpstream_record_status_snprintf(char *buf, size_t len,
+                                     bgpstream_record_status_t status);
+
+/** Write the string representation of the record/elem into the provided buffer
+ *
+ * @param buf           pointer to a char array
+ * @param len           length of the char array
+ * @param elem          pointer to a BGP Stream Record to convert to string
+ * @param elem          pointer to a BGP Stream Elem to convert to string
+ * @return pointer to the start of the buffer if successful, NULL otherwise
+ */
+char *bgpstream_record_elem_snprintf(char *buf, size_t len,
+                                     const bgpstream_record_t * bs_record,
+                                     const bgpstream_elem_t * elem);
+
 /** @} */
 
 #endif /* __BGPSTREAM_RECORD_H */

@@ -40,7 +40,27 @@
 #define COLLECTOR_CMD_CNT 100
 #define WINDOW_CMD_CNT 1024
 #define OPTION_CMD_CNT 1024
-
+#define BGPSTREAM_RECORD_OUTPUT_FORMAT \
+  "# Record format:\n" \
+  "# <dump-type>|<dump-pos>|<project>|<collector>|<status>|<dump-time>\n" \
+  "#\n" \
+  "# <dump-type>: R RIB, U Update\n" \
+  "# <dump-pos>:  B begin, M middle, E end\n" \
+  "# <status>:    V valid, E empty, F filtered, R corrupted record, S corrupted source\n" \
+  "#\n"
+#define BGPSTREAM_ELEM_OUTPUT_FORMAT \
+  "# Elem format:\n" \
+  "# <dump-type>|<elem-type>|<record-ts>|<project>|<collector>|<peer-ASn>|<peer-IP>|<prefix>|<next-hop-IP>|<AS-path>|<origin-AS>|<old-state>|<new-state>\n" \
+  "#\n" \
+  "# <dump-type>: R RIB, U Update\n" \
+  "# <elem-type>: R RIB, A announcement, W withdrawal, S state message\n" \
+  "#\n" \
+  "# RIB control messages (signal Begin and End of RIB):\n" \
+  "# <dump-type>|<dump-pos>|<record-ts>|<project>|<collector>\n" \
+  "#\n" \
+  "# <dump-pos>:  B begin, E end\n" \
+  "#\n"
+  
 struct window {
   uint32_t start;
   uint32_t end;
@@ -50,6 +70,7 @@ static bgpstream_t *bs;
 static bgpstream_data_interface_id_t datasource_id_default = 0;
 static bgpstream_data_interface_id_t datasource_id = 0;
 static bgpstream_data_interface_info_t *datasource_info = NULL;
+
 
 static void data_if_usage() {
   bgpstream_data_interface_id_t *ids = NULL;
@@ -120,20 +141,21 @@ static void usage() {
 	  "   -l             enable live mode (make blocking requests for BGP records)\n"
 	  "                  allows bgpstream to be used to process data in real-time\n"
           "\n"
-	  "   -r             print info for each BGP record (default)\n"
+          "   -e             print info for each element of a valid BGP record (default)\n"
           "   -m             print info for each BGP valid record in bgpdump -m format\n"
-          "   -e             print info for each element of a valid BGP record\n"         
+          "   -r             print info for each BGP record (used mostly for debugging BGPStream)\n"
+          "   -i             print format information before output\n"
           "\n"
 	  "   -h             print this help menu\n"
 	  "* denotes an option that can be given multiple times\n"
 	  );
 }
 
-// print functions
+// print / utility functions
 
-static void print_bs_record(bgpstream_record_t * bs_record);
-static int print_elem(bgpstream_elem_t *elem);
-
+static void print_bs_record(bgpstream_record_t *bs_record);
+static int print_elem(bgpstream_record_t *bs_record, bgpstream_elem_t *elem);
+static void print_rib_control_message(bgpstream_record_t *bs_record);
 
 int main(int argc, char *argv[])
 {
@@ -162,6 +184,7 @@ int main(int argc, char *argv[])
 
   int rib_period = 0;
   int live = 0;
+  int output_info = 0;
   int record_output_on = 0;
   int record_bgpdump_output_on = 0;
   int elem_output_on = 0;
@@ -170,8 +193,7 @@ int main(int argc, char *argv[])
 
   int i;
 
-
-  // required to be created before usage is called
+  /* required to be created before usage is called */
   bs = bgpstream_create();
   if(!bs) {
     fprintf(stderr, "ERROR: Could not create BGPStream instance\n");
@@ -181,8 +203,17 @@ int main(int argc, char *argv[])
   datasource_info = bgpstream_get_data_interface_info(bs, datasource_id);
   assert(datasource_id != 0);
 
+  /* allocate memory for bs_record */
+  bgpstream_record_t *bs_record = bgpstream_record_create();
+  if(bs_record == NULL)
+    {
+      fprintf(stderr, "ERROR: Could not create BGPStream record\n");
+      bgpstream_destroy(bs);
+      return -1;
+    }
+
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:P:lrmeh?")) >= 0)
+	 (opt = getopt (argc, argv, "d:o:p:c:t:w:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -289,6 +320,9 @@ int main(int argc, char *argv[])
 	case 'e':
 	  elem_output_on = 1;
 	  break;
+        case 'i':
+	  output_info = 1;
+	  break;
 	case ':':
 	  fprintf(stderr, "ERROR: Missing option argument for -%c\n", optopt);
 	  usage();
@@ -357,15 +391,15 @@ int main(int argc, char *argv[])
       exit(-1);
     }
 
-  // if the user did not specify any output format
-  // then the default one is per record
+  /* if the user did not specify any output format
+   * then the default one is per elem */
   if(record_output_on == 0 && elem_output_on == 0 && record_bgpdump_output_on == 0) {
-    record_output_on = 1;
+    elem_output_on = 1;
   }
 
-  // the program can now start
+  /* the program can now start */
 
-  // allocate memory for interface
+  /* allocate memory for interface */
 
   /* projects */
   for(i=0; i<projects_cnt; i++)
@@ -409,22 +443,25 @@ int main(int argc, char *argv[])
       bgpstream_set_live_mode(bs);
     }
 
-   // allocate memory for bs_record
-  bgpstream_record_t *bs_record = bgpstream_record_create();
-  if(bs_record == NULL)
-    {
-      fprintf(stderr, "ERROR: Could not create BGPStream record\n");
-      bgpstream_destroy(bs);
-      return -1;
-    }
-
-    // turn on interface
+  /* turn on interface */
   if(bgpstream_start(bs) < 0) {
     fprintf(stderr, "ERROR: Could not init BGPStream\n");
     return -1;
   }
 
-  // use the interface
+  if(output_info)
+    {
+      if(record_output_on)
+        {
+          printf(BGPSTREAM_RECORD_OUTPUT_FORMAT);
+        }
+      if(elem_output_on)
+        {
+          printf(BGPSTREAM_ELEM_OUTPUT_FORMAT);
+        }
+    }
+
+  /* use the interface */
   int get_next_ret = 0;
   bgpstream_elem_t * bs_elem;
   do
@@ -442,26 +479,43 @@ int main(int argc, char *argv[])
 	    }
 	  if(elem_output_on)
 	    {
+              /* check if the record is of type RIB, in case extract the ID */
+              if(bs_record->attributes.dump_type == BGPSTREAM_RIB)
+                {
+
+                  /* print the RIB start line */
+                  if(bs_record->dump_pos == BGPSTREAM_DUMP_START)
+                    {
+                      print_rib_control_message(bs_record);
+                    }
+                }
+
 	      while((bs_elem =
                      bgpstream_record_get_next_elem(bs_record)) != NULL)
 		{
-		  if(print_elem(bs_elem) != 0)
+		  if(print_elem(bs_record, bs_elem) != 0)
                     {
                       goto err;
                     }
 		}
+              /* check if end of RIB has been reached */
+              if(bs_record->attributes.dump_type == BGPSTREAM_RIB &&
+                 bs_record->dump_pos == BGPSTREAM_DUMP_END)
+                {
+                  print_rib_control_message(bs_record);
+                }
 	    }
 	}
   }
   while(get_next_ret > 0);
 
-  // de-allocate memory for bs_record
+  /* de-allocate memory for bs_record */
   bgpstream_record_destroy(bs_record);
 
-  // turn off interface
+  /* turn off interface */
   bgpstream_stop(bs);
 
-  // deallocate memory for interface
+  /* deallocate memory for interface */
   bgpstream_destroy(bs);
 
   return 0;
@@ -473,79 +527,137 @@ int main(int argc, char *argv[])
   return -1;
 }
 
-// print utility functions
-
-static char* get_dump_type_str(bgpstream_record_dump_type_t dump_type)
-{
-  switch(dump_type)
-    {
-    case BGPSTREAM_UPDATE:
-      return "update";
-    case BGPSTREAM_RIB:
-      return "rib";
-    }
-  return "";
-}
-
-static char* get_dump_pos_str(bgpstream_dump_position_t dump_pos)
-{
-  switch(dump_pos)
-    {
-    case BGPSTREAM_DUMP_START:
-      return "start";
-    case BGPSTREAM_DUMP_MIDDLE:
-      return "middle";
-    case BGPSTREAM_DUMP_END:
-      return "end";
-    }
-  return "";
-}
-
-static char *get_record_status_str(bgpstream_record_status_t status)
-{
-  switch(status)
-    {
-    case BGPSTREAM_RECORD_STATUS_VALID_RECORD:
-      return "valid_record";
-    case BGPSTREAM_RECORD_STATUS_FILTERED_SOURCE:
-      return "filtered_source";
-    case BGPSTREAM_RECORD_STATUS_EMPTY_SOURCE:
-      return "empty_source";
-    case BGPSTREAM_RECORD_STATUS_CORRUPTED_SOURCE:
-      return "corrupted_source";
-    case BGPSTREAM_RECORD_STATUS_CORRUPTED_RECORD:
-      return "corrupted_record";
-    }
-  return "";
-}
 
 
-static void print_bs_record(bgpstream_record_t * bs_record)
+/* print utility functions */
+
+static char record_buf[65536];
+
+static void print_bs_record(bgpstream_record_t *bs_record)
 {
   assert(bs_record);
-  printf("%ld|", bs_record->attributes.record_time);
-  printf("%s|", bs_record->attributes.dump_project);
-  printf("%s|", bs_record->attributes.dump_collector);
-  printf("%s|", get_dump_type_str(bs_record->attributes.dump_type));
-  printf("%s|", get_record_status_str(bs_record->status));
-  printf("%ld|", bs_record->attributes.dump_time);
-  printf("%s|", get_dump_pos_str(bs_record->dump_pos));
-  printf("\n");
 
+  size_t written = 0; /* < how many bytes we wanted to write */
+  ssize_t c = 0; /* < how many chars were written */
+  char *buf_p = record_buf;
+  int len = 65536;
+
+  /* record type */
+  if((c =
+      bgpstream_record_dump_type_snprintf(buf_p, len-written,
+                                          bs_record->attributes.dump_type)) < 0)
+    {
+      return;
+    }
+  written += c;
+  buf_p += c;
+
+  c = snprintf(buf_p, len-written, "|");
+  written += c;
+  buf_p += c;
+
+  /* record position */
+  if((c = bgpstream_record_dump_pos_snprintf(buf_p, len-written,
+                                             bs_record->dump_pos)) < 0)
+    {
+      return;
+    }
+  written += c;
+  buf_p += c;
+
+  /* Record timestamp, project, collector */
+  c = snprintf(buf_p, len-written, "|%ld|%s|%s|",
+               bs_record->attributes.record_time,
+               bs_record->attributes.dump_project,
+               bs_record->attributes.dump_collector);
+  written += c;
+  buf_p += c;
+
+  /* record status */
+  if((c = bgpstream_record_status_snprintf(buf_p, len-written, bs_record->status)) < 0)
+    {
+      return;
+    }
+  written += c;
+  buf_p += c;
+
+  /* dump time */
+  c = snprintf(buf_p, len-written, "|%ld",
+               bs_record->attributes.dump_time);
+  written += c;
+  buf_p += c;
+
+  if(written >= len)
+    {
+      return;
+    }
+
+  printf("%s\n", record_buf);
 }
+
+
+static void print_rib_control_message(bgpstream_record_t *bs_record)
+{
+  assert(bs_record);
+
+  size_t written = 0; /* < how many bytes we wanted to write */
+  ssize_t c = 0; /* < how many chars were written */
+  char *buf_p = record_buf;
+  int len = 65536;
+
+  /* record type */
+  if((c =
+      bgpstream_record_dump_type_snprintf(buf_p, len-written,
+                                              bs_record->attributes.dump_type)) < 0)
+    {
+      return;
+    }
+  written += c;
+  buf_p += c;
+
+  c = snprintf(buf_p, len-written, "|");
+  written += c;
+  buf_p += c;
+
+  /* record position */
+  if((c = bgpstream_record_dump_pos_snprintf(buf_p, len-written,
+                                             bs_record->dump_pos)) < 0)
+    {
+      return;
+    }
+  written += c;
+  buf_p += c;
+
+  /* Record timestamp, project, collector */
+  c = snprintf(buf_p, len-written, "|%ld|%s|%s",
+               bs_record->attributes.record_time,
+               bs_record->attributes.dump_project,
+               bs_record->attributes.dump_collector);
+  written += c;
+  buf_p += c;
+
+  if(written >= len)
+    {
+      return;
+    }
+
+  printf("%s\n", record_buf);
+}
+
 
 static char elem_buf[65536];
-static int print_elem(bgpstream_elem_t *elem)
+static int print_elem(bgpstream_record_t *bs_record, bgpstream_elem_t *elem)
 {
+  assert(bs_record);
   assert(elem);
+  int len = 65536;
 
-  if(bgpstream_elem_snprintf(elem_buf, 65536, elem) == NULL)
+  if(bgpstream_record_elem_snprintf(elem_buf, len, bs_record, elem) != NULL)
     {
-      fprintf(stderr, "Failed to construct elem string\n");
-      elem_buf[65535] = '\0';
-      fprintf(stderr, "Elem string: %s\n", elem_buf);
-      return -1;
+      printf("%s\n", elem_buf);
+      return 0;
     }
-  printf("%s\n", elem_buf);
-  return 0;
+
+  return -1;
 }
+
