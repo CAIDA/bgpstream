@@ -41,6 +41,9 @@ endif
 if WITH_PLUGIN_PACIFIER
 PLUGIN_SRC+=bgpcorsaro_pacifier.c bgpcorsaro_pacifier.h
 endif
+if WITH_PLUGIN_ELEMCOUNTER
+PLUGIN_SRC+=bgpcorsaro_elemcounter.c bgpcorsaro_elemcounter.h
+endif
 
 ################################################################################
 # Add new plugins below here using:

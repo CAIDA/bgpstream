@@ -101,8 +101,11 @@ typedef enum bgpcorsaro_plugin_id
   /** Pacifier plugin */
   BGPCORSARO_PLUGIN_ID_PACIFIER         = 2,
 
+  /** Elem Counter plugin */
+  BGPCORSARO_PLUGIN_ID_ELEMCOUNTER      = 3,
+
   /** Maximum plugin ID assigned */
-  BGPCORSARO_PLUGIN_ID_MAX              = BGPCORSARO_PLUGIN_ID_PACIFIER
+  BGPCORSARO_PLUGIN_ID_MAX              = BGPCORSARO_PLUGIN_ID_ELEMCOUNTER
 } bgpcorsaro_plugin_id_t;
 
 /** An bgpcorsaro packet processing plugin */

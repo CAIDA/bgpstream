@@ -231,6 +231,7 @@ AC_MSG_RESULT([$with_plugin_timing])
 
 ED_WITH_PLUGIN([bgpcorsaro_pfxmonitor],[pfxmonitor],[PFXMONITOR],[yes])
 ED_WITH_PLUGIN([bgpcorsaro_pacifier],[pacifier],[PACIFIER],[yes])
+ED_WITH_PLUGIN([bgpcorsaro_elemcounter],[elemcounter],[ELEMCOUNTER],[yes])
 
 # this MUST go after all the ED_WITH_PLUGIN macro calls
 AC_DEFINE_UNQUOTED([ED_PLUGIN_INIT_ALL_ENABLED], $ED_PLUGIN_INIT_ALL_ENABLED,
