@@ -172,7 +172,7 @@ static void usage()
     }
   
   fprintf(stderr,
-	  "usage: bgpcorsaro -w <start>[,<end>] -O outfile -B back-end [<options>]\n"
+	  "usage: bgpcorsaro -w <start>[,<end>] -O outfile [<options>]\n"
 	  "Available options are:\n"
           "   -d <interface> use the given bgpstream data interface to find available data\n"
           "                   available data interfaces are:\n");
@@ -197,8 +197,8 @@ static void usage()
           "   -g <gap-limit> maximum allowed gap between packets (0 is no limit) (default: %d)\n"
 	  "   -L             disable logging to a file\n"
           "\n",
-          GAP_LIMIT_DEFAULT,
-          BGPCORSARO_INTERVAL_DEFAULT);
+          BGPCORSARO_INTERVAL_DEFAULT,
+          GAP_LIMIT_DEFAULT);
   fprintf(stderr,
 	  "   -x <plugin>    enable the given plugin (default: all)*\n"
 	  "                   available plugins:\n");
