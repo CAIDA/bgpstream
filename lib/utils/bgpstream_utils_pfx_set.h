@@ -92,6 +92,14 @@ int bgpstream_pfx_storage_set_exists(bgpstream_pfx_storage_set_t *set,
  */
 int bgpstream_pfx_storage_set_size(bgpstream_pfx_storage_set_t *set);
 
+/** Get the number of IPv<v> prefixes in the given set
+ *
+ * @param set           pointer to the prefix set
+ * @param v          IP version
+ * @return the size of the prefix set
+ */
+int bgpstream_pfx_storage_set_version_size(bgpstream_pfx_storage_set_t *set, bgpstream_addr_version_t v);
+
 /** Merge two prefix sets
  *
  * @param dst_set      pointer to the set to merge src into
@@ -99,7 +107,7 @@ int bgpstream_pfx_storage_set_size(bgpstream_pfx_storage_set_t *set);
  * @return 0 if the sets were merged succsessfully, -1 otherwise
  */
 int bgpstream_pfx_storage_set_merge(bgpstream_pfx_storage_set_t *dst_set,
-                                     bgpstream_pfx_storage_set_t *src_set);
+                                    bgpstream_pfx_storage_set_t *src_set);
 
 /** Destroy the given prefix set
  *

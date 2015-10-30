@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdint.h>
- #include <sys/types.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -80,9 +80,8 @@ bgpstream_addr_storage_hash(bgpstream_addr_storage_t *addr)
     }
 }
 
-
-int bgpstream_addr_storage_equal(bgpstream_addr_storage_t *addr1,
-                                 bgpstream_addr_storage_t *addr2)
+int bgpstream_addr_equal(bgpstream_ip_addr_t *addr1,
+                         bgpstream_ip_addr_t *addr2)
 {
   if(addr1->version == BGPSTREAM_ADDR_VERSION_IPV4 &&
      addr2->version == BGPSTREAM_ADDR_VERSION_IPV4)
@@ -97,6 +96,13 @@ int bgpstream_addr_storage_equal(bgpstream_addr_storage_t *addr1,
                                        (bgpstream_ipv6_addr_t *)addr2);
     }
   return 0;
+}
+
+int bgpstream_addr_storage_equal(bgpstream_addr_storage_t *addr1,
+                                 bgpstream_addr_storage_t *addr2)
+{
+  return bgpstream_addr_equal((bgpstream_ip_addr_t*)addr1,
+                              (bgpstream_ip_addr_t*)addr2);
 }
 
 
@@ -116,6 +122,75 @@ int bgpstream_ipv6_addr_equal(bgpstream_ipv6_addr_t *addr1,
           (memcmp(&(addr1->ipv6.s6_addr[8]),
                   &(addr2->ipv6.s6_addr[8]),
                   sizeof(uint64_t)) == 0));
+}
+
+bgpstream_ip_addr_t *bgpstream_addr_mask(bgpstream_ip_addr_t *addr,
+                                         uint8_t mask_len)
+{
+  if(addr->version == BGPSTREAM_ADDR_VERSION_IPV4)
+    {
+      return (bgpstream_ip_addr_t*)
+        bgpstream_ipv4_addr_mask((bgpstream_ipv4_addr_t *)addr, mask_len);
+    }
+  if(addr->version == BGPSTREAM_ADDR_VERSION_IPV6)
+    {
+      return (bgpstream_ip_addr_t*)
+        bgpstream_ipv6_addr_mask((bgpstream_ipv6_addr_t *)addr, mask_len);
+    }
+  return NULL;
+}
+
+bgpstream_ipv4_addr_t *bgpstream_ipv4_addr_mask(bgpstream_ipv4_addr_t *addr,
+                                                uint8_t mask_len)
+{
+  if(mask_len > 32)
+    {
+      mask_len = 32;
+    }
+
+  addr->ipv4.s_addr &= htonl(~(((uint64_t)1 << (32 - mask_len)) - 1));
+  return addr;
+}
+
+bgpstream_ipv6_addr_t *bgpstream_ipv6_addr_mask(bgpstream_ipv6_addr_t *addr,
+                                                uint8_t mask_len)
+{
+  uint64_t *ptr;
+
+  if(mask_len > 128)
+    {
+      mask_len = 128;
+    }
+
+  if(mask_len <= 64)
+    {
+      /* mask the bottom 64bits and zero the top 64bits */
+      ptr = (uint64_t*)&(addr->ipv6.s6_addr[8]);
+      *ptr = 0;
+      ptr = (uint64_t*)&(addr->ipv6.s6_addr[0]);
+      *ptr &= htonll((uint64_t)(~0) << (64 - mask_len));
+    }
+  else
+    {
+      /* mask the top 64 bits */
+      mask_len -= 64;
+      ptr = (uint64_t*)&(addr->ipv6.s6_addr[8]);
+      *ptr &= htonll((uint64_t)(~0) << (64 - mask_len - 64));
+    }
+
+  return addr;
+}
+
+void bgpstream_addr_copy(bgpstream_ip_addr_t *dst, bgpstream_ip_addr_t *src)
+{
+  if(src->version == BGPSTREAM_ADDR_VERSION_IPV4)
+    {
+      memcpy(dst, src, sizeof(bgpstream_ipv4_addr_t));
+    }
+  if(src->version == BGPSTREAM_ADDR_VERSION_IPV6)
+    {
+      memcpy(dst, src, sizeof(bgpstream_ipv6_addr_t));
+    }
 }
 
 

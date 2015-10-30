@@ -151,6 +151,14 @@ unsigned long long
 bgpstream_pfx_storage_hash(bgpstream_pfx_storage_t *pfx);
 
 
+/** Compare two prefixes for equality
+ *
+ * @param pfx1          pointer to the first prefix to compare
+ * @param pfx2          pointer to the first prefix to compare
+ * @return 0 if the prefixes are not equal, non-zero if they are equal
+ */
+int bgpstream_pfx_equal(bgpstream_pfx_t *pfx1, bgpstream_pfx_t *pfx2);
+
 /** Compare two IPv4 prefixes for equality
  *
  * @param pfx1         pointer to the first prefix to compare
@@ -179,6 +187,14 @@ int bgpstream_ipv6_pfx_equal(bgpstream_ipv6_pfx_t *pfx1,
  */
 int bgpstream_pfx_storage_equal(bgpstream_pfx_storage_t *pfx1,
                                 bgpstream_pfx_storage_t *pfx2);
+
+/** Check if one prefix contains another
+ *
+ * @param outer          pointer to the outer prefix
+ * @param inner          pointer to the inner prefix to check
+ * @return non-zero if inner is a more-specific prefix of outer, 0 if not
+ */
+int bgpstream_pfx_contains(bgpstream_pfx_t *outer, bgpstream_pfx_t *inner);
 
 
 /** Utility macros used to pass khashes objects by reference

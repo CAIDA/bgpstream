@@ -45,6 +45,8 @@ KHASH_INIT(bgpstream_pfx_storage_set /* name */,
 
 struct bgpstream_pfx_storage_set {
   khash_t(bgpstream_pfx_storage_set) *hash;
+  uint64_t ipv4_size;
+  uint64_t ipv6_size;
 };
 
 /* ipv4 specific set */
@@ -95,7 +97,8 @@ bgpstream_pfx_storage_set_t *bgpstream_pfx_storage_set_create()
       bgpstream_pfx_storage_set_destroy(set);
       return NULL;
     }
-
+  set->ipv4_size = 0;
+  set->ipv6_size = 0;
   return set;
 }
 
@@ -108,6 +111,14 @@ int bgpstream_pfx_storage_set_insert(bgpstream_pfx_storage_set_t *set,
      kh_end(set->hash))
     {
       k = kh_put(bgpstream_pfx_storage_set, set->hash, *pfx, &khret);
+      if(pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV4)
+        {
+          set->ipv4_size++;
+        }
+      else
+        {
+          set->ipv6_size++;
+        }
       return 1;
     }
   return 0;
@@ -125,11 +136,24 @@ int bgpstream_pfx_storage_set_exists(bgpstream_pfx_storage_set_t *set,
   return 1;
 }
 
-
 int bgpstream_pfx_storage_set_size(bgpstream_pfx_storage_set_t *set)
 {
   return kh_size(set->hash);
 }
+
+int bgpstream_pfx_storage_set_version_size(bgpstream_pfx_storage_set_t *set, bgpstream_addr_version_t v)
+{
+  switch(v)
+    {
+    case BGPSTREAM_ADDR_VERSION_IPV4:
+      return set->ipv4_size;
+    case BGPSTREAM_ADDR_VERSION_IPV6:
+      return set->ipv6_size;
+    default:
+      return -1;
+    }
+}
+
 
 int bgpstream_pfx_storage_set_merge(bgpstream_pfx_storage_set_t *dst_set,
                                      bgpstream_pfx_storage_set_t *src_set)
@@ -158,6 +182,8 @@ void bgpstream_pfx_storage_set_destroy(bgpstream_pfx_storage_set_t *set)
 void bgpstream_pfx_storage_set_clear(bgpstream_pfx_storage_set_t *set)
 {
   kh_clear(bgpstream_pfx_storage_set, set->hash);
+  set->ipv4_size = 0;
+  set->ipv6_size = 0;
 }
 
 
