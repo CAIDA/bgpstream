@@ -416,15 +416,15 @@ int bgpstream_as_path_copy(bgpstream_as_path_t *dst, bgpstream_as_path_t *src,
 bgpstream_as_path_seg_t *
 bgpstream_as_path_get_origin_seg(bgpstream_as_path_t *path)
 {
-  assert(path != NULL);
+  /*assert(path != NULL);*/
 
   if(path->data_len == 0)
     {
       return NULL;
     }
 
-  assert(path->data != NULL);
-  assert(path->origin_offset != UINT16_MAX);
+  /*assert(path->data != NULL);*/
+  /*assert(path->origin_offset != UINT16_MAX);*/
 
   return (bgpstream_as_path_seg_t*)(path->data+path->origin_offset);
 }
@@ -449,8 +449,8 @@ bgpstream_as_path_get_next_seg(bgpstream_as_path_t *path,
   cur_seg = CUR_SEG(path, iter);
 
   /* be sure that this segment is not corrupt */
-  assert((iter->cur_offset + SIZEOF_SEG(cur_seg)) <= path->data_len);
-  assert(cur_seg->type != BGPSTREAM_AS_PATH_SEG_INVALID);
+  /*assert((iter->cur_offset + SIZEOF_SEG(cur_seg)) <= path->data_len);*/
+  /*assert(cur_seg->type != BGPSTREAM_AS_PATH_SEG_INVALID);*/
 
   /* calculate the size of the current segment and skip over it*/
   iter->cur_offset += SIZEOF_SEG(cur_seg);
@@ -481,7 +481,7 @@ uint16_t bgpstream_as_path_get_data(bgpstream_as_path_t *path, uint8_t **data)
 int bgpstream_as_path_populate_from_data(bgpstream_as_path_t *path,
                                          uint8_t *data, uint16_t data_len)
 {
-  assert(path != NULL);
+  /*assert(path != NULL);*/
 
   bgpstream_as_path_clear(path);
 
@@ -512,7 +512,7 @@ int bgpstream_as_path_populate_from_data(bgpstream_as_path_t *path,
 int bgpstream_as_path_populate_from_data_zc(bgpstream_as_path_t *path,
                                             uint8_t *data, uint16_t data_len)
 {
-  assert(path != NULL);
+  /*assert(path != NULL);*/
 
   bgpstream_as_path_clear(path);
 

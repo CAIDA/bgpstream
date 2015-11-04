@@ -270,7 +270,17 @@ bgpstream_as_path_store_get_path_id(bgpstream_as_path_store_t *store,
 {
   /* shallow copy of the provided path, possibly with the peer segment removed */
   bgpstream_as_path_store_path_t findme;
-  bgpstream_as_path_seg_t *seg = (bgpstream_as_path_seg_t*)path->data;
+  bgpstream_as_path_seg_t *seg;
+
+  /* special case for empty path */
+  if(path == NULL)
+    {
+      id->path_hash = UINT32_MAX;
+      id->path_id = UINT16_MAX;
+      return 0;
+    }
+
+  seg = (bgpstream_as_path_seg_t*)path->data;
 
   /* perform a shallow copy of the path, only extracting the core path if
      needed */
@@ -379,6 +389,12 @@ bgpstream_as_path_store_get_store_path(bgpstream_as_path_store_t *store,
 {
   khiter_t k;
 
+  /* special case for NULL path */
+  if(id.path_hash == UINT32_MAX && id.path_id == UINT16_MAX)
+    {
+      return NULL;
+    }
+
   if((k = kh_get(pathset, store->path_set, id.path_hash)) ==
      kh_end(store->path_set))
     {
@@ -438,6 +454,13 @@ bgpstream_as_path_store_path_get_path(bgpstream_as_path_store_path_t *store_path
  err:
   bgpstream_as_path_destroy(pc);
   return NULL;
+}
+
+bgpstream_as_path_seg_t *
+bgpstream_as_path_store_path_get_origin_seg(bgpstream_as_path_store_path_t *store_path)
+{
+  return ((store_path == NULL) || store_path->path.data_len == 0) ? NULL :
+    (bgpstream_as_path_seg_t*)(store_path->path.data+store_path->path.origin_offset);
 }
 
 void
