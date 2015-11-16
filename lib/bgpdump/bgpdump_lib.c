@@ -168,8 +168,8 @@ BGPDUMP_ENTRY*	bgpdump_read_next(BGPDUMP *dump) {
     if(bytes_read > 0) {
       /* Malformed record */
       dump->parsed++;
-      bgpdump_err("bgpdump_read_next: incomplete MRT header (%d bytes read, expecting 12)",
-		  bytes_read);	    
+      bgpdump_err("bgpdump_read_next: %s incomplete MRT header (%d bytes read, expecting 12)",
+		  dump->filename, bytes_read);	    
       dump->corrupted_read = true;
     }
     /* Nothing more to read, quit */
@@ -191,8 +191,8 @@ BGPDUMP_ENTRY*	bgpdump_read_next(BGPDUMP *dump) {
   buffer = malloc(this_entry->length);
   bytes_read = cfr_read_n(dump->f, buffer, this_entry->length);
   if(bytes_read != this_entry->length) {
-    bgpdump_err("bgpdump_read_next: incomplete dump record (%d bytes read, expecting %d)",
-		bytes_read, this_entry->length);
+    bgpdump_err("bgpdump_read_next: %s incomplete dump record (%d bytes read, expecting %d)",
+		dump->filename, bytes_read, this_entry->length);
     dump->corrupted_read = true;
     //printf("case 2\n");
     bgpdump_free_mem(this_entry);
