@@ -38,6 +38,9 @@ PLUGIN_LIBS=
 if WITH_PLUGIN_PFXMONITOR
 PLUGIN_SRC+=bgpcorsaro_pfxmonitor.c bgpcorsaro_pfxmonitor.h
 endif
+if WITH_PLUGIN_ASMONITOR
+PLUGIN_SRC+=bgpcorsaro_asmonitor.c bgpcorsaro_asmonitor.h
+endif
 if WITH_PLUGIN_PACIFIER
 PLUGIN_SRC+=bgpcorsaro_pacifier.c bgpcorsaro_pacifier.h
 endif
