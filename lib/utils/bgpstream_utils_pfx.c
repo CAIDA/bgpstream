@@ -170,7 +170,7 @@ bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx)
   unsigned long int r = strtoul(found+1, &endptr, 10);
   int ret = errno;
   if(!(endptr != NULL  && *endptr == '\0') ||
-     r == 0 || ret != 0 ||
+     ret != 0 ||
      (pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV4 && r > 32) ||
      (pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV6 && r > 128) )
     {
