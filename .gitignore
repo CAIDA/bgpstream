@@ -23,7 +23,8 @@ TAGS
 *.tar.gz
 tools/bgpreader
 test/bgpstream-test
-test/bgpstream-test-utilities
+test/bgpstream-test-utils-addr
+test/bgpstream-test-utils-pfx
 bgpcorsaro/tools/bgpcorsaro
 
 # pybgpstream build files
