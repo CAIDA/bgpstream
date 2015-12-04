@@ -33,6 +33,8 @@
 #include "bgpstream_elem_generator.h"
 #include "bgpstream_elem_int.h"
 #include "bgpstream_debug.h"
+#include "bgpstream_int.h"
+
 
 /* allocate memory for a bs_record */
 bgpstream_record_t *bgpstream_record_create() {
@@ -43,6 +45,7 @@ bgpstream_record_t *bgpstream_record_create() {
     return NULL; // can't allocate memory
   }
 
+  bs_record->bs = NULL;
   bs_record->bd_entry = NULL;
 
   if((bs_record->elem_generator = bgpstream_elem_generator_create()) == NULL) {
@@ -92,6 +95,7 @@ void bgpstream_record_clear(bgpstream_record_t *record) {
     bgpdump_free_mem(record->bd_entry);
     record->bd_entry = NULL;
   }
+  // record->bs = NULL;
 
   bgpstream_elem_generator_clear(record->elem_generator);
 }
@@ -100,13 +104,66 @@ void bgpstream_record_print_mrt_data(bgpstream_record_t * const bs_record) {
   bgpdump_print_entry(bs_record->bd_entry);
 }
 
+
+
+static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgpstream_elem_t *elem)
+{
+  int pass = 0;
+  bgpstream_asn_filter_t *it = filter_mgr->peer_asns;
+  bgpstream_pfx_filter_t *pit = filter_mgr->prefixes;
+
+  /* Checking peer ASNs */
+  pass = (filter_mgr->peer_asns) ? 0 : 1;
+  while(it != NULL)
+    {
+      if(it->value == elem->peer_asnumber)
+        {
+          pass = 1;
+          break;
+        }
+      it = it->next;
+    }
+  if(pass == 0)
+    {
+      return 0;
+    }
+
+  /* Checking prefixes (unless it is a peer state message) */
+  if(elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE)
+    {
+      return 1;
+    }
+  pass = (filter_mgr->prefixes) ? 0 : 1;
+  while(pit != NULL)
+    {
+      if(bgpstream_pfx_storage_equal(&pit->value, &elem->prefix))
+        {
+          pass = 1;
+          break;
+        }
+      pit = pit->next;
+    }
+
+  return pass;
+}
+
 bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record) {
   if(bgpstream_elem_generator_is_populated(record->elem_generator) == 0 &&
      bgpstream_elem_generator_populate(record->elem_generator, record) != 0)
     {
       return NULL;
     }
-  return bgpstream_elem_generator_get_next_elem(record->elem_generator);
+  bgpstream_elem_t *elem = bgpstream_elem_generator_get_next_elem(record->elem_generator);
+
+  /* if the elem is compatible with the current filters
+   * then return elem, otherwise run again
+   * bgpstream_record_get_next_elem(record) */
+  if(elem == NULL || bgpstream_elem_check_filters(record->bs->filter_mgr, elem) == 1)
+    {
+      return elem;
+    }
+
+  return bgpstream_record_get_next_elem(record);
 }
 
 
@@ -266,7 +323,7 @@ char *bgpstream_record_elem_snprintf(char *buf, size_t len,
   written += c;
   buf_p += c;
   ADD_PIPE;
-  
+
   if(B_FULL)
     return NULL;
 
@@ -274,12 +331,12 @@ char *bgpstream_record_elem_snprintf(char *buf, size_t len,
     {
       return NULL;
     }
-  
+
   written += c;
   buf_p += c;
-  
+
   if(B_FULL)
-    return NULL;  
+    return NULL;
 
   return buf;
 }

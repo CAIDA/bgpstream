@@ -140,6 +140,9 @@ typedef struct struct_bgpstream_record_attributes_t {
 /** Record structure */
 typedef struct struct_bgpstream_record_t {
 
+  /** INTERNAL: pointer to the originating bgpstream instance */
+  struct struct_bgpstream_t *bs;
+
   /** INTERNAL: buffer containing the underlying MRT data for the record */
   bgpstream_record_mrt_data_t *bd_entry;
 

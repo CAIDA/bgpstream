@@ -224,7 +224,7 @@ int bgpstream_pfx_contains(bgpstream_pfx_t *outer, bgpstream_pfx_t *inner);
  *         prefix is not valid
  */
 bgpstream_pfx_storage_t *
-bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx);
+bgpstream_str2pfx(const char *pfx_str, bgpstream_pfx_storage_t *pfx);
 
 /** @} */
 

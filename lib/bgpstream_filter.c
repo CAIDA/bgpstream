@@ -24,6 +24,8 @@
 #include "bgpstream_filter.h"
 #include "bgpstream_debug.h"
 
+#include "utils.h"
+
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -31,16 +33,11 @@
 /* allocate memory for a new bgpstream filter */
 bgpstream_filter_mgr_t *bgpstream_filter_mgr_create() {
   bgpstream_debug("\tBSF_MGR: create start");
-  bgpstream_filter_mgr_t *bs_filter_mgr = (bgpstream_filter_mgr_t*) malloc(sizeof(bgpstream_filter_mgr_t));
+  bgpstream_filter_mgr_t *bs_filter_mgr =
+    (bgpstream_filter_mgr_t*) malloc_zero(sizeof(bgpstream_filter_mgr_t));
   if(bs_filter_mgr == NULL) {
     return NULL; // can't allocate memory
   }
-  bs_filter_mgr->projects = NULL;
-  bs_filter_mgr->collectors = NULL;
-  bs_filter_mgr->bgp_types = NULL;
-  bs_filter_mgr->time_intervals = NULL;
-  bs_filter_mgr->last_processed_ts = NULL;
-  bs_filter_mgr->rib_period = 0;
   bgpstream_debug("\tBSF_MGR: create end");
   return bs_filter_mgr;
 }
@@ -52,17 +49,46 @@ void bgpstream_filter_mgr_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
   if(bs_filter_mgr == NULL) {
     return; // nothing to customize
   }
+
+  if(filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN)
+    {
+      bgpstream_asn_filter_t *af = (bgpstream_asn_filter_t*) malloc(sizeof(bgpstream_asn_filter_t));
+      if(af == NULL) {
+        bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+        bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+        return;
+      }
+      af->value = strtoul(filter_value, NULL, 10);
+      af->next = bs_filter_mgr->peer_asns;
+      bs_filter_mgr->peer_asns = af;
+      return;
+    }
+
+  if(filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX)
+    {
+      bgpstream_pfx_filter_t *pf = (bgpstream_pfx_filter_t*) malloc(sizeof(bgpstream_pfx_filter_t));
+      if(pf == NULL) {
+        bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+        bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+        return;
+      }
+      bgpstream_str2pfx(filter_value, &pf->value);
+      pf->next = bs_filter_mgr->prefixes;
+      bs_filter_mgr->prefixes = pf;
+      return;
+    }
+
   // create a new filter structure
   bgpstream_string_filter_t *f = (bgpstream_string_filter_t*) malloc(sizeof(bgpstream_string_filter_t));
   if(f == NULL) {
     bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-    bgpstream_log_warn("\tBSF_MGR: can't allocate memory");       
-    return; 
+    bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+    return;
   }
   // copying filter value
   strcpy(f->value, filter_value);
   // add filter to the appropriate list
-  switch(filter_type) {    
+  switch(filter_type) {
   case BGPSTREAM_FILTER_TYPE_PROJECT:
     f->next = bs_filter_mgr->projects;
     bs_filter_mgr->projects = f;
@@ -77,10 +103,10 @@ void bgpstream_filter_mgr_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
     break;
   default:
     free(f);
-    bgpstream_log_warn("\tBSF_MGR: unknown filter - ignoring");   
+    bgpstream_log_warn("\tBSF_MGR: unknown filter - ignoring");
     return;
   }
-  bgpstream_debug("\tBSF_MGR:: add_filter stop");  
+  bgpstream_debug("\tBSF_MGR:: add_filter stop");
 }
 
 
@@ -93,7 +119,7 @@ void bgpstream_filter_mgr_rib_period_filter_add(bgpstream_filter_mgr_t *bs_filte
     {
       if((bs_filter_mgr->last_processed_ts = kh_init(collector_ts)) == NULL)
         {
-          bgpstream_log_warn("\tBSF_MGR: can't allocate memory for collectortype map"); 
+          bgpstream_log_warn("\tBSF_MGR: can't allocate memory for collectortype map");
         }
     }
   bs_filter_mgr->rib_period = period;
@@ -104,7 +130,7 @@ void bgpstream_filter_mgr_rib_period_filter_add(bgpstream_filter_mgr_t *bs_filte
 
 void bgpstream_filter_mgr_interval_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
 					      uint32_t begin_time,
-                                              uint32_t end_time){  
+                                              uint32_t end_time){
   bgpstream_debug("\tBSF_MGR:: add_filter start");
   if(bs_filter_mgr == NULL) {
     return; // nothing to customize
@@ -113,8 +139,8 @@ void bgpstream_filter_mgr_interval_filter_add(bgpstream_filter_mgr_t *bs_filter_
   bgpstream_interval_filter_t *f = (bgpstream_interval_filter_t*) malloc(sizeof(bgpstream_interval_filter_t));
   if(f == NULL) {
     bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-    bgpstream_log_warn("\tBSF_MGR: can't allocate memory");       
-    return; 
+    bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+    return;
   }
   // copying filter values
   f->begin_time = begin_time;
@@ -122,7 +148,7 @@ void bgpstream_filter_mgr_interval_filter_add(bgpstream_filter_mgr_t *bs_filter_
   f->next = bs_filter_mgr->time_intervals;
   bs_filter_mgr->time_intervals = f;
 
-  bgpstream_debug("\tBSF_MGR:: add_filter stop");  
+  bgpstream_debug("\tBSF_MGR:: add_filter stop");
 }
 
 int bgpstream_filter_mgr_validate(bgpstream_filter_mgr_t *filter_mgr) {
@@ -156,6 +182,8 @@ void bgpstream_filter_mgr_destroy(bgpstream_filter_mgr_t *bs_filter_mgr) {
   // destroying filters
   bgpstream_string_filter_t * sf;
   bgpstream_interval_filter_t * tif;
+  bgpstream_asn_filter_t * af;
+  bgpstream_pfx_filter_t *pf;
   khiter_t k;
   // projects
   sf = NULL;
@@ -178,6 +206,21 @@ void bgpstream_filter_mgr_destroy(bgpstream_filter_mgr_t *bs_filter_mgr) {
     bs_filter_mgr->bgp_types =  bs_filter_mgr->bgp_types->next;
     free(sf);
   }
+  // peer asns
+  af = NULL;
+  while(bs_filter_mgr->peer_asns != NULL) {
+    af =  bs_filter_mgr->peer_asns;
+    bs_filter_mgr->peer_asns =  bs_filter_mgr->peer_asns->next;
+    free(af);
+  }
+  // prefixes
+  pf = NULL;
+  while(bs_filter_mgr->prefixes != NULL) {
+    pf =  bs_filter_mgr->prefixes;
+    bs_filter_mgr->prefixes =  bs_filter_mgr->prefixes->next;
+    free(pf);
+  }
+
   // time_intervals
   tif = NULL;
   while(bs_filter_mgr->time_intervals != NULL) {

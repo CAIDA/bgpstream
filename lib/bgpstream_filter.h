@@ -33,6 +33,16 @@ typedef struct struct_bgpstream_string_filter_t {
   struct struct_bgpstream_string_filter_t * next;
 } bgpstream_string_filter_t;
 
+typedef struct struct_bgpstream_asn_filter_t {
+  uint32_t value;
+  struct struct_bgpstream_asn_filter_t * next;
+} bgpstream_asn_filter_t;
+
+typedef struct struct_bgpstream_pfx_filter_t {
+  bgpstream_pfx_storage_t value;
+  struct struct_bgpstream_pfx_filter_t * next;
+} bgpstream_pfx_filter_t;
+
 typedef struct struct_bgpstream_interval_filter_t {
   uint32_t begin_time;
   uint32_t end_time;
@@ -49,6 +59,8 @@ typedef struct struct_bgpstream_filter_mgr_t {
   bgpstream_string_filter_t * projects;
   bgpstream_string_filter_t * collectors;
   bgpstream_string_filter_t * bgp_types;
+  bgpstream_asn_filter_t * peer_asns;
+  bgpstream_pfx_filter_t * prefixes;
   bgpstream_interval_filter_t * time_intervals;
   collector_ts_t *last_processed_ts;
   uint32_t rib_period;

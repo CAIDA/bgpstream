@@ -38,6 +38,8 @@
 #define PROJECT_CMD_CNT 10
 #define TYPE_CMD_CNT    10
 #define COLLECTOR_CMD_CNT 100
+#define PREFIX_CMD_CNT 1000
+#define PEERASN_CMD_CNT 1000
 #define WINDOW_CMD_CNT 1024
 #define OPTION_CMD_CNT 1024
 #define BGPSTREAM_RECORD_OUTPUT_FORMAT \
@@ -50,7 +52,7 @@
   "#\n"
 #define BGPSTREAM_ELEM_OUTPUT_FORMAT \
   "# Elem format:\n" \
-  "# <dump-type>|<elem-type>|<record-ts>|<project>|<collector>|<peer-ASn>|<peer-IP>|<prefix>|<next-hop-IP>|<AS-path>|<origin-AS>|<old-state>|<new-state>\n" \
+  "# <dump-type>|<elem-type>|<record-ts>|<project>|<collector>|<peer-ASN>|<peer-IP>|<prefix>|<next-hop-IP>|<AS-path>|<origin-AS>|<old-state>|<new-state>\n" \
   "#\n" \
   "# <dump-type>: R RIB, U Update\n" \
   "# <elem-type>: R RIB, A announcement, W withdrawal, S state message\n" \
@@ -60,7 +62,7 @@
   "#\n" \
   "# <dump-pos>:  B begin, E end\n" \
   "#\n"
-  
+
 struct window {
   uint32_t start;
   uint32_t end;
@@ -138,6 +140,8 @@ static void usage() {
           "                  process records within the given time window\n"
           "                    (omitting the end parameter enables live mode)*\n"
           "   -P <period>    process a rib files every <period> seconds (bgp time)\n"
+          "   -j <peer ASN>  return valid elems originated by a specific peer ASN*\n"
+          "   -k <prefix>    return valid elems associated with a specific prefix*\n"
 	  "   -l             enable live mode (make blocking requests for BGP records)\n"
 	  "                  allows bgpstream to be used to process data in real-time\n"
           "\n"
@@ -174,6 +178,12 @@ int main(int argc, char *argv[])
 
   char *collectors[COLLECTOR_CMD_CNT];
   int collectors_cnt = 0;
+
+  char *peerasns[PEERASN_CMD_CNT];
+  int peerasns_cnt = 0;
+
+  char *prefixes[PREFIX_CMD_CNT];
+  int prefixes_cnt = 0;
 
   struct window windows[WINDOW_CMD_CNT];
   char *endp;
@@ -213,7 +223,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -259,14 +269,14 @@ int main(int argc, char *argv[])
 	  break;
 	case 'w':
 	  if(windows_cnt == WINDOW_CMD_CNT)
-	  {
-	    fprintf(stderr,
-		    "ERROR: A maximum of %d windows can be specified on "
-		    "the command line\n",
-		    WINDOW_CMD_CNT);
-	    usage();
-	    exit(-1);
-	  }
+            {
+              fprintf(stderr,
+                      "ERROR: A maximum of %d windows can be specified on "
+                      "the command line\n",
+                      WINDOW_CMD_CNT);
+              usage();
+              exit(-1);
+            }
 	  /* split the window into a start and end */
 	  if((endp = strchr(optarg, ',')) == NULL)
 	    {
@@ -280,6 +290,30 @@ int main(int argc, char *argv[])
             }
 	  windows[windows_cnt].start = atoi(optarg);
 	  windows_cnt++;
+	  break;
+        case 'j':
+	  if(peerasns_cnt == PEERASN_CMD_CNT)
+	    {
+	      fprintf(stderr,
+		      "ERROR: A maximum of %d peer asns can be specified on "
+		      "the command line\n",
+		      PEERASN_CMD_CNT);
+	      usage();
+	      exit(-1);
+	    }
+	  peerasns[peerasns_cnt++] = strdup(optarg);
+	  break;
+        case 'k':
+	  if(prefixes_cnt == PREFIX_CMD_CNT)
+	    {
+	      fprintf(stderr,
+		      "ERROR: A maximum of %d peer asns can be specified on "
+		      "the command line\n",
+		      PREFIX_CMD_CNT);
+	      usage();
+	      exit(-1);
+	    }
+	  prefixes[prefixes_cnt++] = strdup(optarg);
 	  break;
         case 'P':
           rib_period = atoi(optarg);
@@ -428,12 +462,26 @@ int main(int argc, char *argv[])
       bgpstream_add_interval_filter(bs, windows[i].start, windows[i].end);
     }
 
+  /* peer asns */
+  for(i=0; i<peerasns_cnt; i++)
+    {
+      bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN, peerasns[i]);
+      free(peerasns[i]);
+    }
+
+  /* prefixes */
+  for(i=0; i<prefixes_cnt; i++)
+    {
+      bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_ELEM_PREFIX, prefixes[i]);
+      free(prefixes[i]);
+    }
+  
   /* frequencies */
   if(rib_period > 0)
     {
       bgpstream_add_rib_period_filter(bs, rib_period);
     }
-    
+
   /* datasource */
   bgpstream_set_data_interface(bs, datasource_id);
 

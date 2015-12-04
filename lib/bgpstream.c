@@ -447,7 +447,8 @@ int bgpstream_get_next_record(bgpstream_t *bs,
   if(bs == NULL || (bs != NULL && bs->status != BGPSTREAM_STATUS_ON)) {
     return -1; // wrong status
   }
-  // bgpstream_record_t *record = NULL;
+
+
   int num_query_results = 0;
   bgpstream_input_t *bs_in = NULL;
 
@@ -481,6 +482,8 @@ int bgpstream_get_next_record(bgpstream_t *bs,
     bs_in = NULL;
   }
   bgpstream_debug("BS: reader mgr not empty");
+  /* init the record with a pointer to bgpstream */
+  record->bs = bs;
   return bgpstream_reader_mgr_get_next_record(bs->reader_mgr, record,
                                               bs->filter_mgr);
 }
