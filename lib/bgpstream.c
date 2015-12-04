@@ -423,7 +423,7 @@ int bgpstream_start(bgpstream_t *bs) {
   if(bs->datasource_mgr->status == BGPSTREAM_DATASOURCE_STATUS_ON) {
     bs->status = BGPSTREAM_STATUS_ON; // interface is on
     bgpstream_debug("BS: init end: ok");
-    return 1;
+    return 0;
   }
   else{
     // interface is not on (something wrong with datasource)
