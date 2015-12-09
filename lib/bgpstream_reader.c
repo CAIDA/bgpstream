@@ -25,7 +25,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <unistd.h>
 
 #include "bgpstream_reader.h"
 #include "bgpstream_input.h"
@@ -34,6 +34,9 @@
 #include "utils.h"
 
 #define BUFFER_LEN 1024
+
+#define DUMP_OPEN_MAX_RETRIES 5
+#define DUMP_OPEN_MIN_RETRY_WAIT  10
 
 struct struct_bgpstream_reader_t {
   struct struct_bgpstream_reader_t *next;
@@ -62,13 +65,30 @@ struct struct_bgpstream_reader_t {
 static void *thread_producer(void *user)
 {
   bgpstream_reader_t *bsr = (bgpstream_reader_t *)user;
+  int retries = 0;
+  int delay = DUMP_OPEN_MIN_RETRY_WAIT;
 
   /* all we do is open the dump */
-  if((bsr->bd_mgr = bgpdump_open_dump(bsr->dump_name)) == NULL) {
-    bsr->status = BGPSTREAM_READER_STATUS_CANT_OPEN_DUMP;
+  /* but try a few times in case there is a transient failure */
+  while(retries < DUMP_OPEN_MAX_RETRIES && bsr->bd_mgr == NULL) {
+    if((bsr->bd_mgr = bgpdump_open_dump(bsr->dump_name)) == NULL) {
+      fprintf(stderr, "WARN: Could not open dumpfile (%s). Attempt %d of %d\n",
+              bsr->dump_name, retries+1, DUMP_OPEN_MAX_RETRIES);
+      retries++;
+      if(retries < DUMP_OPEN_MAX_RETRIES) {
+        sleep(delay);
+        delay *= 2;
+      }
+    }
   }
 
   pthread_mutex_lock(&bsr->mutex);
+  if(bsr->bd_mgr == NULL) {
+    fprintf(stderr,
+            "ERROR: Could not open dumpfile (%s) after %d attempts. Giving up.\n",
+            bsr->dump_name, DUMP_OPEN_MAX_RETRIES);
+    bsr->status = BGPSTREAM_READER_STATUS_CANT_OPEN_DUMP;
+  }
   bsr->dump_ready = 1;
   pthread_cond_signal(&bsr->dump_ready_cond);
   pthread_mutex_unlock(&bsr->mutex);
