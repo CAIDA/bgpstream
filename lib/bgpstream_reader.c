@@ -85,6 +85,10 @@ static BGPDUMP_ENTRY *get_next_entry(bgpstream_reader_t *bsr)
     }
     pthread_mutex_unlock(&bsr->mutex);
 
+    if(bsr->status == BGPSTREAM_READER_STATUS_CANT_OPEN_DUMP) {
+      return NULL;
+    }
+
     bsr->skip_dump_check = 1;
   }
 
@@ -155,7 +159,9 @@ static void bgpstream_reader_read_new_data(bgpstream_reader_t * const bs_reader,
   bgpstream_debug("\t\tBSR: read new data: reading new entry (or entries) in bgpdump");   
   bgpstream_debug("\t\tBSR: read new data: from %s", bs_reader->dump_name);
   while(!significant_entry) {
-    bgpstream_debug("\t\t\tBSR: read new data: reading");   
+    bgpstream_debug("\t\t\tBSR: read new data: reading");
+    // try and get the next entry
+    // will block until dump is open (or fails)
     bs_reader->bd_entry = get_next_entry(bs_reader);
     // check if there was an error opening the dump
     if(bs_reader->status == BGPSTREAM_READER_STATUS_CANT_OPEN_DUMP) {
