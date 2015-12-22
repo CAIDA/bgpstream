@@ -62,7 +62,6 @@ static    int process_zebra_bgp_snapshot(struct mstream *s,BGPDUMP_ENTRY *entry)
 static    attributes_t *process_attributes(struct mstream *s, u_int8_t asn_len, struct zebra_incomplete *incomplete);
 
 static    char aspath_delimiter_char (u_char type, u_char which);
-static    void process_attr_community_string(struct community *com);
 
 static    void process_mp_announce(struct mstream *s, struct mp_info *info, struct zebra_incomplete *incomplete);
 static    void process_mp_withdraw(struct mstream *s, struct mp_info *info, struct zebra_incomplete *incomplete);
@@ -904,7 +903,7 @@ static void process_one_attr(struct mstream *outer_stream, attributes_t *attr, u
     attr->community->val	= malloc(len);
     mstream_get(s,attr->community->val,len);
     attr->community->str	= NULL;
-    process_attr_community_string(attr->community);
+    /*process_attr_community_string(attr->community);*/
     break;
   case BGP_ATTR_NEW_AS_PATH:
     assert(! attr->new_aspath);

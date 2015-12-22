@@ -82,6 +82,9 @@ typedef enum {
   /** Filter elems based on prefix  */
   BGPSTREAM_FILTER_TYPE_ELEM_PREFIX   = 5,
 
+  /** Filter elems based on the community attribute  */
+  BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY = 6,
+
 } bgpstream_filter_type_t;
 
 

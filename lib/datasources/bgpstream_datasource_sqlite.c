@@ -92,7 +92,7 @@ bgpstream_sqlite_datasource_t *
 bgpstream_sqlite_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
                                    char * sqlite_file)
 {
-  
+
   bgpstream_debug("\t\tBSDS_SQLITE: create sqlite_ds start");  
   bgpstream_sqlite_datasource_t *sqlite_ds = (bgpstream_sqlite_datasource_t*) malloc_zero(sizeof(bgpstream_sqlite_datasource_t));
   if(sqlite_ds == NULL) {
@@ -122,55 +122,67 @@ bgpstream_sqlite_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
              "bgp_data.collector_id = time_span.collector_id AND "
              "bgp_data.type_id = bgp_types.id AND "
              "bgp_data.type_id = time_span.bgp_type_id ");
-  
+
   // projects, collectors, bgp_types, and time_intervals are used as filters
   // only if they are provided by the user
-  bgpstream_string_filter_t * sf;
   bgpstream_interval_filter_t * tif;
+  bool first;
+  char *f;
   
   // projects
+  first = true;
   if(filter_mgr->projects != NULL) {
-    sf = filter_mgr->projects;
     APPEND_STR(" AND collectors.project IN (");
-    while(sf != NULL) {
-      APPEND_STR("'");
-      APPEND_STR(sf->value);
-      APPEND_STR("'");
-      sf = sf->next;
-      if(sf!= NULL) {
-        APPEND_STR(", ");
-      }
-    }
+    bgpstream_str_set_rewind(filter_mgr->projects);    
+    while((f = bgpstream_str_set_next(filter_mgr->projects)) != NULL)
+      {
+        if(!first)
+          {
+            APPEND_STR(", ");
+          }
+        APPEND_STR("'");
+        APPEND_STR(f);
+        APPEND_STR("'");
+        first = false;
+      }    
     APPEND_STR(" ) ");
   }
+
   // collectors
+  first = true;
   if(filter_mgr->collectors != NULL) {
-    sf = filter_mgr->collectors;
     APPEND_STR(" AND collectors.name IN (");
-    while(sf != NULL) {
-      APPEND_STR("'");
-      APPEND_STR(sf->value);
-      APPEND_STR("'");
-      sf = sf->next;
-      if(sf!= NULL) {
-        APPEND_STR(", ");
-      }
-    }
+    bgpstream_str_set_rewind(filter_mgr->collectors);    
+    while((f = bgpstream_str_set_next(filter_mgr->collectors)) != NULL)
+      {
+        if(!first)
+          {
+            APPEND_STR(", ");
+          }
+        APPEND_STR("'");
+        APPEND_STR(f);
+        APPEND_STR("'");
+        first = false;
+      }    
     APPEND_STR(" ) ");
   }
+
   // bgp_types
+  first = true;
   if(filter_mgr->bgp_types != NULL) {
-    sf = filter_mgr->bgp_types;
     APPEND_STR(" AND bgp_types.name IN (");
-    while(sf != NULL) {
-      APPEND_STR("'");
-      APPEND_STR(sf->value);
-      APPEND_STR("'");
-      sf = sf->next;
-      if(sf!= NULL) {
-        APPEND_STR(", ");
-      }
-    }
+    bgpstream_str_set_rewind(filter_mgr->bgp_types);    
+    while((f = bgpstream_str_set_next(filter_mgr->bgp_types)) != NULL)
+      {
+        if(!first)
+          {
+            APPEND_STR(", ");
+          }
+        APPEND_STR("'");
+        APPEND_STR(f);
+        APPEND_STR("'");
+        first = false;
+      }    
     APPEND_STR(" ) ");
   }
 
@@ -231,13 +243,13 @@ bgpstream_sqlite_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
   // input insertions are always "head" insertions, i.e. queue insertion is
   // faster
   APPEND_STR(" ORDER BY file_time DESC, bgp_types.name DESC");
-
+  
   if(prepare_db(sqlite_ds) != 0)
     {
       goto err;
     }
 
-  /* printf("%d \n %s\n", rem_buf_space, sqlite_ds->sql_query); */
+  // printf("%s\n", sqlite_ds->sql_query); 
   
   bgpstream_debug("\t\tBSDS_SQLITE: create sqlite_ds end");
 

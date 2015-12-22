@@ -349,5 +349,5 @@ int bgpstream_as_path_equal(bgpstream_as_path_t *path1,
 /** @} */
 
 
-#endif /* __BGPSTREAM_UTILS_AS_H */
+#endif /* __BGPSTREAM_UTILS_AS_PATH_H */
 

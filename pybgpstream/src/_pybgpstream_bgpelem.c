@@ -29,6 +29,17 @@
 
 #define BGPElemDocstring "BGPElem object"
 
+#define ADD_STR_TO_DICT(key_str, value_exp)             \
+  do {                                                  \
+    PyObject *key = PyString_FromString(key_str);       \
+    PyObject *value = (value_exp);                      \
+    if(PyDict_SetItem(dict, key, value) == -1)          \
+      return NULL;                                      \
+    Py_DECREF(key);                                     \
+    Py_DECREF(value);                                   \
+  }                                                     \
+  while(0)
+
 static PyObject *
 get_ip_pystr(bgpstream_ip_addr_t *ip) {
   char ip_str[INET6_ADDRSTRLEN] = "";
@@ -51,6 +62,36 @@ get_aspath_pystr(bgpstream_as_path_t *aspath) {
   if(bgpstream_as_path_snprintf(buf, 4096, aspath) >= 4096)
     return NULL;
   return PyString_FromString(buf);
+}
+
+static PyObject *
+get_communities_pylist(bgpstream_community_set_t *communities) {
+
+  PyObject *list;
+  bgpstream_community_t *c;
+  Py_ssize_t len = bgpstream_community_set_size(communities);
+  int i;
+  /* create the dictionary */
+  if((list = PyList_New(len)) == NULL)
+    return NULL;
+  
+  PyObject *dict;
+
+  for(i = 0; i< len; i++)
+    {
+      c = bgpstream_community_set_get(communities, i);
+
+      /* create the dictionary */
+      if((dict = PyDict_New()) == NULL)
+        return NULL;
+      /* add pair to dictionary */
+      ADD_STR_TO_DICT("asn", Py_BuildValue("k", c->asn));
+      ADD_STR_TO_DICT("value", Py_BuildValue("k", c->value));
+
+      /* add dictionary to list*/
+      PyList_SetItem(list, (Py_ssize_t)i, dict);
+    }
+  return list;
 }
 
 static PyObject *
@@ -108,16 +149,6 @@ BGPElem_get_peer_asn(BGPElemObject *self, void *closure)
   return Py_BuildValue("k", self->elem->peer_asnumber);
 }
 
-#define ADD_TO_DICT(key_str, value_exp)                 \
-  do {                                                  \
-    PyObject *key = PyString_FromString(key_str);       \
-    PyObject *value = (value_exp);                      \
-    if(PyDict_SetItem(dict, key, value) == -1)          \
-      return NULL;                                      \
-    Py_DECREF(key);                                     \
-    Py_DECREF(value);                                   \
-  }                                                     \
-  while(0)
 
 /** Type-dependent field dict */
 static PyObject *
@@ -134,26 +165,29 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
     case BGPSTREAM_ELEM_TYPE_RIB:
     case BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT:
       /* next hop */
-      ADD_TO_DICT("next-hop",
+      ADD_STR_TO_DICT("next-hop",
                   get_ip_pystr((bgpstream_ip_addr_t *)&self->elem->nexthop));
 
       /* as path */
-      ADD_TO_DICT("as-path", get_aspath_pystr(self->elem->aspath));
+      ADD_STR_TO_DICT("as-path", get_aspath_pystr(self->elem->aspath));
+
+      /* communities */
+      ADD_STR_TO_DICT("communities", get_communities_pylist(self->elem->communities));
 
       /* FALLTHROUGH */
 
     case BGPSTREAM_ELEM_TYPE_WITHDRAWAL:
       /* prefix */
-      ADD_TO_DICT("prefix",
+      ADD_STR_TO_DICT("prefix",
                   get_pfx_pystr((bgpstream_pfx_t *)&self->elem->prefix));
       break;
 
     case BGPSTREAM_ELEM_TYPE_PEERSTATE:
       /* old state */
-      ADD_TO_DICT("old-state", get_peerstate_pystr(self->elem->old_state));
+      ADD_STR_TO_DICT("old-state", get_peerstate_pystr(self->elem->old_state));
 
       /* new state */
-      ADD_TO_DICT("new-state", get_peerstate_pystr(self->elem->new_state));
+      ADD_STR_TO_DICT("new-state", get_peerstate_pystr(self->elem->new_state));
       break;
 
     case BGPSTREAM_ELEM_TYPE_UNKNOWN:

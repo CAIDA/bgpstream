@@ -147,6 +147,12 @@ typedef struct struct_bgpstream_elem_t {
    */
   bgpstream_as_path_t *aspath;
 
+  /** Communities
+   *
+   * Available only for RIB and Announcement elem types
+   */
+  bgpstream_community_set_t *communities;
+
   /** Old peer state
    *
    * Available only for the Peer-state elem type

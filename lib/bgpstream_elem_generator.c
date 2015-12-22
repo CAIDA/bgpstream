@@ -58,6 +58,7 @@
 #include "utils.h"
 
 #include "bgpstream_utils_as_path_int.h"
+#include "bgpstream_utils_community_int.h"
 
 #include "bgpstream_debug.h"
 #include "bgpstream_elem_int.h"
@@ -222,6 +223,13 @@ static int table_line_mrtd_route(bgpstream_elem_generator_t *self,
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
     }
 
+  // communities
+  if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
+     entry->attr->community)
+    {
+      bgpstream_community_set_populate(ri->communities, entry->attr->community);
+    }
+
   // nextop
     if((entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_MP_REACH_NLRI)) &&
 	entry->attr->mp_info->announce[AFI_IP6][SAFI_UNICAST])
@@ -292,6 +300,10 @@ int table_line_dump_v2_prefix(bgpstream_elem_generator_t *self,
     if (attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, attr->aspath);
     }
+    // communities
+    if (attr->community) {
+      bgpstream_community_set_populate(ri->communities, attr->community);
+    }
     // next hop
     if ((attr->flag & ATTR_FLAG_BIT(BGP_ATTR_MP_REACH_NLRI)) &&
 	attr->mp_info->announce[AFI_IP6][SAFI_UNICAST]) {
@@ -344,6 +356,11 @@ static int table_line_announce(bgpstream_elem_generator_t *self,
        entry->attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
     }
+    // communities
+    if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
+       entry->attr->community) {
+      bgpstream_community_set_populate(ri->communities, entry->attr->community);
+    }
   }
   return 0;
 }
@@ -385,6 +402,11 @@ static int table_line_announce_1(bgpstream_elem_generator_t *self,
        entry->attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
     }
+    // communities
+    if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
+       entry->attr->community) {
+      bgpstream_community_set_populate(ri->communities, entry->attr->community);
+    }
   }
   return 0;
 }
@@ -425,6 +447,11 @@ static int table_line_announce6(bgpstream_elem_generator_t *self,
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_AS_PATH) &&
        entry->attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
+    }
+    // communities
+    if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
+       entry->attr->community) {
+      bgpstream_community_set_populate(ri->communities, entry->attr->community);
     }
   }
   return 0;

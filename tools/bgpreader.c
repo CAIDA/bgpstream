@@ -39,6 +39,7 @@
 #define TYPE_CMD_CNT    10
 #define COLLECTOR_CMD_CNT 100
 #define PREFIX_CMD_CNT 1000
+#define COMMUNITY_CMD_CNT 1000
 #define PEERASN_CMD_CNT 1000
 #define WINDOW_CMD_CNT 1024
 #define OPTION_CMD_CNT 1024
@@ -142,6 +143,8 @@ static void usage() {
           "   -P <period>    process a rib files every <period> seconds (bgp time)\n"
           "   -j <peer ASN>  return valid elems originated by a specific peer ASN*\n"
           "   -k <prefix>    return valid elems associated with a specific prefix*\n"
+          "   -y <community> return valid elems with the specified community* \n"
+          "                  (format: asn:value, the '*' metacharacter is recognized)\n"
 	  "   -l             enable live mode (make blocking requests for BGP records)\n"
 	  "                  allows bgpstream to be used to process data in real-time\n"
           "\n"
@@ -185,6 +188,9 @@ int main(int argc, char *argv[])
   char *prefixes[PREFIX_CMD_CNT];
   int prefixes_cnt = 0;
 
+  char *communities[COMMUNITY_CMD_CNT];
+  int communities_cnt = 0;
+
   struct window windows[WINDOW_CMD_CNT];
   char *endp;
   int windows_cnt = 0;
@@ -223,7 +229,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -314,6 +320,18 @@ int main(int argc, char *argv[])
 	      exit(-1);
 	    }
 	  prefixes[prefixes_cnt++] = strdup(optarg);
+	  break;
+        case 'y':
+	  if(communities_cnt == COMMUNITY_CMD_CNT)
+	    {
+	      fprintf(stderr,
+		      "ERROR: A maximum of %d communities can be specified on "
+		      "the command line\n",
+		      PREFIX_CMD_CNT);
+	      usage();
+	      exit(-1);
+	    }
+	  communities[communities_cnt++] = strdup(optarg);
 	  break;
         case 'P':
           rib_period = atoi(optarg);
@@ -475,7 +493,14 @@ int main(int argc, char *argv[])
       bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_ELEM_PREFIX, prefixes[i]);
       free(prefixes[i]);
     }
-  
+
+  /* communities */
+  for(i=0; i<communities_cnt; i++)
+    {
+      bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY, communities[i]);
+      free(communities[i]);
+    }
+
   /* frequencies */
   if(rib_period > 0)
     {

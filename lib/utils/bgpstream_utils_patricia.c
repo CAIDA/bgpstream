@@ -207,6 +207,7 @@ static bgpstream_patricia_node_t *bgpstream_patricia_node_create(bgpstream_patri
   node->bit = pfx->mask_len;
   node->l = NULL;
   node->r = NULL;
+  node->user = NULL;
   return node;
 }
 
@@ -693,7 +694,11 @@ bgpstream_patricia_node_t *bgpstream_patricia_tree_insert(bgpstream_patricia_tre
     }
 
   /* Create a new node */
-  new_node = bgpstream_patricia_node_create(pt, pfx);
+  if((new_node = bgpstream_patricia_node_create(pt, pfx)) == NULL)
+    {
+      fprintf(stderr, "Error creating pt node\n");
+      return NULL;
+    }
 
   /* Insert the new node in the Patricia Tree: CHILD */
   if (node_it->bit == differ_bit)
@@ -873,6 +878,15 @@ void bgpstream_patricia_tree_remove_node(bgpstream_patricia_tree_t *pt, bgpstrea
   if(v == BGPSTREAM_ADDR_VERSION_UNKNOWN)
     {
       return;
+    }
+
+  if(node->user != NULL)
+    {
+      if(pt->node_user_destructor != NULL)
+        {
+          pt->node_user_destructor(node->user);
+        }
+      node->user = NULL;
     }
 
   /* if node has both children */

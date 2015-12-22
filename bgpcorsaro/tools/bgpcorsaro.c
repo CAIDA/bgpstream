@@ -46,6 +46,7 @@
 #define TYPE_CMD_CNT    10
 #define COLLECTOR_CMD_CNT 100
 #define PREFIX_CMD_CNT 1000
+#define COMMUNITY_CMD_CNT 1000
 #define PEERASN_CMD_CNT 1000
 #define WINDOW_CMD_CNT 1024
 #define OPTION_CMD_CNT 1024
@@ -172,7 +173,7 @@ static void usage()
       fprintf(stderr, "bgpcorsaro_get_plugin_names failed\n");
       return;
     }
-  
+
   fprintf(stderr,
 	  "usage: bgpcorsaro -w <start>[,<end>] -O outfile [<options>]\n"
 	  "Available options are:\n"
@@ -193,6 +194,8 @@ static void usage()
           "   -P <period>    process a rib files every <period> seconds (bgp time)\n"
           "   -j <peer ASN>  return valid elems originated by a specific peer ASN*\n"
           "   -k <prefix>    return valid elems associated with a specific prefix*\n"
+          "   -y <community> return valid elems with the specified community* \n"
+          "                  (format: asn:value, the '*' metacharacter is recognized)\n"
 	  "   -l             enable live mode (make blocking requests for BGP records)\n"
 	  "                  allows bgpcorsaro to be used to process data in real-time\n"
           "\n"
@@ -271,6 +274,9 @@ int main(int argc, char *argv[])
   char *prefixes[PREFIX_CMD_CNT];
   int prefixes_cnt = 0;
 
+  char *communities[COMMUNITY_CMD_CNT];
+  int communities_cnt = 0;
+
   char *interface_options[OPTION_CMD_CNT];
   int interface_options_cnt = 0;
 
@@ -294,7 +300,7 @@ int main(int argc, char *argv[])
   assert(datasource_id != 0);
 
   while(prevoptind = optind,
-        (opt = getopt(argc, argv, ":d:o:p:c:t:w:j:k:P:i:ag:lLx:n:O:r:R:hv?")) >= 0)
+        (opt = getopt(argc, argv, ":d:o:p:c:t:w:j:k:y:P:i:ag:lLx:n:O:r:R:hv?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -378,7 +384,7 @@ int main(int argc, char *argv[])
 	  windows[windows_cnt].start = atoi(optarg);
 	  windows_cnt++;
 	  break;
-          
+
         case 'j':
 	  if(peerasns_cnt == PEERASN_CMD_CNT)
 	    {
@@ -391,7 +397,7 @@ int main(int argc, char *argv[])
 	    }
 	  peerasns[peerasns_cnt++] = strdup(optarg);
 	  break;
-          
+
         case 'k':
 	  if(prefixes_cnt == PREFIX_CMD_CNT)
 	    {
@@ -403,6 +409,19 @@ int main(int argc, char *argv[])
 	      exit(-1);
 	    }
 	  prefixes[prefixes_cnt++] = strdup(optarg);
+	  break;
+
+        case 'y':
+	  if(communities_cnt == COMMUNITY_CMD_CNT)
+	    {
+	      fprintf(stderr,
+		      "ERROR: A maximum of %d communities can be specified on "
+		      "the command line\n",
+		      PREFIX_CMD_CNT);
+	      usage();
+	      exit(-1);
+	    }
+	  communities[communities_cnt++] = strdup(optarg);
 	  break;
 
         case 'o':
@@ -675,6 +694,12 @@ int main(int argc, char *argv[])
       free(prefixes[i]);
     }
 
+  /* communities */
+  for(i=0; i<communities_cnt; i++)
+    {
+      bgpstream_add_filter(stream, BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY, communities[i]);
+      free(communities[i]);
+    }
 
   /* frequencies */
   if(rib_period > 0)

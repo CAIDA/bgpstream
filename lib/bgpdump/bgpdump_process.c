@@ -907,8 +907,14 @@ static void show_attr(attributes_t *attr) {
   
 	  }
       } 
-    if( (attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-      printf("COMMUNITY:%s\n",attr->community->str);
+    if( (attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+      {
+        if(attr->community->str == NULL)
+          {
+            process_attr_community_string(attr->community);
+          }
+        printf("COMMUNITY:%s\n",attr->community->str);
+      }
   }
  
 }
@@ -1089,8 +1095,14 @@ static void table_line_announce(struct prefix *prefix,int count,BGPDUMP_ENTRY *e
 	    nmed=0;
 			    
 	  printf("%s|%u|%u|",inet_ntoa(entry->attr->nexthop),npref,nmed);
-	  if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-	    printf("%s|%s|",entry->attr->community->str+1,tmp2);
+	  if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+            {
+              if(entry->attr->community->str == NULL)
+                {
+                  process_attr_community_string(entry->attr->community);
+                }
+              printf("%s|%s|",entry->attr->community->str+1,tmp2);
+            }
 	  else
 	    printf("|%s|",tmp2);
 				
@@ -1174,8 +1186,14 @@ static void table_line_announce_1(struct mp_nlri *prefix,int count,BGPDUMP_ENTRY
 			    
 	      printf("%s|%d|%d|",inet_ntoa(entry->attr->nexthop),npref,nmed);
 	      //printf("%s|%d|%d|",inet_ntoa(prefix->nexthop.v4_addr),entry->attr->local_pref,entry->attr->med);
-	      if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-		printf("%s|%s|",entry->attr->community->str+1,tmp2);
+	      if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+                {
+                  if(entry->attr->community->str == NULL)
+                    {
+                      process_attr_community_string(entry->attr->community);
+                    }
+                  printf("%s|%s|",entry->attr->community->str+1,tmp2);
+                }
 	      else
 		printf("|%s|",tmp2);
 
@@ -1203,8 +1221,14 @@ static void table_line_announce_1(struct mp_nlri *prefix,int count,BGPDUMP_ENTRY
 			    
 	      printf("%s|%d|%d|",inet_ntoa(entry->attr->nexthop),npref,nmed);
 	      //printf("%s|%d|%d|",inet_ntoa(entry->attr->nexthop),entry->attr->local_pref,entry->attr->med);
-	      if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-		printf("%s|%s|",entry->attr->community->str+1,tmp2);
+	      if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+                {
+                  if(entry->attr->community->str == NULL)
+                    {
+                      process_attr_community_string(entry->attr->community);
+                    }
+                  printf("%s|%s|",entry->attr->community->str+1,tmp2);
+                }
 	      else
 		printf("|%s|",tmp2);
 
@@ -1295,8 +1319,14 @@ static void table_line_announce6(struct mp_nlri *prefix,int count,BGPDUMP_ENTRY 
 	      printf("BGP4MP|%ld|A|%s|%u|%s/%d|%s|%s|%s|%u|%u|",entry->time,bgpdump_fmt_ipv4(entry->body.zebra_message.source_ip,buf1),entry->body.zebra_message.source_as,bgpdump_fmt_ipv6(prefix->nlri[idx].address,buf2),prefix->nlri[idx].len,attr_aspath(entry->attr),tmp1,bgpdump_fmt_ipv6(prefix->nexthop,buf),npref,nmed);
 	      break;
 	    }
-	  if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-	    printf("%s|%s|",entry->attr->community->str+1,tmp2);
+	  if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+            {
+              if(entry->attr->community->str == NULL)
+                {
+                  process_attr_community_string(entry->attr->community);
+                }
+              printf("%s|%s|",entry->attr->community->str+1,tmp2);
+            }
 	  else
 	    printf("|%s|",tmp2);
 
@@ -1392,8 +1422,14 @@ static void table_line_mrtd_route(BGPDUMP_MRTD_TABLE_DUMP *route,BGPDUMP_ENTRY *
 	}
       printf("%s|%u|%u|",nexthop,npref,nmed);
 
-      if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-	printf("%s|%s|",entry->attr->community->str+1,tmp2);
+      if( (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+        {
+          if(entry->attr->community->str == NULL)
+            {
+              process_attr_community_string(entry->attr->community);
+            }
+          printf("%s|%s|",entry->attr->community->str+1,tmp2);
+        }
       else
 	printf("|%s|",tmp2);
 				
@@ -1483,8 +1519,14 @@ static void table_line_dump_v2_prefix(BGPDUMP_TABLE_DUMP_V2_PREFIX *e,BGPDUMP_EN
 	  }
 	printf("%s|%u|%u|",nexthop,npref,nmed);
             
-	if( (attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)	
-	  printf("%s|%s|",attr->community->str+1,aggregate);
+	if( (attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) ) !=0)
+          {
+            if(attr->community->str == NULL)
+              {
+                process_attr_community_string(attr->community);
+              }
+            printf("%s|%s|",attr->community->str+1,aggregate);
+          }
 	else
 	  printf("|%s|",aggregate);
             

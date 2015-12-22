@@ -109,21 +109,11 @@ void bgpstream_record_print_mrt_data(bgpstream_record_t * const bs_record) {
 static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgpstream_elem_t *elem)
 {
   int pass = 0;
-  bgpstream_asn_filter_t *it = filter_mgr->peer_asns;
-  bgpstream_pfx_filter_t *pit = filter_mgr->prefixes;
 
-  /* Checking peer ASNs */
-  pass = (filter_mgr->peer_asns) ? 0 : 1;
-  while(it != NULL)
-    {
-      if(it->value == elem->peer_asnumber)
-        {
-          pass = 1;
-          break;
-        }
-      it = it->next;
-    }
-  if(pass == 0)
+  /* Checking peer ASNs: if the filter is on and the peer asn is not in the 
+   * set, return 0 */
+  if(filter_mgr->peer_asns &&
+     bgpstream_id_set_exists(filter_mgr->peer_asns, elem->peer_asnumber) == 0)
     {
       return 0;
     }
@@ -133,17 +123,40 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
     {
       return 1;
     }
-  pass = (filter_mgr->prefixes) ? 0 : 1;
-  while(pit != NULL)
+
+  if(filter_mgr->prefixes &&
+    (bgpstream_patricia_tree_get_pfx_overlap_info(filter_mgr->prefixes,
+                                                  (bgpstream_pfx_t *) &elem->prefix) &
+     (BGPSTREAM_PATRICIA_EXACT_MATCH | BGPSTREAM_PATRICIA_LESS_SPECIFICS) ) == 0)
     {
-      if(bgpstream_pfx_storage_equal(&pit->value, &elem->prefix))
-        {
-          pass = 1;
-          break;
-        }
-      pit = pit->next;
+      return 0;
     }
 
+  /* Checking communities (unless it is a withdrawal message) */
+  if(elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL)
+    {
+      return 1;
+    }
+
+  pass = (filter_mgr->communities != NULL) ? 0 : 1;
+  if(filter_mgr->communities)
+    {
+      bgpstream_community_t *c;
+      khiter_t k;
+      for(k = kh_begin(filter_mgr->communities); k != kh_end(filter_mgr->communities); ++k)
+        {
+          if(kh_exist(filter_mgr->communities, k))
+            {
+              c = &(kh_key(filter_mgr->communities, k));
+              if(bgpstream_community_set_match(elem->communities, c,
+                                               kh_value(filter_mgr->communities, k)))
+                {
+                  pass = 1;
+                  break;
+                }
+            }
+        }
+    }
   return pass;
 }
 

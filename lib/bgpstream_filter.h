@@ -28,20 +28,12 @@
 #include "bgpstream_constants.h"
 #include "khash.h"
 
-typedef struct struct_bgpstream_string_filter_t {
-  char value[BGPSTREAM_PAR_MAX_LEN];
-  struct struct_bgpstream_string_filter_t * next;
-} bgpstream_string_filter_t;
 
-typedef struct struct_bgpstream_asn_filter_t {
-  uint32_t value;
-  struct struct_bgpstream_asn_filter_t * next;
-} bgpstream_asn_filter_t;
-
-typedef struct struct_bgpstream_pfx_filter_t {
-  bgpstream_pfx_storage_t value;
-  struct struct_bgpstream_pfx_filter_t * next;
-} bgpstream_pfx_filter_t;
+/* hash table community filter:
+ * community -> filter mask (asn only, value only, both) */
+KHASH_INIT(bgpstream_community_filter, bgpstream_community_t, uint8_t, 1,
+	   bgpstream_community_hash_value, bgpstream_community_equal_value);
+typedef khash_t(bgpstream_community_filter) bgpstream_community_filter_t;
 
 typedef struct struct_bgpstream_interval_filter_t {
   uint32_t begin_time;
@@ -55,12 +47,12 @@ KHASH_INIT(collector_ts, char*, uint32_t, 1,
 typedef khash_t(collector_ts) collector_ts_t;
                                    
 typedef struct struct_bgpstream_filter_mgr_t {
-  
-  bgpstream_string_filter_t * projects;
-  bgpstream_string_filter_t * collectors;
-  bgpstream_string_filter_t * bgp_types;
-  bgpstream_asn_filter_t * peer_asns;
-  bgpstream_pfx_filter_t * prefixes;
+  bgpstream_str_set_t *projects;
+  bgpstream_str_set_t *collectors;
+  bgpstream_str_set_t *bgp_types;
+  bgpstream_id_set_t *peer_asns;
+  bgpstream_patricia_tree_t *prefixes;
+  bgpstream_community_filter_t *communities;
   bgpstream_interval_filter_t * time_intervals;
   collector_ts_t *last_processed_ts;
   uint32_t rib_period;

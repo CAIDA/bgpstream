@@ -495,37 +495,34 @@ bgpstream_broker_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
 
   // projects, collectors, bgp_types, and time_intervals are used as filters
   // only if they are provided by the user
-  bgpstream_string_filter_t * sf;
   bgpstream_interval_filter_t * tif;
 
   // projects
+  char *f;
   if(filter_mgr->projects != NULL) {
-    sf = filter_mgr->projects;
-    while(sf != NULL) {
+    bgpstream_str_set_rewind(filter_mgr->projects);    
+    while((f = bgpstream_str_set_next(filter_mgr->projects)) != NULL) {
       AMPORQ;
       APPEND_STR("projects[]=");
-      APPEND_STR(sf->value);
-      sf = sf->next;
+      APPEND_STR(f);
     }
   }
   // collectors
   if(filter_mgr->collectors != NULL) {
-    sf = filter_mgr->collectors;
-    while(sf != NULL) {
+    bgpstream_str_set_rewind(filter_mgr->collectors);    
+    while((f = bgpstream_str_set_next(filter_mgr->collectors)) != NULL) {
       AMPORQ;
       APPEND_STR("collectors[]=");
-      APPEND_STR(sf->value);
-      sf = sf->next;
+      APPEND_STR(f);
     }
   }
   // bgp_types
   if(filter_mgr->bgp_types != NULL) {
-    sf = filter_mgr->bgp_types;
-    while(sf != NULL) {
+    bgpstream_str_set_rewind(filter_mgr->bgp_types);    
+    while((f = bgpstream_str_set_next(filter_mgr->bgp_types)) != NULL) {
       AMPORQ;
       APPEND_STR("types[]=");
-      APPEND_STR(sf->value);
-      sf = sf->next;
+      APPEND_STR(f);
     }
   }
 

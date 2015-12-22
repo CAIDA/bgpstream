@@ -44,6 +44,7 @@ KHASH_INIT(bgpstream_id_set /* name */,
 
 
 struct bgpstream_id_set {
+  khiter_t k;
   khash_t(bgpstream_id_set) *hash;
 };
 
@@ -64,7 +65,7 @@ bgpstream_id_set_t *bgpstream_id_set_create()
       bgpstream_id_set_destroy(set);
       return NULL;
     }
-
+  bgpstream_id_set_rewind(set);
   return set;
 }
 
@@ -105,7 +106,29 @@ int bgpstream_id_set_merge(bgpstream_id_set_t *dst_set,
             }
 	}
     }
+  bgpstream_id_set_rewind(dst_set);
+  bgpstream_id_set_rewind(src_set);
   return 0;
+}
+
+void bgpstream_id_set_rewind(bgpstream_id_set_t *set)
+{
+  set->k = kh_begin(set->hash);
+}
+
+uint32_t* bgpstream_id_set_next(bgpstream_id_set_t *set)
+{
+  uint32_t *v = NULL;
+  for( ; set->k != kh_end(set->hash); ++set->k)
+    {
+      if(kh_exist(set->hash, set->k))
+	{
+          v = &kh_key(set->hash, set->k);
+          set->k++;
+          return v;
+        }
+    }
+  return NULL;
 }
 
 int bgpstream_id_set_size(bgpstream_id_set_t *set)
@@ -121,5 +144,6 @@ void bgpstream_id_set_destroy(bgpstream_id_set_t *set)
 
 void bgpstream_id_set_clear(bgpstream_id_set_t *set)
 {
+  bgpstream_id_set_rewind(set);
   kh_clear(bgpstream_id_set, set->hash);
 }
