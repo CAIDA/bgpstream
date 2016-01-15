@@ -56,7 +56,8 @@
       {                                                                 \
         goto err;                                                       \
       }                                                                 \
-    strncat(broker_ds->query_url_buf, str, broker_ds->query_url_remaining); \
+    strncat(broker_ds->query_url_buf, str,                              \
+            broker_ds->query_url_remaining-1);                          \
     broker_ds->query_url_remaining -= len;                              \
   } while(0)
 
