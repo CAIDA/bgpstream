@@ -76,6 +76,15 @@ typedef enum {
   /** Filter records based on record type (e.g. 'updates') */
   BGPSTREAM_FILTER_TYPE_RECORD_TYPE   = 3,
 
+  /** Filter elems based on peer ASN  */
+  BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN = 4,
+
+  /** Filter elems based on prefix  */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX   = 5,
+
+  /** Filter elems based on the community attribute  */
+  BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY = 6,
+
 } bgpstream_filter_type_t;
 
 

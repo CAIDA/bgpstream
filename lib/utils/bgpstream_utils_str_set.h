@@ -65,7 +65,7 @@ bgpstream_str_set_t *bgpstream_str_set_create();
  *
  * @note this function copies the provided string
  */
-int bgpstream_str_set_insert(bgpstream_str_set_t *set, char * val);
+int bgpstream_str_set_insert(bgpstream_str_set_t *set, const char * val);
 
 /** Remove a string from the set
  *
@@ -98,6 +98,21 @@ int bgpstream_str_set_size(bgpstream_str_set_t *set);
  */
 int bgpstream_str_set_merge(bgpstream_str_set_t *dst_set,
                             bgpstream_str_set_t *src_set);
+
+/** Reset the internal iterator
+ *
+ * @param set           pointer to the string set
+ */
+void bgpstream_str_set_rewind(bgpstream_str_set_t *set);
+
+/** Returns a pointer to the next string
+ *
+ * @param set           pointer to the string set
+ * @return a pointer to the next string in the set
+ *         (borrowed pointer), NULL if the end of the set
+ *         has been reached
+ */
+char* bgpstream_str_set_next(bgpstream_str_set_t *set);
 
 /** Empty the string set.
  *

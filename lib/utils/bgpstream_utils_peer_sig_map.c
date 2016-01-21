@@ -29,6 +29,9 @@
 
 #include "bgpstream_utils_peer_sig_map.h"
 
+#define IPV4_ID_OFFSET 1
+#define IPV6_ID_OFFSET 1
+
 
 /** Hash a peer signature into a 64bit number
  *
@@ -85,6 +88,8 @@ KHASH_INIT(bgpstream_peer_id_sig_map,
 struct bgpstream_peer_sig_map {
   khash_t(bgpstream_peer_sig_id_map) * ps_id;
   khash_t(bgpstream_peer_id_sig_map) * id_ps;
+  bgpstream_peer_id_t v4_next_id;
+  bgpstream_peer_id_t v6_next_id;
 };
 
 
@@ -102,21 +107,41 @@ static bgpstream_peer_id_t bgpstream_peer_sig_map_set_and_get_ps(
 {
   khiter_t k;
   int khret;
-  bgpstream_peer_id_t next_id = kh_size(map->id_ps) + 1;
+  bgpstream_peer_id_t new_id;
+
   if((k = kh_get(bgpstream_peer_sig_id_map, map->ps_id, ps)) ==
      kh_end(map->ps_id))
     {
-      k = kh_put(bgpstream_peer_sig_id_map, map->ps_id, ps, &khret);
-      kh_value(map->ps_id,k) = next_id;
-      k = kh_put(bgpstream_peer_id_sig_map, map->id_ps, next_id, &khret);
-      kh_value(map->id_ps,k) = ps;
+      /* was not already in the map */
+      /* what ID should we use? */
+      if(map->v4_next_id >= IPV6_ID_OFFSET)
+        {
+          /* v4 peers are in v6 range */
+          /* regardless of the version, use the v6 id */
+          new_id = map->v6_next_id++;
+        }
+      else if(ps->peer_ip_addr.version == BGPSTREAM_ADDR_VERSION_IPV6)
+        {
+          assert(map->v4_next_id < IPV6_ID_OFFSET);
+          new_id = map->v6_next_id++;
+        }
+      else
+        {
+          new_id = map->v4_next_id++;
+        }
 
-      return next_id;
+      /* insert into both maps */
+      k = kh_put(bgpstream_peer_sig_id_map, map->ps_id, ps, &khret);
+      kh_value(map->ps_id, k) = new_id;
+      k = kh_put(bgpstream_peer_id_sig_map, map->id_ps, new_id, &khret);
+      kh_value(map->id_ps, k) = ps;
+
+      return new_id;
     }
   else {
     /* already exists... */
     free(ps); /* it was mallocd for us...*/
-    return kh_value(map->ps_id,k);
+    return kh_value(map->ps_id, k);
   }
   return 0;
 }
@@ -165,6 +190,9 @@ bgpstream_peer_sig_map_t *bgpstream_peer_sig_map_create()
     {
       goto err;
     }
+
+  map->v4_next_id = IPV4_ID_OFFSET;
+  map->v6_next_id = IPV6_ID_OFFSET;
 
   return map;
 

@@ -22,6 +22,10 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+echo "Initializing submodules"
+git submodule init
+git submodule update
+echo "Running autoconf"
 autoreconf -vfi
 
 

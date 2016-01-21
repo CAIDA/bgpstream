@@ -36,6 +36,7 @@ KHASH_INIT(bgpstream_str_set, char*, char, 0,
 
 
 struct bgpstream_str_set_t {
+  khiter_t k;
   khash_t(bgpstream_str_set) *hash;
 };
 
@@ -57,25 +58,30 @@ bgpstream_str_set_t *bgpstream_str_set_create()
       return NULL;
     }
 
+  bgpstream_str_set_rewind(set);
   return set;
 }
 
 
 int bgpstream_str_set_insert(bgpstream_str_set_t *set,
-                             char *val)
+                             const char *val)
 {
   int khret;
   khiter_t k;
   char *cpy;
-
-  if((k = kh_get(bgpstream_str_set, set->hash, val)) == kh_end(set->hash))
+  if((cpy = strdup(val)) == NULL)
     {
-      if((cpy = strdup(val)) == NULL)
-        {
-          return -1;
-        }
+      return -1;
+    }
+
+  if((k = kh_get(bgpstream_str_set, set->hash, cpy)) == kh_end(set->hash))
+    {
       k = kh_put(bgpstream_str_set, set->hash, cpy, &khret);
       return 1;
+    }
+  else
+    {
+      free(cpy);
     }
   return 0;
 }
@@ -84,6 +90,7 @@ int bgpstream_str_set_insert(bgpstream_str_set_t *set,
 int bgpstream_str_set_remove(bgpstream_str_set_t *set, char *val)
 {
   khiter_t k;
+  bgpstream_str_set_rewind(set);
   if((k = kh_get(bgpstream_str_set, set->hash, val)) != kh_end(set->hash))
     {
       // free memory allocated for the key (string)
@@ -125,12 +132,37 @@ int bgpstream_str_set_merge(bgpstream_str_set_t *dst_set,
             }
 	}
     }
+  bgpstream_str_set_rewind(dst_set);
+  bgpstream_str_set_rewind(src_set);
   return 0;
 }
+
+
+void bgpstream_str_set_rewind(bgpstream_str_set_t *set)
+{
+  set->k = kh_begin(set->hash);
+}
+
+char* bgpstream_str_set_next(bgpstream_str_set_t *set)
+{
+  char *v = NULL;
+  for( ; set->k != kh_end(set->hash); ++set->k)
+    {
+      if(kh_exist(set->hash, set->k))
+	{
+          v = kh_key(set->hash, set->k);
+          set->k++;
+          return v;
+        }
+    }
+  return v;
+}
+
 
 void bgpstream_str_set_clear(bgpstream_str_set_t *set)
 {
   khiter_t k;
+  bgpstream_str_set_rewind(set);
   for(k = kh_begin(set->hash); k != kh_end(set->hash); ++k)
     {
       if(kh_exist(set->hash, k))

@@ -137,20 +137,22 @@ bgpstream_csvfile_datasource_filter_ok(bgpstream_csvfile_datasource_t* csvfile_d
   /* fprintf(stderr, "%s %s %s %s\n", */
   /*         csvfile_ds->filename, csvfile_ds->project, csvfile_ds->collector, csvfile_ds->bgp_type); */
 
-  bgpstream_string_filter_t * sf;
   bgpstream_interval_filter_t * tif;
   bool all_false;
+  
+  char *f;  
+  
   // projects
   all_false = true;
   if(csvfile_ds->filter_mgr->projects != NULL) {
-    sf = csvfile_ds->filter_mgr->projects;
-    while(sf != NULL) {
-      if(strcmp(sf->value, csvfile_ds->project) == 0) {
-	all_false = false;
-	break;
-      }
-      sf = sf->next;
-    }
+    bgpstream_str_set_rewind(csvfile_ds->filter_mgr->projects);    
+    while((f = bgpstream_str_set_next(csvfile_ds->filter_mgr->projects)) != NULL)
+      {
+        if(strcmp(f, csvfile_ds->project) == 0) {
+          all_false = false;
+          break;
+        }
+      }    
     if(all_false) {
       return false; 
     }
@@ -158,33 +160,35 @@ bgpstream_csvfile_datasource_filter_ok(bgpstream_csvfile_datasource_t* csvfile_d
   // collectors
   all_false = true;
   if(csvfile_ds->filter_mgr->collectors != NULL) {
-    sf = csvfile_ds->filter_mgr->collectors;
-    while(sf != NULL) {
-      if(strcmp(sf->value, csvfile_ds->collector) == 0) {
-	all_false = false;
-	break;
-      }
-      sf = sf->next;
-    }
+    bgpstream_str_set_rewind(csvfile_ds->filter_mgr->collectors);    
+    while((f = bgpstream_str_set_next(csvfile_ds->filter_mgr->collectors)) != NULL)
+      {
+        if(strcmp(f, csvfile_ds->collector) == 0) {
+          all_false = false;
+          break;
+        }
+      }    
     if(all_false) {
       return false; 
     }
   }
+
   // bgp_types
   all_false = true;
   if(csvfile_ds->filter_mgr->bgp_types != NULL) {
-    sf = csvfile_ds->filter_mgr->bgp_types;
-    while(sf != NULL) {
-      if(strcmp(sf->value, csvfile_ds->bgp_type) == 0) {
-	all_false = false;
-	break;
-      }
-      sf = sf->next;
-    }
+    bgpstream_str_set_rewind(csvfile_ds->filter_mgr->bgp_types);    
+    while((f = bgpstream_str_set_next(csvfile_ds->filter_mgr->bgp_types)) != NULL)
+      {
+        if(strcmp(f, csvfile_ds->bgp_type) == 0) {
+          all_false = false;
+          break;
+        }
+      }    
     if(all_false) {
       return false; 
     }
   }
+
   // time_intervals
   all_false = true;
   if(csvfile_ds->filter_mgr->time_intervals != NULL) {

@@ -39,6 +39,10 @@
 #include "bgpcorsaro_pfxmonitor.h"
 #endif
 
+#ifdef WITH_PLUGIN_ASMONITOR
+#include "bgpcorsaro_asmonitor.h"
+#endif
+
 #ifdef WITH_PLUGIN_PACIFIER
 #include "bgpcorsaro_pacifier.h"
 #endif

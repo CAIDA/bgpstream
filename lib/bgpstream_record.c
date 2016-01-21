@@ -33,6 +33,8 @@
 #include "bgpstream_elem_generator.h"
 #include "bgpstream_elem_int.h"
 #include "bgpstream_debug.h"
+#include "bgpstream_int.h"
+
 
 /* allocate memory for a bs_record */
 bgpstream_record_t *bgpstream_record_create() {
@@ -43,6 +45,7 @@ bgpstream_record_t *bgpstream_record_create() {
     return NULL; // can't allocate memory
   }
 
+  bs_record->bs = NULL;
   bs_record->bd_entry = NULL;
 
   if((bs_record->elem_generator = bgpstream_elem_generator_create()) == NULL) {
@@ -92,6 +95,7 @@ void bgpstream_record_clear(bgpstream_record_t *record) {
     bgpdump_free_mem(record->bd_entry);
     record->bd_entry = NULL;
   }
+  // record->bs = NULL;
 
   bgpstream_elem_generator_clear(record->elem_generator);
 }
@@ -100,13 +104,79 @@ void bgpstream_record_print_mrt_data(bgpstream_record_t * const bs_record) {
   bgpdump_print_entry(bs_record->bd_entry);
 }
 
+
+
+static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgpstream_elem_t *elem)
+{
+  int pass = 0;
+
+  /* Checking peer ASNs: if the filter is on and the peer asn is not in the 
+   * set, return 0 */
+  if(filter_mgr->peer_asns &&
+     bgpstream_id_set_exists(filter_mgr->peer_asns, elem->peer_asnumber) == 0)
+    {
+      return 0;
+    }
+
+  /* Checking prefixes (unless it is a peer state message) */
+  if(elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE)
+    {
+      return 1;
+    }
+
+  if(filter_mgr->prefixes &&
+    (bgpstream_patricia_tree_get_pfx_overlap_info(filter_mgr->prefixes,
+                                                  (bgpstream_pfx_t *) &elem->prefix) &
+     (BGPSTREAM_PATRICIA_EXACT_MATCH | BGPSTREAM_PATRICIA_LESS_SPECIFICS) ) == 0)
+    {
+      return 0;
+    }
+
+  /* Checking communities (unless it is a withdrawal message) */
+  if(elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL)
+    {
+      return 1;
+    }
+
+  pass = (filter_mgr->communities != NULL) ? 0 : 1;
+  if(filter_mgr->communities)
+    {
+      bgpstream_community_t *c;
+      khiter_t k;
+      for(k = kh_begin(filter_mgr->communities); k != kh_end(filter_mgr->communities); ++k)
+        {
+          if(kh_exist(filter_mgr->communities, k))
+            {
+              c = &(kh_key(filter_mgr->communities, k));
+              if(bgpstream_community_set_match(elem->communities, c,
+                                               kh_value(filter_mgr->communities, k)))
+                {
+                  pass = 1;
+                  break;
+                }
+            }
+        }
+    }
+  return pass;
+}
+
 bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record) {
   if(bgpstream_elem_generator_is_populated(record->elem_generator) == 0 &&
      bgpstream_elem_generator_populate(record->elem_generator, record) != 0)
     {
       return NULL;
     }
-  return bgpstream_elem_generator_get_next_elem(record->elem_generator);
+  bgpstream_elem_t *elem = bgpstream_elem_generator_get_next_elem(record->elem_generator);
+
+  /* if the elem is compatible with the current filters
+   * then return elem, otherwise run again
+   * bgpstream_record_get_next_elem(record) */
+  if(elem == NULL || bgpstream_elem_check_filters(record->bs->filter_mgr, elem) == 1)
+    {
+      return elem;
+    }
+
+  return bgpstream_record_get_next_elem(record);
 }
 
 
@@ -266,7 +336,7 @@ char *bgpstream_record_elem_snprintf(char *buf, size_t len,
   written += c;
   buf_p += c;
   ADD_PIPE;
-  
+
   if(B_FULL)
     return NULL;
 
@@ -274,12 +344,12 @@ char *bgpstream_record_elem_snprintf(char *buf, size_t len,
     {
       return NULL;
     }
-  
+
   written += c;
   buf_p += c;
-  
+
   if(B_FULL)
-    return NULL;  
+    return NULL;
 
   return buf;
 }

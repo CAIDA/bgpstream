@@ -98,6 +98,24 @@ bgpstream_pfx_storage_hash(bgpstream_pfx_storage_t *pfx)
   return 0;
 }
 
+int bgpstream_pfx_equal(bgpstream_pfx_t *pfx1, bgpstream_pfx_t *pfx2)
+{
+  if(pfx1->address.version != pfx2->address.version)
+    {
+      return 0;
+    }
+  if(pfx1->address.version == BGPSTREAM_ADDR_VERSION_IPV4)
+    {
+      return bgpstream_ipv4_pfx_equal((bgpstream_ipv4_pfx_t *)pfx1,
+                                      (bgpstream_ipv4_pfx_t *)pfx2);
+    }
+  if(pfx1->address.version == BGPSTREAM_ADDR_VERSION_IPV6)
+    {
+      return bgpstream_ipv6_pfx_equal((bgpstream_ipv6_pfx_t *)pfx1,
+                                      (bgpstream_ipv6_pfx_t *)pfx2);
+    }
+  return 0;
+}
 
 int bgpstream_ipv4_pfx_equal(bgpstream_ipv4_pfx_t *pfx1,
                              bgpstream_ipv4_pfx_t *pfx2)
@@ -127,9 +145,23 @@ int bgpstream_pfx_storage_equal(bgpstream_pfx_storage_t *pfx1,
   return 0;
 }
 
+int bgpstream_pfx_contains(bgpstream_pfx_t *outer, bgpstream_pfx_t *inner)
+{
+  bgpstream_addr_storage_t tmp;
+
+  if(outer->address.version != inner->address.version ||
+     outer->mask_len > inner->mask_len)
+    {
+      return 0;
+    }
+
+  bgpstream_addr_copy((bgpstream_ip_addr_t*)&tmp, &inner->address);
+  bgpstream_addr_mask((bgpstream_ip_addr_t*)&tmp, outer->mask_len);
+  return bgpstream_addr_equal((bgpstream_ip_addr_t*)&tmp, &outer->address);
+}
 
 bgpstream_pfx_storage_t *
-bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx)
+bgpstream_str2pfx(const char *pfx_str, bgpstream_pfx_storage_t *pfx)
 {
   if(pfx_str == NULL || pfx == NULL)
     {
@@ -148,7 +180,7 @@ bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx)
     {
       return NULL;
     }
-  
+
   /* get pointer to ip/mask divisor */
   char *found = strchr(pfx_copy, '/');
   if(found == NULL)
@@ -175,5 +207,8 @@ bgpstream_str2pfx(char *pfx_str, bgpstream_pfx_storage_t *pfx)
       return NULL;
     }
   pfx->mask_len = (uint8_t) r;
+
+  bgpstream_addr_mask((bgpstream_ip_addr_t*)&pfx->address, pfx->mask_len);
+
   return pfx;
 }

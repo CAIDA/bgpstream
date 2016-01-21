@@ -44,20 +44,29 @@
 
 bgpstream_elem_t *bgpstream_elem_create() {
   // allocate memory for new element
-  bgpstream_elem_t * ri;
+  bgpstream_elem_t *ri = NULL;
 
   if((ri =
       (bgpstream_elem_t *) malloc_zero(sizeof(bgpstream_elem_t))) == NULL) {
-    return NULL;
+    goto err;
   }
   // all fields are initialized to zero
 
   // need to create as path
   if((ri->aspath = bgpstream_as_path_create()) == NULL) {
-    return NULL;
+    goto err;
+  }
+
+  // and a community set
+  if((ri->communities = bgpstream_community_set_create()) == NULL) {
+    goto err;
   }
 
   return ri;
+
+ err:
+  bgpstream_elem_destroy(ri);
+  return NULL;
 }
 
 void bgpstream_elem_destroy(bgpstream_elem_t *elem) {
@@ -69,11 +78,15 @@ void bgpstream_elem_destroy(bgpstream_elem_t *elem) {
   bgpstream_as_path_destroy(elem->aspath);
   elem->aspath = NULL;
 
+  bgpstream_community_set_destroy(elem->communities);
+  elem->communities = NULL;
+
   free(elem);
 }
 
 void bgpstream_elem_clear(bgpstream_elem_t *elem) {
   bgpstream_as_path_clear(elem->aspath);
+  bgpstream_community_set_clear(elem->communities);
 }
 
 bgpstream_elem_t *bgpstream_elem_copy(bgpstream_elem_t *dst,
@@ -81,14 +94,21 @@ bgpstream_elem_t *bgpstream_elem_copy(bgpstream_elem_t *dst,
 {
   /* save all ptrs before memcpy */
   bgpstream_as_path_t *dst_aspath = dst->aspath;
+  bgpstream_community_set_t *dst_comms = dst->communities;
 
-  /* do a memcpy and then manually copy the as path */
+  /* do a memcpy and then manually copy the as path and communities */
   memcpy(dst, src, sizeof(bgpstream_elem_t));
 
   /* restore all ptrs */
   dst->aspath = dst_aspath;
+  dst->communities = dst_comms;
 
   if(bgpstream_as_path_copy(dst->aspath, src->aspath) != 0)
+    {
+      return NULL;
+    }
+
+  if(bgpstream_community_set_copy(dst->communities, src->communities) != 0)
     {
       return NULL;
     }
@@ -247,7 +267,7 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
 
       if(B_FULL)
         return NULL;
-      
+
       ADD_PIPE;
     }
 
@@ -309,6 +329,16 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
 
       ADD_PIPE;
 
+      /* COMMUNITIES */
+      c = bgpstream_community_set_snprintf(buf_p, B_REMAIN, elem->communities);
+      written += c;
+      buf_p += c;
+
+      if(B_FULL)
+        return NULL;
+
+      ADD_PIPE;
+
       /* OLD STATE (empty) */
       ADD_PIPE;
 
@@ -335,6 +365,8 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
       ADD_PIPE;
       /* ORIGIN AS (empty) */
       ADD_PIPE;
+      /* COMMUNITIES (empty) */
+      ADD_PIPE;
       /* OLD STATE (empty) */
       ADD_PIPE;
       /* NEW STATE (empty) */
@@ -352,6 +384,8 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
       /* AS PATH (empty) */
       ADD_PIPE;
       /* ORIGIN AS (empty) */
+      ADD_PIPE;
+      /* COMMUNITIES (empty) */
       ADD_PIPE;
 
       /* OLD STATE */
@@ -386,5 +420,5 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
 char *bgpstream_elem_snprintf(char *buf, size_t len,
                               bgpstream_elem_t const *elem)
 {
-  return bgpstream_elem_custom_snprintf(buf,len,elem, 1);
+  return bgpstream_elem_custom_snprintf(buf, len, elem, 1);
 }

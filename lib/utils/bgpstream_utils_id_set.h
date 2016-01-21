@@ -88,6 +88,21 @@ int bgpstream_id_set_size(bgpstream_id_set_t *set);
 int bgpstream_id_set_merge(bgpstream_id_set_t *dst_set,
                            bgpstream_id_set_t *src_set);
 
+/** Reset the internal iterator
+ *
+ * @param set           pointer to the id set
+ */
+void bgpstream_id_set_rewind(bgpstream_id_set_t *set);
+
+/** Returns a pointer to the next id
+ *
+ * @param set           pointer to the string set
+ * @return a pointer to the next id in the set
+ *         (borrowed pointer), NULL if the end of the set
+ *         has been reached
+ */
+uint32_t* bgpstream_id_set_next(bgpstream_id_set_t *set);
+
 /** Destroy the given ID set
  *
  * @param set           pointer to the ID set to destroy

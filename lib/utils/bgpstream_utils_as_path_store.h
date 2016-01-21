@@ -232,6 +232,14 @@ bgpstream_as_path_t *
 bgpstream_as_path_store_path_get_path(bgpstream_as_path_store_path_t *store_path,
                                       uint32_t peer_asn);
 
+/** Get a borrowed pointer to the origin segment of the given store path
+ *
+ * @param store_path    pointer to a store path
+ * @return a borrowed pointer to the origin segment
+ */
+bgpstream_as_path_seg_t *
+bgpstream_as_path_store_path_get_origin_seg(bgpstream_as_path_store_path_t *store_path);
+
 /** Reset the given store path iterator
  *
  * @param store_path    pointer to the store path to iterate over
