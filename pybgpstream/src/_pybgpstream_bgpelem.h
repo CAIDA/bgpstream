@@ -36,7 +36,7 @@ typedef struct {
 } BGPElemObject;
 
 /** Expose the BGPElemType structure */
-PyTypeObject *_pybgpstream_bgpstream_get_BGPElemType();
+PyTypeObject *_pybgpstream_bgpstream_get_BGPElemType(void);
 
 /** Expose our new function as it is not exposed to Python */
 PyObject *BGPElem_new(bgpstream_elem_t *elem);

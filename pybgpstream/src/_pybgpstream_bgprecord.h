@@ -37,6 +37,6 @@ typedef struct {
 } BGPRecordObject;
 
 /** Expose the BGPRecordType structure */
-PyTypeObject *_pybgpstream_bgpstream_get_BGPRecordType();
+PyTypeObject *_pybgpstream_bgpstream_get_BGPRecordType(void);
 
 #endif /* ___PYBGPSTREAM_BGPRECORD_H */
