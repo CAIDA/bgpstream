@@ -23,18 +23,37 @@
 
 AC_PREREQ([2.68])
 
-AC_INIT([bgpstream], [1.0.0], [bgpstream-info@caida.org])
+AC_INIT([bgpstream], [1.1.0], [bgpstream-info@caida.org])
 
 BGPSTREAM_MAJOR_VERSION=1
-BGPSTREAM_MID_VERSION=0
+BGPSTREAM_MID_VERSION=1
 BGPSTREAM_MINOR_VERSION=0
 
+LIBBGPSTREAM_MAJOR_VERSION=2
+LIBBGPSTREAM_MID_VERSION=0
+LIBBGPSTREAM_MINOR_VERSION=0
+
 AC_DEFINE_UNQUOTED([BGPSTREAM_MAJOR_VERSION],$BGPSTREAM_MAJOR_VERSION,
-	[bgpstream major version])
+        [bgpstream major version])
 AC_DEFINE_UNQUOTED([BGPSTREAM_MID_VERSION],$BGPSTREAM_MID_VERSION,
-	[bgpstream mid version])
+        [bgpstream mid version])
 AC_DEFINE_UNQUOTED([BGPSTREAM_MINOR_VERSION],$BGPSTREAM_MINOR_VERSION,
-	[bgpstream minor version])
+        [bgpstream minor version])
+
+AC_SUBST([BGPSTREAM_MAJOR_VERSION])
+AC_SUBST([BGPSTREAM_MID_VERSION])
+AC_SUBST([BGPSTREAM_MINOR_VERSION])
+
+AC_DEFINE_UNQUOTED([LIBBGPSTREAM_MAJOR_VERSION],$LIBBGPSTREAM_MAJOR_VERSION,
+        [libbgpstream major version])
+AC_DEFINE_UNQUOTED([LIBBGPSTREAM_MID_VERSION],$LIBBGPSTREAM_MID_VERSION,
+        [libbgpstream mid version])
+AC_DEFINE_UNQUOTED([LIBBGPSTREAM_MINOR_VERSION],$LIBBGPSTREAM_MINOR_VERSION,
+        [libbgpstream minor version])
+
+AC_SUBST([LIBBGPSTREAM_MAJOR_VERSION])
+AC_SUBST([LIBBGPSTREAM_MID_VERSION])
+AC_SUBST([LIBBGPSTREAM_MINOR_VERSION])
 
 LT_INIT
 
@@ -245,10 +264,6 @@ AC_MSG_NOTICE([----------------------------------])
 
 # we may want to come back later and add compile-time configuration for things
 # like datastructure providers, but for now it will all get compiled
-
-AC_SUBST([BGPSTREAM_MAJOR_VERSION])
-AC_SUBST([BGPSTREAM_MID_VERSION])
-AC_SUBST([BGPSTREAM_MINOR_VERSION])
 
 AC_HEADER_ASSERT
 
