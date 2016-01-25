@@ -53,7 +53,7 @@
   "#\n"
 #define BGPSTREAM_ELEM_OUTPUT_FORMAT \
   "# Elem format:\n" \
-  "# <dump-type>|<elem-type>|<record-ts>|<project>|<collector>|<peer-ASN>|<peer-IP>|<prefix>|<next-hop-IP>|<AS-path>|<origin-AS>|<old-state>|<new-state>\n" \
+  "# <dump-type>|<elem-type>|<record-ts>|<project>|<collector>|<peer-ASN>|<peer-IP>|<prefix>|<next-hop-IP>|<AS-path>|<origin-AS>|<communities>|<old-state>|<new-state>\n" \
   "#\n" \
   "# <dump-type>: R RIB, U Update\n" \
   "# <elem-type>: R RIB, A announcement, W withdrawal, S state message\n" \
