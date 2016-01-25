@@ -82,12 +82,18 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
     "project",
     "collector",
     "record-type",
+    "peer-asn",
+    "prefix",
+    "community",
     NULL
   };
   static int filtertype_vals[] = {
     BGPSTREAM_FILTER_TYPE_PROJECT,
     BGPSTREAM_FILTER_TYPE_COLLECTOR,
     BGPSTREAM_FILTER_TYPE_RECORD_TYPE,
+    BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN,
+    BGPSTREAM_FILTER_TYPE_ELEM_PREFIX,
+    BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY,
     -1,
   };
 
