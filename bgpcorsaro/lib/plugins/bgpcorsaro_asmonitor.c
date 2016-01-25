@@ -526,7 +526,7 @@ add_asns_from_file(bgpstream_id_set_t *monitored_ases, char* as_file_string)
 static void usage(bgpcorsaro_plugin_t *plugin)
 {
   fprintf(stderr,
-	  "plugin usage: %s -l <pfx> \n"
+	  "plugin usage: %s -a <asn> [options] \n"
 	  "       -m <prefix>        metric prefix (default: %s)\n"
 	  "       -a <asn>           ASn to monitor*\n"
 	  "       -A <asns-file>     read the ASn to monitor from file*\n"
