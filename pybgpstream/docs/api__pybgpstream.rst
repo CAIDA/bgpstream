@@ -15,23 +15,33 @@ BGPStream
 
    .. py:method:: add_filter(type, value)
 
-      Add a filter to an unstarted BGP Stream instance. Only those records that
+      Add a filter to an unstarted BGP Stream instance. Only those records/elems that
       match the filter(s) will be included in the stream.
 
-      If multiple filters of the **same** type are added, a record is considered
+      If multiple filters of the **same** type are added, a record/elem is considered
       a match if it matches **any** of the filters. E.g. if
       `add_filter('project', 'routeviews')` and `add_filter('project', 'ris')`
       are used, then records that are from either the `Route Views`, **or** the
       `RIS` project will be included.
 
-      If multiple filters of **different** types are added, a record is
+      If multiple filters of **different** types are added, a record/elem is
       considered a match if it matches **all** of the filters. E.g. if
       `add_filter('project', 'routeviews')` and `add_filter('record-type',
       'updates')` are used, then records that are both from the `Route Views`
       project, **and** are `updates` will be included.
 
+      `project`,  `collector`, and `record-type` filter BGP records,
+      whereas `peer-asn`,  `prefix`, and `community` filter BGP
+      elems. The `prefix` filter selects BGP elems related to the
+      prefix or more specifics. The `community` filter is specified as
+      a `asn:value` formatted string, the user can specify the ASn or
+      the value and leave the other field not specified using the `*`.
+      E.g. if `add_filter('community', '*:300')` is used then all the BGP elems
+      having at least one community with value `300` will be included.
+
       :param str type: The type of the filter, can be one of `project`,
-		       `collector`, `record-type`
+		       `collector`, `record-type`, `peer-asn`,
+                       `prefix`, `community`
       :param str value: The value of the filter
       :raises TypeError: if the type or value are not basestrings
       :raises ValueError: if the type is not valid
@@ -252,6 +262,9 @@ BGPElem
             - 'next-hop': The next-hop IP address (basestring)
             - 'as-path': The AS path (basestring)
             - 'prefix': The prefix (basestring)
+            - 'communities': The communities (a list of dictionaries,
+              each one representing a community; each dictionary has
+              the `asn` and the `value` keys)
 	 - *withdrawal*
             - 'prefix': The prefix (basestring)
 	 - *peerstate*
