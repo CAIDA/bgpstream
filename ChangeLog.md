@@ -7,16 +7,16 @@ v1.1.0
  - All users should upgrade to this release. Contact bgpstream-info@caida.org
 	for help upgrading.
 
-# Major Features
+### Major Features
  - Adds native support for communities.
  - Adds proof-of-concept filters for peers, prefixes and communities.
 
-# Minor Features
+### Minor Features
  - Adds various utility functions, including patricia tree.
  - Improved testing of various features (make check)
  - Adds AS monitor plugin to BGPCorsaro
 
-# Bug Fixes
+### Bug Fixes
  - Fix segmentation fault when dump file could not be opened.
  - Make the broker datasource more resilient to temporary network failures
    (i.e. retry failed downloads)
