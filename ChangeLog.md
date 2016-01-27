@@ -8,21 +8,21 @@ v1.1.0
 	for help upgrading.
 
 ### Major Features
- - Adds native support for communities.
- - Adds proof-of-concept filters for peers, prefixes and communities.
+ - Added native support for communities.
+ - Added proof-of-concept filters for peers, prefixes and communities.
 
 ### Minor Features
- - Adds various utility functions, including patricia tree.
+ - Added various utility functions and data structures, including a patricia tree.
  - Improved testing of various features (make check)
- - Adds AS monitor plugin to BGPCorsaro
+ - Added AS monitor plugin to BGPCorsaro
 
 ### Bug Fixes
- - Fix segmentation fault when dump file could not be opened.
- - Make the broker datasource more resilient to temporary network failures
+ - Fixed segmentation fault when dump file could not be opened.
+ - Made the broker datasource more resilient to temporary network failures
    (i.e. retry failed downloads)
- - Fix warning issued by GCC 4.8.4 on Ubuntu 14.04
- - Fix warning issued when building PyBGPStream on Ubuntu
- - Fix incorrect return code in `bgpstream_start`
+ - Fixed warning issued by GCC 4.8.4 on Ubuntu 14.04
+ - Fixed warning issued when building PyBGPStream on Ubuntu
+ - Fixed incorrect return code in `bgpstream_start`
 
 v1.0.0
 ------
