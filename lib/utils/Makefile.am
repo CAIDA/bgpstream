@@ -74,7 +74,9 @@ libbgpstream_utils_la_SOURCES =             \
 	bgpstream_utils_ip_counter.c	    \
 	bgpstream_utils_ip_counter.h	    \
 	bgpstream_utils_patricia.c	    \
-	bgpstream_utils_patricia.h
+	bgpstream_utils_patricia.h  \
+	bgpstream_utils_rtr.c	    \
+	bgpstream_utils_rtr.h
 
 
 libbgpstream_utils_la_LIBADD = $(CONDITIONAL_LIBS)
