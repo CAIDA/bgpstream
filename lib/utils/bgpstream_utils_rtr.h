@@ -41,7 +41,7 @@
 
 /** @file
  *
- * @brief Header file that exposes the public interface of the BGP Stream String
+ * @brief Header file that exposes the public interface of the RTR-Validation for a BGP-Records
  * Set.
  *
  * @author Chiara Orsini
@@ -75,23 +75,20 @@ struct conf_tr bgpstream_rtr_start_connection(char * host, char * port, char * s
 
 /**
  * @brief Validates the origin of a BGP-Route.
- * @param[in] conf_tr Configuration and socket
- * @param[in] asn Autonomous system number of the Origin-AS of the prefix.
- * @param[in] prefix Announced network prefix
- * @param[in] mask_len Length of the network mask of the announced prefix
+ * @param conf_tr Configuration and socket
+ * @param asn Autonomous system number of the Origin-AS of the prefix.
+ * @param prefix Announced network prefix
+ * @param mask_len Length of the network mask of the announced prefix
  * @param[out] result Outcome of the validation.
- * @return PFX_SUCCESS On success.
- * @return PFX_ERROR If an error occurred.
+ * @return the validation of the ip: BGP_PFXV_STATE_VALID, BGP_PFXV_STATE_NOT_FOUND or BGP_PFXV_STATE_INVALID.
  */
 char *bgpstream_rtr_validate(struct conf_tr, uint32_t asn, char * prefix, uint32_t mask_len);
 
-/** Remove a string from the set
+/** Stop a connection to a desired RTR-Server over SSH or TCP
  *
- * @param set           pointer to the string set
- * @param val           pointer to the string to remove
- * @return 1 if the string was removed, 0 if the string was not in the set
+ * @param conf_tr Configuration and socket
  */
-void bgpstream_rtr_close_connection();
+void bgpstream_rtr_close_connection(struct conf_tr cfg_tr);
 
 
 /** @} */

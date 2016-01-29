@@ -39,15 +39,16 @@
 
 #include "bgpstream_utils_rtr.h"
 
-int main()
+void main()
 {
+  char ip[] = "10.10.0.0";
+  struct conf_tr cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", "8282", NULL, NULL ,NULL);  
+  char * result = bgpstream_rtr_validate(cfg_tr, 12345, ip, 24);
+  bgpstream_rtr_close_connection(cfg_tr);
 
-  struct conf_tr cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", "8282", NULL, NULL ,NULL);
-  char * result = bgpstream_rtr_validate(cfg_tr, 12345, "10.10.0.0", 24);
-  bgpstream_rtr_close_connection(cfg_tr.tr);
-
-  return 0;
+  printf("\nState for IP-Address: %s is %s \n\n",ip, result);
 }
+
 /* PUBLIC FUNCTIONS */
 
 struct conf_tr bgpstream_rtr_start_connection(char * host, char * port, char * ssh_user, char * ssh_hostkey, char * ssh_privkey)
@@ -123,9 +124,9 @@ bgpstream_rtr_validate (struct conf_tr cfg_tr, uint32_t asn,
   return validity_code;
 }
 
-void bgpstream_rtr_close_connection(struct tr_socket *tr)
+void bgpstream_rtr_close_connection(struct conf_tr cfg_tr)
 {
-  tr_close(tr);
-  //tr_free(&tr);
+  tr_close(&cfg_tr.tr);
+  tr_free(&cfg_tr.tr);
 }
 
