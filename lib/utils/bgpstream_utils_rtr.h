@@ -21,30 +21,18 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <time.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdbool.h>
-#include <string.h>
-#include "rtrlib/rtrlib.h"
-#include "rtrlib/transport/ssh/ssh_transport.h"
-#include "rtrlib/rtr_mgr.h"
-#include "bgpstream.h"
-
 #ifndef __BGPSTREAM_UTILS_RTR_H
 #define __BGPSTREAM_UTILS_RTR_H
 
+#include "rtrlib/rtrlib.h"
+
+
 /** @file
  *
- * @brief Header file that exposes the public interface of the RTR-Validation for a BGP-Records
- * Set.
+ * @brief Header file that exposes the public interface of the RTR-Validation for 
+ * a BGP-Record Set.
  *
- * @author Chiara Orsini
+ * @author Samir Al-Sheikh, Fabrice J. Ryba
  *
  */
 
@@ -62,15 +50,16 @@ struct reasoned_result {
 
 /** Start a connection to a desired RTR-Server over SSH or TCP
  *
- * @param host         string of the host-address
- * @param port         string of the port-number
- * @param ssh_user     if ssh should be used, the username to be used
+ * @param host         		string of the host-address
+ * @param port         		if specific port should be used, string of the port-number
+ * @param polling_period 	if specific polling period should be used, uint32_t number (seconds)
+ * @param cache_timeout		if specific cache_timeout should be used, uint32_t nuber (seconds)
+ * @param ssh_user    		if ssh should be used, the username to be used
  * @param ssh_hostkey     if ssh should be used, the hostkey to be used
  * @param ssh_privkey     if ssh should be used, the private key to be used
  * @return a struct consisting of the configuration and the address of the transport-socket
  */
-struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char * port, uint32_t polling_period, uint32_t cache_timeout,
-                                                      char * ssh_user, char * ssh_hostkey, char * ssh_privkey);
+struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char * port, uint32_t * polling_period, uint32_t * cache_timeout, char * ssh_user, char * ssh_hostkey, char * ssh_privkey);
 
 /**
  * @brief Validates the origin of a BGP-Route.

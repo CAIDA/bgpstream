@@ -21,24 +21,31 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <stdlib.h>
 #include "rtrlib/rtrlib.h"
 #include "bgpstream_utils_rtr.h"
 
 /* PUBLIC FUNCTIONS */
 
-struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char port[], uint32_t polling_period, uint32_t cache_timeout,
-                                                      char * ssh_user, char * ssh_hostkey, char * ssh_privkey){
-  if(polling_period == 0){
-    polling_period = 240;
+struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char * port, uint32_t * polling_period, uint32_t * cache_timeout, char * ssh_user, char * ssh_hostkey, char * ssh_privkey){
+
+	char p[5]="8282\0";
+	if(port == NULL){
+		port = p;
+	}
+
+	uint32_t pp=240;
+  if(polling_period == NULL){
+    polling_period = &pp;
   }
 
-  if(cache_timeout == 0){
-    cache_timeout = 520;
+	uint32_t ct=520;
+  if(cache_timeout == NULL){
+    cache_timeout = &ct;
   }
 
   struct tr_socket *tr = malloc(sizeof(struct tr_socket));
-  if (host != NULL && port != NULL && ssh_user != NULL && ssh_hostkey != NULL && ssh_privkey != NULL){
+  if (host != NULL && ssh_user != NULL && ssh_hostkey != NULL && ssh_privkey != NULL){
     int port = port;
     struct tr_ssh_config config = {
         host,
@@ -51,7 +58,7 @@ struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char port[], 
     tr_ssh_init(&config, tr);
   }
 
-  else if (host != NULL && port != NULL){
+  else if (host != NULL){
     struct tr_tcp_config config = {
       host,
       port,
@@ -69,7 +76,7 @@ struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char port[], 
   groups[0].sockets[0] = rtr;
   groups[0].preference = 1;
 
-  struct rtr_mgr_config *conf = rtr_mgr_init(groups, 1, polling_period, cache_timeout, NULL, NULL, NULL, NULL);
+  struct rtr_mgr_config *conf = rtr_mgr_init(groups, 1, *polling_period, *cache_timeout, NULL, NULL, NULL, NULL);
   rtr_mgr_start(conf);
 
   while(!rtr_mgr_conf_in_sync(conf))

@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include "rtrlib/rtrlib.h"
 #include "bgpstream_utils_rtr.h"
-#include "bgpstream_utils_rtr.c"
 
 void main()
 {
@@ -33,16 +32,16 @@ void main()
   uint32_t mask_len = 24;
 
   /* TCP Example - without Reason */
-  struct rtr_mgr_config* cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", "8282", 0, 0, NULL, NULL ,NULL);  
+  struct rtr_mgr_config* cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", NULL, NULL, NULL, NULL, NULL ,NULL);  
   enum pfxv_state result = bgpstream_rtr_validate(cfg_tr, asn, ip, mask_len);
   bgpstream_rtr_close_connection(cfg_tr);
   printf("\nTCP - State for IP-Address: %s is %s \n\n",ip, pfxv2str(result));
 
   /* TCP Example - Reason*/
-  cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", "8282", 0, 0, NULL, NULL ,NULL);  
+  cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", NULL, NULL, NULL, NULL, NULL ,NULL);  
   struct reasoned_result res_reasoned = bgpstream_rtr_validate_reason(cfg_tr, asn, ip, mask_len);
   bgpstream_rtr_close_connection(cfg_tr);
-  printf("\nTCP - State for IP-Address: %s is %s \n\n",ip, pfxv2str(res_reasoned.result));
+  printf("\nTCP - State for IP-Address: %s is %s \n\n",ip, pfxv2str(res_reasoned.result), );
   struct pfx_record* reason = res_reasoned.reason;
   //printf("TCP - Reason for IP-Address: %s is %s \n\n", ip, reason.xxx);
 
