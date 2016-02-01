@@ -50,11 +50,9 @@
 
 /** @} */
 
-struct conf_tr
-{
-  struct rtr_mgr_config *conf;
-  struct tr_socket tr;
-
+struct reasoned_result {
+	struct pfx_record* reason;
+	enum pfxv_state result;
 };
 
 /**
@@ -71,24 +69,43 @@ struct conf_tr
  * @param ssh_privkey     if ssh should be used, the private key to be used
  * @return a struct consisting of the configuration and the address of the transport-socket
  */
-struct conf_tr bgpstream_rtr_start_connection(char * host, char * port, char * ssh_user, char * ssh_hostkey, char * ssh_privkey);
+struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char * port, uint32_t polling_period, uint32_t cache_timeout,
+                                                      char * ssh_user, char * ssh_hostkey, char * ssh_privkey);
 
 /**
  * @brief Validates the origin of a BGP-Route.
- * @param conf_tr Configuration and socket
+ * @param mgr_cfg Manager-Configuration
  * @param asn Autonomous system number of the Origin-AS of the prefix.
  * @param prefix Announced network prefix
  * @param mask_len Length of the network mask of the announced prefix
  * @param[out] result Outcome of the validation.
  * @return the validation of the ip: BGP_PFXV_STATE_VALID, BGP_PFXV_STATE_NOT_FOUND or BGP_PFXV_STATE_INVALID.
  */
-char *bgpstream_rtr_validate(struct conf_tr, uint32_t asn, char * prefix, uint32_t mask_len);
+enum pfxv_state bgpstream_rtr_validate(struct rtr_mgr_config* mgr_cfg, uint32_t asn, char * prefix, uint32_t mask_len);
+
+/**
+ * @brief Validates the origin of a BGP-Route and returns the reason for the state.
+ * @param mgr_cfg Manager-Configuration
+ * @param asn Autonomous system number of the Origin-AS of the prefix.
+ * @param prefix Announced network prefix
+ * @param mask_len Length of the network mask of the announced prefix
+ * @param[out] result Outcome of the validation and the reason for the state.
+ * @return the validation of the ip: BGP_PFXV_STATE_VALID, BGP_PFXV_STATE_NOT_FOUND or BGP_PFXV_STATE_INVALID.
+ */
+struct reasoned_result bgpstream_rtr_validate_reason(struct rtr_mgr_config* mgr_cfg, uint32_t asn, char prefix[], uint32_t mask_len);
+  
 
 /** Stop a connection to a desired RTR-Server over SSH or TCP
  *
- * @param conf_tr Configuration and socket
+ * @param mgr_cfg Configuration and socket
  */
-void bgpstream_rtr_close_connection(struct conf_tr cfg_tr);
+void bgpstream_rtr_close_connection(struct rtr_mgr_config* mgr_cfg);
+
+/** Converts PFVX_STATE to string
+ *
+ * @param result Outcome of the validation
+ */
+char* pfxv2str(enum pfxv_state result);
 
 
 /** @} */

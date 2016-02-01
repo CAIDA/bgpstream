@@ -37,15 +37,12 @@ include_HEADERS= bgpstream_utils.h 		     \
 		 bgpstream_utils_addr_set.h	     \
 		 bgpstream_utils_as_path.h	     \
 		 bgpstream_utils_as_path_store.h     \
-		 bgpstream_utils_community.h	     \
 		 bgpstream_utils_id_set.h     	     \
 		 bgpstream_utils_peer_sig_map.h      \
 		 bgpstream_utils_pfx.h		     \
 		 bgpstream_utils_pfx_set.h	     \
 		 bgpstream_utils_str_set.h	     \
-		 bgpstream_utils_ip_counter.h	     \
-	         bgpstream_utils_patricia.h
-
+		 bgpstream_utils_ip_counter.h
 
 libbgpstream_utils_la_SOURCES =             \
 	bgpstream_utils.h                   \
@@ -58,9 +55,6 @@ libbgpstream_utils_la_SOURCES =             \
 	bgpstream_utils_as_path_store.c	    \
 	bgpstream_utils_as_path_store.h	    \
 	bgpstream_utils_as_path_int.h	    \
-	bgpstream_utils_community.h	    \
-	bgpstream_utils_community.c	    \
-	bgpstream_utils_community_int.h	    \
 	bgpstream_utils_id_set.c     	    \
 	bgpstream_utils_id_set.h     	    \
 	bgpstream_utils_peer_sig_map.c      \
@@ -72,10 +66,9 @@ libbgpstream_utils_la_SOURCES =             \
 	bgpstream_utils_str_set.c  	    \
 	bgpstream_utils_str_set.h	    \
 	bgpstream_utils_ip_counter.c	    \
-	bgpstream_utils_ip_counter.h	    \
-	bgpstream_utils_patricia.c	    \
-	bgpstream_utils_patricia.h  \
+	bgpstream_utils_ip_counter.h      \
 	bgpstream_utils_rtr.c	    \
+	bgpstream_utils_rtr_test.c	    \
 	bgpstream_utils_rtr.h
 
 
