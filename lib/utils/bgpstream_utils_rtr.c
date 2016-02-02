@@ -123,11 +123,11 @@ void bgpstream_rtr_close_connection(struct rtr_mgr_config *mgr_cfg){
 char* pfxv2str(enum pfxv_state result){
   char* validity_code;
   if (result == BGP_PFXV_STATE_VALID){
-      validity_code = "valid";
+      validity_code = "valid\0";
   } else if (result == BGP_PFXV_STATE_NOT_FOUND){
-      validity_code = "State not found";
+      validity_code = "State not found\0";
   } else if (result == BGP_PFXV_STATE_INVALID){
-      validity_code = "State invalid";
+      validity_code = "State invalid\0";
   }
   return validity_code;
 }

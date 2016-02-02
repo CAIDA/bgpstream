@@ -22,10 +22,11 @@
  */
 
 #include <stdio.h>
+#include <inttypes.h>
 #include "rtrlib/rtrlib.h"
 #include "bgpstream_utils_rtr.h"
 
-void main()
+int main()
 {
   char ip[] = "10.11.10.0";
   uint32_t asn = 12345;
@@ -41,14 +42,28 @@ void main()
   cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", NULL, NULL, NULL, NULL, NULL ,NULL);  
   struct reasoned_result res_reasoned = bgpstream_rtr_validate_reason(cfg_tr, asn, ip, mask_len);
   bgpstream_rtr_close_connection(cfg_tr);
-  printf("\nTCP - State for IP-Address: %s is %s \n\n",ip, pfxv2str(res_reasoned.result), );
-  struct pfx_record* reason = res_reasoned.reason;
-  //printf("TCP - Reason for IP-Address: %s is %s \n\n", ip, reason.xxx);
+  printf("\nTCP - State for IP-Address: %s is %s \n",ip, pfxv2str(res_reasoned.result) );
+  if(res_reasoned.reason){
+		struct pfx_record *reason = res_reasoned.reason;
+		char ip_prefix[INET6_ADDRSTRLEN];
+		lrtr_ip_addr_to_str(&(reason->prefix), ip_prefix, sizeof(ip_prefix));
+  	printf(
+			"TCP - Reason for IP-Address %s is: ASN(%10u) Prefix(%-18s) minimal length(%3u) maximal length(%3u) \n\n",
+			ip, 
+			reason->asn, 
+			ip_prefix,
+			reason->min_len,
+			reason->max_len);
+	}
+	else{
+		printf("Since %s is not found there is no reason %p\n\n", ip, res_reasoned.reason);
+	} 
 
   /*SSH Example - without Reason*/
-  /*cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", "22", 0, 0, "rtr-ssh", "~/.ssh/id_rsa" ,"~/.ssh/known_hosts");  
+  /*cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", "22", NULL, NULL, "rtr-ssh", "~/.ssh/id_rsa" ,"~/.ssh/known_hosts");  
   result = bgpstream_rtr_validate(cfg_tr, asn, ip, mask_len);
   bgpstream_rtr_close_connection(cfg_tr);
   printf("\nSSH - State for IP-Address: %s is %s \n\n",ip, pfxv2str(result));*/
 
+	return 0;
 }
