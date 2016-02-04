@@ -28,9 +28,9 @@
 
 int main()
 {
-  char ip[] = "10.11.10.0";
-  uint32_t asn = 12345;
-  uint32_t mask_len = 24;
+  char ip[] = "2001:678:3::";
+  uint32_t asn = 42;
+  uint32_t mask_len = 48;
 
   /* TCP Example - without Reason */
   struct rtr_mgr_config* cfg_tr = bgpstream_rtr_start_connection("rpki-validator.realmv6.org", NULL, NULL, NULL, NULL, NULL ,NULL);  
@@ -45,12 +45,14 @@ int main()
   printf("\nTCP - State for IP-Address: %s is %s \n",ip, pfxv2str(res_reasoned.result) );
   if(res_reasoned.reason){
 		struct pfx_record *reason = res_reasoned.reason;
-		char ip_prefix[INET6_ADDRSTRLEN];
+		char ip_prefix[INET6_ADDRSTRLEN+1];
 		lrtr_ip_addr_to_str(&(reason->prefix), ip_prefix, sizeof(ip_prefix));
+		int len_of_prefix = sizeof(ip_prefix);
   	printf(
-			"TCP - Reason for IP-Address %s is: ASN(%10u) Prefix(%-18s) minimal length(%3u) maximal length(%3u) \n\n",
+			"TCP - Reason for IP-Address %s is: ASN(%"PRIu32") Prefix(%.*s) minimal length(%"PRIu8") maximal length(%"PRIu8") \n\n",
 			ip, 
 			reason->asn, 
+			len_of_prefix,
 			ip_prefix,
 			reason->min_len,
 			reason->max_len);
