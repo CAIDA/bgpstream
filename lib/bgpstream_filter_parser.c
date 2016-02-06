@@ -7,7 +7,67 @@
 #include "bgpstream_filter.h"
 #include "bgpstream_debug.h"
 
+const char *bgpstream_filter_type_to_string(bgpstream_filter_type_t type) {
+  switch(type) {
+    case BGPSTREAM_FILTER_TYPE_RECORD_TYPE:
+      return "Record Type";
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE:
+      return "Prefix (or more specific)";
+    case BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY:
+      return "Community";
+    case BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN:
+      return "Peer ASN";
+    case BGPSTREAM_FILTER_TYPE_PROJECT:
+      return "Project";
+    case BGPSTREAM_FILTER_TYPE_COLLECTOR:
+      return "Collector";
+    case BGPSTREAM_FILTER_TYPE_ELEM_ASPATH:
+      return "AS Path";
+    case BGPSTREAM_FILTER_TYPE_ELEM_EXTENDED_COMMUNITY:
+      return "Extended Community";
+    case BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION:
+      return "IP Version";
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY:
+      return "Prefix (of any specificity)";
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS:
+      return "Prefix (or less specific)";
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT:
+      return "Prefix (exact match)";
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX:
+      return "Prefix (old format)";
+  }
 
+  return "Unknown filter term ??";
+
+}
+
+static void instantiate_filter(bgpstream_t *bs, bgpstream_filter_item_t *item) {
+
+  bgpstream_filter_type_t usetype = item->termtype;
+
+  if (item->termtype == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE) {
+    usetype = BGPSTREAM_FILTER_TYPE_ELEM_PREFIX;
+  }
+
+  switch(item->termtype) {
+    case BGPSTREAM_FILTER_TYPE_RECORD_TYPE:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE:
+    case BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN:
+    case BGPSTREAM_FILTER_TYPE_PROJECT:
+    case BGPSTREAM_FILTER_TYPE_COLLECTOR:
+      bgpstream_debug("Added filter for %s", item->value);
+      bgpstream_add_filter(bs, usetype, item->value);
+      break;
+
+    default:
+      bgpstream_debug("Implementation of filter type %s is still to come!",
+          bgpstream_filter_type_to_string(item->termtype));
+      break;
+  }
+    
+
+}
 
 static int bgpstream_parse_filter_term(char *term, fp_state_t *state,
     bgpstream_filter_item_t *curr) {
@@ -257,6 +317,9 @@ int bgpstream_parse_filter_string(bgpstream_t *bs, const char *fstring) {
           ret = 0;
           goto endparsing;
         }
+        if (state == ENDVALUE) {
+          instantiate_filter(bs, filteritem);      
+        }
         break;
 
       case VALUE:
@@ -264,12 +327,16 @@ int bgpstream_parse_filter_string(bgpstream_t *bs, const char *fstring) {
           ret = 0;
           goto endparsing;
         }
+        instantiate_filter(bs, filteritem);      
         break;
 
       case QUOTEDVALUE:
         if (bgpstream_parse_quotedvalue(tok, &state, filteritem) == FAIL) {
           ret = 0;
           goto endparsing;
+        }
+        if (state == ENDVALUE) {
+          instantiate_filter(bs, filteritem);      
         }
         break;
      

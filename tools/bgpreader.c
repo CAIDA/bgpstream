@@ -400,11 +400,6 @@ int main(int argc, char *argv[])
 	}
     }
 
-  if (filterstring) {
-    bgpstream_parse_filter_string(bs, filterstring);
-    exit(0);
-  }
-
   for(i=0; i<interface_options_cnt; i++)
     {
       if(*interface_options[i] == '?')
@@ -462,6 +457,12 @@ int main(int argc, char *argv[])
   /* the program can now start */
 
   /* allocate memory for interface */
+  
+  /* Parse the filter string */
+  if (filterstring) {
+    bgpstream_parse_filter_string(bs, filterstring);
+  }
+
 
   /* projects */
   for(i=0; i<projects_cnt; i++)
