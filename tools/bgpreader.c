@@ -198,6 +198,8 @@ int main(int argc, char *argv[])
   char *interface_options[OPTION_CMD_CNT];
   int interface_options_cnt = 0;
 
+  char *filterstring = NULL;
+
   int rib_period = 0;
   int live = 0;
   int output_info = 0;
@@ -229,7 +231,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "f:d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -375,6 +377,9 @@ int main(int argc, char *argv[])
         case 'i':
 	  output_info = 1;
 	  break;
+  case 'f':
+    filterstring = optarg;
+    break;
 	case ':':
 	  fprintf(stderr, "ERROR: Missing option argument for -%c\n", optopt);
 	  usage();
@@ -394,6 +399,11 @@ int main(int argc, char *argv[])
 	  exit(-1);
 	}
     }
+
+  if (filterstring) {
+    bgpstream_parse_filter_string(bs, filterstring);
+    exit(0);
+  }
 
   for(i=0; i<interface_options_cnt; i++)
     {
