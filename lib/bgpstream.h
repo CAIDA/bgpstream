@@ -104,7 +104,10 @@ typedef enum {
   BGPSTREAM_FILTER_TYPE_ELEM_EXTENDED_COMMUNITY = 12,
 
   /** Filter elems based on the IP address version */
-  BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION = 13
+  BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION = 13,
+
+  /** Filter elems based on the element type, e.g. withdrawals, announcements */
+  BGPSTREAM_FILTER_TYPE_ELEM_TYPE = 14
 
 } bgpstream_filter_type_t;
 

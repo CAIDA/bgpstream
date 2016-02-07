@@ -35,6 +35,8 @@ const char *bgpstream_filter_type_to_string(bgpstream_filter_type_t type) {
       return "Prefix (exact match)";
     case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX:
       return "Prefix (old format)";
+    case BGPSTREAM_FILTER_TYPE_ELEM_TYPE:
+      return "Element Type";
   }
 
   return "Unknown filter term ??";
@@ -57,6 +59,7 @@ static void instantiate_filter(bgpstream_t *bs, bgpstream_filter_item_t *item) {
     case BGPSTREAM_FILTER_TYPE_COLLECTOR:
     case BGPSTREAM_FILTER_TYPE_ELEM_ASPATH:
     case BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION:
+    case BGPSTREAM_FILTER_TYPE_ELEM_TYPE:
       bgpstream_debug("Added filter for %s", item->value);
       bgpstream_add_filter(bs, usetype, item->value);
       break;
@@ -149,6 +152,15 @@ static int bgpstream_parse_filter_term(char *term, fp_state_t *state,
     *state = VALUE;
     return *state;
   }
+
+  if (strcmp(term, "elemtype") == 0) {
+    /* Element type */
+    bgpstream_debug("Got an element type term");
+    curr->termtype = BGPSTREAM_FILTER_TYPE_ELEM_TYPE;
+    *state = VALUE;
+    return *state;
+  }
+    
 
   bgpstream_log_err("Expected a valid term, got %s", term);
   *state = FAIL;

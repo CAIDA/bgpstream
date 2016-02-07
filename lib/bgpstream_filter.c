@@ -64,6 +64,21 @@ void bgpstream_filter_mgr_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
         }
       bgpstream_id_set_insert(bs_filter_mgr->peer_asns, (uint32_t) strtoul(filter_value, NULL, 10));
       return;
+
+    case BGPSTREAM_FILTER_TYPE_ELEM_TYPE:
+      if (strcmp(filter_value, "ribs") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_RIB);
+      } else if (strcmp(filter_value, "announcements") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_ANNOUNCEMENT);
+      } else if (strcmp(filter_value, "withdrawals") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_WITHDRAWAL);
+      } else if (strcmp(filter_value, "peerstates") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_PEERSTATE);
+      } else {
+        bgpstream_log_warn("\tBSF_MGR: %s is not a known element type", 
+            filter_value);
+      }
+      return;
     
     case BGPSTREAM_FILTER_TYPE_ELEM_ASPATH:
       if (bs_filter_mgr->aspath_exprs == NULL) {

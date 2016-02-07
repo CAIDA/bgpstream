@@ -58,8 +58,8 @@ BGPStream
 
       `project`,  `collector`, and `record-type` filter BGP records,
       whereas `peer-asn`,  `prefix-exact`, `prefix-more`, `prefix-less`,
-      `prefix-any`, `aspath`, `ipversion`, and `community` filter BGP
-      elems. 
+      `prefix-any`, `aspath`, `ipversion`, `elemtype` and `community` filter
+      BGP elems. 
 
       The `prefix-*` filters selects BGP elems related to the
       prefix. `prefix-exact` will only match if the exact prefix appears in
@@ -75,8 +75,13 @@ BGPStream
       path. E.g. if the filter value `^681_1444_` is used, only elements with
       an AS path beginning with AS681 followed by AS1444 will be included.
 
-      The `ipversion` can be used to limit the stream to IPv4 or IPv6 prefixes
-      only. Use `4` to get IPv4 only and `6` to get IPv6 only.
+      The `ipversion` filter can be used to limit the stream to IPv4 or IPv6
+      prefixes only. Use `4` to get IPv4 only and `6` to get IPv6 only.
+
+      The `elemtype` filter can be used to limit the stream to only certain
+      element types. Possible element types are `ribs`, `withdrawals`,
+      `announcements` and `peerstates`.
+
       The `community` filter is specified as
       a `asn:value` formatted string, the user can specify the ASn or
       the value and leave the other field not specified using the `*`.
@@ -86,7 +91,7 @@ BGPStream
       :param str type: The type of the filter, can be one of `project`,
 		       `collector`, `record-type`, `peer-asn`, `prefix-exact`,
                        `prefix-more`, `prefix-less`, `prefix-any`,
-                       `ipversion`, `aspath`, `community`
+                       `ipversion`, `aspath`, `community`, `elemtype`
       :param str value: The value of the filter
       :raises TypeError: if the type or value are not basestrings
       :raises ValueError: if the type is not valid

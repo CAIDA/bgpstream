@@ -107,6 +107,7 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
     "prefix-any",
     "aspath",
     "ipversion",
+    "elemtype",
     NULL
   };
   static int filtertype_vals[] = {
@@ -121,7 +122,8 @@ BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
     BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS,
     BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY,
     BGPSTREAM_FILTER_TYPE_ELEM_ASPATH,
-    BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION
+    BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION,
+    BGPSTREAM_FILTER_TYPE_ELEM_TYPE,
     -1,
   };
 

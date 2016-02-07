@@ -33,6 +33,11 @@ The list of accepted terms and their meaning are:
   type
       restrict the stream to only records of a certain type, e.g. updates.
 
+  elemtype
+      restrict the stream to only elements of a certain type. Possible 
+      element types are "ribs", "announcements", "withdrawals", and
+      "peerstates".
+
   peer
       restrict the stream to only those elements from a particular peer ASN
 

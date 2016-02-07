@@ -158,6 +158,31 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
 {
   int pass = 0;
 
+  /* First up, check if this element is the right type */
+  if (filter_mgr->elemtype_mask) {
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE && 
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_PEERSTATE)) {
+      return 0;
+    }
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_RIB && 
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_RIB)) {
+      return 0;
+    }
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT && 
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_ANNOUNCEMENT)) {
+      return 0;
+    }
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL && 
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_WITHDRAWAL)) {
+      return 0;
+    }
+
+  }
+
   /* Checking peer ASNs: if the filter is on and the peer asn is not in the 
    * set, return 0 */
   if(filter_mgr->peer_asns &&
@@ -166,55 +191,27 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
       return 0;
     }
 
-  /* Checking prefixes (unless it is a peer state message) */
-  if(elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE)
-    {
-      return 1;
-    }
-
   if (filter_mgr->ipversion) {
     /* Determine address version for the element prefix */
-    bgpstream_ip_addr_t *addr = &(((bgpstream_pfx_t *) &elem->prefix)->address);
 
+    if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
+      return 0;
+    }
+
+    bgpstream_ip_addr_t *addr = &(((bgpstream_pfx_t *) &elem->prefix)->address);
     if (addr->version != filter_mgr->ipversion)
       return 0;
   }
 
   if(filter_mgr->prefixes) {
+    if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
+      return 0;
+    }
     return bgpstream_elem_prefix_match(filter_mgr->prefixes,
       (bgpstream_pfx_t *) &elem->prefix);
   }
 
-  /* Checking communities (unless it is a withdrawal message) */
-  if(elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL)
-    {
-      return 1;
-    }
-
-  pass = (filter_mgr->communities != NULL) ? 0 : 1;
-  if(filter_mgr->communities)
-    {
-      bgpstream_community_t *c;
-      khiter_t k;
-      for(k = kh_begin(filter_mgr->communities); k != kh_end(filter_mgr->communities); ++k)
-        {
-          if(kh_exist(filter_mgr->communities, k))
-            {
-              c = &(kh_key(filter_mgr->communities, k));
-              if(bgpstream_community_set_match(elem->communities, c,
-                                               kh_value(filter_mgr->communities, k)))
-                {
-                  pass = 1;
-                  break;
-                }
-            }
-        }
-      if (pass == 0)
-        return 0;
-    }
- 
   pass = 0;
-   
   /* Checking AS Path expressions */
   if (filter_mgr->aspath_exprs) {
     char aspath[65536];
@@ -223,10 +220,20 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
     regex_t re;
     int result;
     
+    if(elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL ||
+        elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE)
+    {
+      return 0;
+    }
+
     pathlen = bgpstream_as_path_get_filterable(aspath, 65535, elem->aspath);
 
     if (pathlen == 65535) {
       bgpstream_log_warn("AS Path is too long? Filter may not work well.");
+    }
+
+    if (pathlen == 0) {
+      return 0;
     }
 
     bgpstream_str_set_rewind(filter_mgr->aspath_exprs);
@@ -258,6 +265,37 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
       return 0;
 
   }
+  /* Checking communities (unless it is a withdrawal message) */
+  pass = (filter_mgr->communities != NULL) ? 0 : 1;
+  if(filter_mgr->communities)
+    {
+      if(elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL || 
+          elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE)
+      {
+        return 0;
+      }
+
+      bgpstream_community_t *c;
+      khiter_t k;
+      for(k = kh_begin(filter_mgr->communities); k != kh_end(filter_mgr->communities); ++k)
+        {
+          if(kh_exist(filter_mgr->communities, k))
+            {
+              c = &(kh_key(filter_mgr->communities, k));
+              if(bgpstream_community_set_match(elem->communities, c,
+                                               kh_value(filter_mgr->communities, k)))
+                {
+                  pass = 1;
+                  break;
+                }
+            }
+        }
+      if (pass == 0) {
+        return 0;
+      }
+    }
+ 
+   
 
   return 1;
 }
