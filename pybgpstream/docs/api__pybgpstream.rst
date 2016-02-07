@@ -13,6 +13,32 @@ BGPStream
 
    The BGP Stream class provides a single stream of BGP Records.
 
+   .. py:method:: parse_filter_string(fstring)
+
+      Adds filters to an unstarted BGP Stream instance, based on the filter
+      string provided. Only those record/elements that match the filter(s)
+      will be included in the stream.
+
+      If multiple filters of the **same** type are added, a record/elem is
+      considered a match if it matches **any** of the filters. For example,
+      if a filter string `project routeviews and project ris` is used, then
+      records that are from either the `Route Views` **or** the `RIS` project
+      will be included.
+
+      If filters of **different** types are added, a record/elem is considered
+      a match only if it matches **all** of the filters. For example, if a
+      filter string `project routeviews and prefix exact 1.2.3.0/24` is used,
+      then only records that are both from the `Route Views` project **and**
+      have a prefix of 1.2.3.0/24 are included.
+
+      More information of the specifics of the filter string language and
+      the filtering methods that it supports can be found with the libbgpstream
+      documentation.
+
+      :param str fstring: The filter string
+      :raises TypeError: if the filter string is not a basestring
+      :raises ValueError: if the filter string is invalid or badly formed
+
    .. py:method:: add_filter(type, value)
 
       Add a filter to an unstarted BGP Stream instance. Only those records/elems that
@@ -31,17 +57,36 @@ BGPStream
       project, **and** are `updates` will be included.
 
       `project`,  `collector`, and `record-type` filter BGP records,
-      whereas `peer-asn`,  `prefix`, and `community` filter BGP
-      elems. The `prefix` filter selects BGP elems related to the
-      prefix or more specifics. The `community` filter is specified as
+      whereas `peer-asn`,  `prefix-exact`, `prefix-more`, `prefix-less`,
+      `prefix-any`, `aspath`, `ipversion`, and `community` filter BGP
+      elems. 
+
+      The `prefix-*` filters selects BGP elems related to the
+      prefix. `prefix-exact` will only match if the exact prefix appears in
+      the element. `prefix-more` will match if the exact prefix or a more
+      specific prefix is observed. `prefix-less` will match if the exact prefix
+      or a less specific prefix is observed. `prefix-any` with match if any
+      relevant prefix is observed, either more or less specific.
+
+      The `aspath` filter is specifed as a regular expression and will match
+      if the AS path matches the regular expression. `^` can be used to 
+      represent the start of an AS path and `$` can be used to represent the
+      end of an AS path. `_` can be used to separate adjacent ASNs in the
+      path. E.g. if the filter value `^681_1444_` is used, only elements with
+      an AS path beginning with AS681 followed by AS1444 will be included.
+
+      The `ipversion` can be used to limit the stream to IPv4 or IPv6 prefixes
+      only. Use `4` to get IPv4 only and `6` to get IPv6 only.
+      The `community` filter is specified as
       a `asn:value` formatted string, the user can specify the ASn or
       the value and leave the other field not specified using the `*`.
       E.g. if `add_filter('community', '*:300')` is used then all the BGP elems
       having at least one community with value `300` will be included.
 
       :param str type: The type of the filter, can be one of `project`,
-		       `collector`, `record-type`, `peer-asn`,
-                       `prefix`, `community`
+		       `collector`, `record-type`, `peer-asn`, `prefix-exact`,
+                       `prefix-more`, `prefix-less`, `prefix-any`,
+                       `ipversion`, `aspath`, `community`
       :param str value: The value of the filter
       :raises TypeError: if the type or value are not basestrings
       :raises ValueError: if the type is not valid
