@@ -211,7 +211,6 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
       (bgpstream_pfx_t *) &elem->prefix);
   }
 
-  pass = 0;
   /* Checking AS Path expressions */
   if (filter_mgr->aspath_exprs) {
     char aspath[65536];
@@ -219,6 +218,9 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
     int pathlen;
     regex_t re;
     int result;
+    int negatives = 0;
+    int positives = 0;
+    int totalpositives = 0;
     
     if(elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL ||
         elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE)
@@ -240,6 +242,18 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
     while ((regexstr = bgpstream_str_set_next(filter_mgr->aspath_exprs))
         != NULL)
     {
+      int negate = 0;
+      
+      if (strlen(regexstr) == 0)
+        continue;
+
+      if (*regexstr == '!') {
+        negate = 1;
+        regexstr ++;
+      } else {
+        totalpositives += 1;
+      }
+
       if (regcomp(&re, regexstr, 0) < 0) {
         /* XXX should really use regerror here for proper error reporting */ 
         bgpstream_log_err("Failed to compile AS path regex");
@@ -248,21 +262,26 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
 
       result = regexec(&re, aspath, 0, NULL, 0);
       if (result == 0) {
-        regfree(&re);
-        return 1;
-      }
-      
-      if (result != REG_NOMATCH) {
-        bgpstream_log_err("Error while matching AS path regex");
-        regfree(&re);
-        break;
+        if (!negate) {
+          positives ++;
+        }
+        if (negate) {
+          negatives ++;
+        }
       }
 
       regfree(&re);
+      if (result != REG_NOMATCH && result != 0) {
+        bgpstream_log_err("Error while matching AS path regex");
+        break;
+      }
 
     }
-    if (pass == 0)
+    if (positives == totalpositives && negatives == 0) {
+      return 1;
+    } else {
       return 0;
+    }
 
   }
   /* Checking communities (unless it is a withdrawal message) */
