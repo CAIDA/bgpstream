@@ -117,6 +117,23 @@ BGPStream
       :param int stop: The end time of the interval (inclusive)
       :raises TypeError: if the start or end times are not ints
 
+   .. py:method::add_recent_interval_filter(interval, islive)
+
+      Adds an interval filter to an unstarted BGP Stream instance, based on
+      a time period described by a special interval string relative to the
+      current time. Only those records that fall within the given interval
+      will be included in the stream.
+
+      The interval string takes the format "<number> <units>". The available
+      units are 's', 'm', 'h', and 'd', for 'seconds', 'minutes', 'hours',
+      and 'days' respectively. For example, an interval string of "3 h" will
+      fetch the most recent 3 hours of BGP data.
+
+      :param str interval: the string describing the interval
+      :param bool islive: if True, BGP Stream will continue to stream live
+                          data once it has fetch the recent historical data.
+      :raises TypeError: if the interval is not a string or islive cannot be
+                         treated as a bool.
 
    .. py:method:: get_data_interfaces()
 
