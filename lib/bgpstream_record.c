@@ -172,6 +172,14 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
       return 1;
     }
 
+  if (filter_mgr->ipversion) {
+    /* Determine address version for the element prefix */
+    bgpstream_ip_addr_t *addr = &(((bgpstream_pfx_t *) &elem->prefix)->address);
+
+    if (addr->version != filter_mgr->ipversion)
+      return 0;
+  }
+
   if(filter_mgr->prefixes) {
     return bgpstream_elem_prefix_match(filter_mgr->prefixes,
       (bgpstream_pfx_t *) &elem->prefix);

@@ -154,6 +154,18 @@ void bgpstream_filter_mgr_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
        *                filter_value, kh_value(bs_filter_mgr->communities, k) ); */
       return;
     }
+
+    case BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION:
+      if (strcmp(filter_value, "4") == 0) {
+        bs_filter_mgr->ipversion = BGPSTREAM_ADDR_VERSION_IPV4;
+      } else if (strcmp(filter_value, "6") == 0) {
+        bs_filter_mgr->ipversion = BGPSTREAM_ADDR_VERSION_IPV6;
+      } else {
+        bgpstream_log_warn("\tBSF_MGR: Unknown IP version %s, ignoring",
+            filter_value);
+      }
+      return;
+    
  
     case BGPSTREAM_FILTER_TYPE_PROJECT:
       v = &bs_filter_mgr->projects;

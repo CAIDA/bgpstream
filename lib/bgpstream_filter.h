@@ -57,6 +57,7 @@ typedef struct struct_bgpstream_filter_mgr_t {
   bgpstream_interval_filter_t * time_intervals;
   collector_ts_t *last_processed_ts;
   uint32_t rib_period;
+  uint8_t ipversion;
 } bgpstream_filter_mgr_t;
 
 
