@@ -207,7 +207,7 @@ bgpstream_str2pfx(const char *pfx_str, bgpstream_pfx_storage_t *pfx)
       return NULL;
     }
   pfx->mask_len = (uint8_t) r;
-
+  pfx->allowed_matches = BGPSTREAM_PREFIX_MATCH_ANY;
   bgpstream_addr_mask((bgpstream_ip_addr_t*)&pfx->address, pfx->mask_len);
 
   return pfx;

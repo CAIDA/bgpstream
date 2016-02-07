@@ -45,13 +45,12 @@ static void instantiate_filter(bgpstream_t *bs, bgpstream_filter_item_t *item) {
 
   bgpstream_filter_type_t usetype = item->termtype;
 
-  if (item->termtype == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE) {
-    usetype = BGPSTREAM_FILTER_TYPE_ELEM_PREFIX;
-  }
-
   switch(item->termtype) {
     case BGPSTREAM_FILTER_TYPE_RECORD_TYPE:
     case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT:
     case BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY:
     case BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN:
     case BGPSTREAM_FILTER_TYPE_PROJECT:
