@@ -236,6 +236,31 @@ void bgpstream_add_rib_period_filter(bgpstream_t *bs, uint32_t period)
   bgpstream_debug("BS: set_filter end");
 }
 
+void bgpstream_add_recent_interval_filter(bgpstream_t *bs,
+    const char *interval, uint8_t islive) {
+
+  uint32_t starttime, endtime;
+  bgpstream_debug("BS: set_filter start");
+  
+  if(bs == NULL || (bs != NULL && bs->status != BGPSTREAM_STATUS_ALLOCATED)) {
+    return; // nothing to customize
+  }
+
+  if (bgpstream_time_calc_recent_interval(&starttime, &endtime, interval) == 0) 
+  {
+    bgpstream_log_err("Failed to determine suitable time interval");
+    return;
+  }
+
+  if (islive) {
+    bgpstream_set_live_mode(bs);
+    endtime = BGPSTREAM_FOREVER;
+  }
+
+  bgpstream_filter_mgr_interval_filter_add(bs->filter_mgr, starttime, endtime);
+  bgpstream_debug("BS: set_filter end");
+}
+
 void bgpstream_add_interval_filter(bgpstream_t *bs,
 				   uint32_t begin_time,
                                    uint32_t end_time) {

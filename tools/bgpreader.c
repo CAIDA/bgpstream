@@ -199,6 +199,7 @@ int main(int argc, char *argv[])
   int interface_options_cnt = 0;
 
   char *filterstring = NULL;
+  char *intervalstring = NULL;
 
   int rib_period = 0;
   int live = 0;
@@ -231,7 +232,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "f:d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "f:I:d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -380,6 +381,9 @@ int main(int argc, char *argv[])
   case 'f':
     filterstring = optarg;
     break;
+  case 'I':
+    intervalstring = optarg;
+    break;
 	case ':':
 	  fprintf(stderr, "ERROR: Missing option argument for -%c\n", optopt);
 	  usage();
@@ -440,7 +444,7 @@ int main(int argc, char *argv[])
     }
   interface_options_cnt = 0;
 
-  if(windows_cnt == 0)
+  if(windows_cnt == 0 && !intervalstring)
     {
       fprintf(stderr,
               "ERROR: At least one time window must be specified using -w\n");
@@ -463,6 +467,9 @@ int main(int argc, char *argv[])
     bgpstream_parse_filter_string(bs, filterstring);
   }
 
+  if (intervalstring) {
+    bgpstream_add_recent_interval_filter(bs, intervalstring, live);
+  }
 
   /* projects */
   for(i=0; i<projects_cnt; i++)

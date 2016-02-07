@@ -182,6 +182,21 @@ BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject *
+BGPStream_add_recent_interval(BGPStreamObject *self, PyObject *args)
+{
+  const char *intstring;
+  int islive;
+
+  if (!PyArg_ParseTuple(args, "si", &intstring, &islive)) {
+    return NULL;
+  }
+
+  bgpstream_add_recent_interval_filter(self->bs, intstring, islive);
+  Py_RETURN_NONE;  
+
+}
+
 #define ADD_TO_DICT(key_str, value_exp)                 \
   do {                                                  \
     PyObject *key = PyString_FromString(key_str);       \
@@ -421,6 +436,12 @@ static PyMethodDef BGPStream_methods[] = {
     (PyCFunction)BGPStream_add_interval_filter,
     METH_VARARGS,
    "Add an interval filter to an un-started stream."
+  },
+  {
+    "add_recent_interval_filter",
+    (PyCFunction)BGPStream_add_recent_interval,
+    METH_VARARGS,
+   "Add a recentinterval filter to an un-started stream."
   },
   {
     "get_data_interfaces",

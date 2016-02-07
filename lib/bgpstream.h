@@ -208,6 +208,24 @@ int bgpstream_parse_filter_string(bgpstream_t *bs, const char *fstring);
  */
 void bgpstream_add_rib_period_filter(bgpstream_t *bs, uint32_t period);
 
+/** Add a filter to select a specific time range starting from now and
+ *  going back a certain number of seconds, minutes, hours or days.
+ *
+ *  Intervals may be specified using the format 'num unit'. The unit can
+ *  be one of 's', 'm', 'h' or 'd', representing seconds, minutes, hours and
+ *  days respectively. 
+ *
+ *  For example, an interval of "3 h" will go back three hours and an interval
+ *  of "45 s" will go back 45 seconds.
+ *
+ *  @param bs         pointer to a BGP Stream instance to filter
+ *  @param interval   string describing the interval to go back
+ *  @param islive     if not zero, live data will be provided once all historic
+ *                    data has been fetched.
+ */
+void bgpstream_add_recent_interval_filter(bgpstream_t *bs,
+    const char *interval, uint8_t islive);
+
 /** Add a filter to select a specific time range from the BGP data available
  *
  * @param bs            pointer to a BGP Stream instance to filter
