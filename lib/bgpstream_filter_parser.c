@@ -56,6 +56,7 @@ static void instantiate_filter(bgpstream_t *bs, bgpstream_filter_item_t *item) {
     case BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN:
     case BGPSTREAM_FILTER_TYPE_PROJECT:
     case BGPSTREAM_FILTER_TYPE_COLLECTOR:
+    case BGPSTREAM_FILTER_TYPE_ELEM_ASPATH:
       bgpstream_debug("Added filter for %s", item->value);
       bgpstream_add_filter(bs, usetype, item->value);
       break;

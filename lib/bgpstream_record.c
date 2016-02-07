@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <regex.h>
 
 #include "bgpdump_lib.h"
 #include "bgpdump_process.h"
@@ -156,8 +157,57 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr, bgps
                 }
             }
         }
+      if (pass == 0)
+        return 0;
     }
-  return pass;
+ 
+  pass = 0;
+   
+  /* Checking AS Path expressions */
+  if (filter_mgr->aspath_exprs) {
+    char aspath[65536];
+    char *regexstr;
+    int pathlen;
+    regex_t re;
+    int result;
+    
+    pathlen = bgpstream_as_path_get_filterable(aspath, 65535, elem->aspath);
+
+    if (pathlen == 65535) {
+      bgpstream_log_warn("AS Path is too long? Filter may not work well.");
+    }
+
+    bgpstream_str_set_rewind(filter_mgr->aspath_exprs);
+    while ((regexstr = bgpstream_str_set_next(filter_mgr->aspath_exprs))
+        != NULL)
+    {
+      if (regcomp(&re, regexstr, 0) < 0) {
+        /* XXX should really use regerror here for proper error reporting */ 
+        bgpstream_log_err("Failed to compile AS path regex");
+        break;
+      }
+
+      result = regexec(&re, aspath, 0, NULL, 0);
+      if (result == 0) {
+        regfree(&re);
+        return 1;
+      }
+      
+      if (result != REG_NOMATCH) {
+        bgpstream_log_err("Error while matching AS path regex");
+        regfree(&re);
+        break;
+      }
+
+      regfree(&re);
+
+    }
+    if (pass == 0)
+      return 0;
+
+  }
+
+  return 1;
 }
 
 bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record) {
@@ -172,7 +222,7 @@ bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record) {
    * then return elem, otherwise run again
    * bgpstream_record_get_next_elem(record) */
   if(elem == NULL || bgpstream_elem_check_filters(record->bs->filter_mgr, elem) == 1)
-    {
+   {
       return elem;
     }
 

@@ -214,6 +214,20 @@ int bgpstream_as_path_seg_equal(bgpstream_as_path_seg_t *seg1,
 int bgpstream_as_path_snprintf(char *buf, size_t len,
                                bgpstream_as_path_t *as_path);
 
+/** Write the string representation of the given AS path into the given
+ *  character buffer, using a '_'-separated format that is suitable for
+ *  use with BGP path filtering expressions.
+ *
+ * @param buf           pointer to a character buffer at least len bytes long
+ * @param len           length of the given character buffer
+ * @param as_path       pointer to the bgpstream AS path to convert to string
+ * @return the number of characters written given an infinite len (not including
+ * the trailing nul). If this value is greater than or equal to len, then the
+ * output was truncated.
+ */
+int bgpstream_as_path_get_filterable(char *buf, size_t len,
+                               bgpstream_as_path_t *as_path);
+
 /** Create an empty AS path structure.
  *
  * @return pointer to the created AS path object if successful, NULL otherwise

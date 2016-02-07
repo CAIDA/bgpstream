@@ -65,6 +65,19 @@ void bgpstream_filter_mgr_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
       return;
     }
 
+  if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_ASPATH) {
+    if (bs_filter_mgr->aspath_exprs == NULL) {
+      if ((bs_filter_mgr->aspath_exprs = bgpstream_str_set_create()) == NULL) {
+        bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+        bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+        return;
+      }
+    }
+
+    bgpstream_str_set_insert(bs_filter_mgr->aspath_exprs, filter_value);
+    return;
+  }
+
   if(filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX)
     {
       bgpstream_pfx_storage_t pfx;
@@ -245,6 +258,10 @@ void bgpstream_filter_mgr_destroy(bgpstream_filter_mgr_t *bs_filter_mgr) {
   // peer asns
   if(bs_filter_mgr->peer_asns != NULL) {
     bgpstream_id_set_destroy(bs_filter_mgr->peer_asns);
+  }
+  // aspath expressions
+  if (bs_filter_mgr->aspath_exprs != NULL) {
+    bgpstream_str_set_destroy(bs_filter_mgr->aspath_exprs);
   }
   // prefixes
   if(bs_filter_mgr->prefixes != NULL) {
