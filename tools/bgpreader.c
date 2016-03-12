@@ -43,6 +43,8 @@
 #define PEERASN_CMD_CNT 1000
 #define WINDOW_CMD_CNT 1024
 #define OPTION_CMD_CNT 1024
+#define RTR_CMD_CNT 2
+#define RTR_MAX_CNT 2
 #define BGPSTREAM_RECORD_OUTPUT_FORMAT \
   "# Record format:\n" \
   "# <dump-type>|<dump-pos>|<project>|<collector>|<status>|<dump-time>\n" \
@@ -152,6 +154,8 @@ static void usage() {
           "   -m             print info for each BGP valid record in bgpdump -m format\n"
           "   -r             print info for each BGP record (used mostly for debugging BGPStream)\n"
           "   -i             print format information before output\n"
+          "   -R <host>,<port>\n"
+          "                  enable RTR-validation with a specified cache-server"
           "\n"
 	  "   -h             print this help menu\n"
 	  "* denotes an option that can be given multiple times\n"
@@ -163,6 +167,7 @@ static void usage() {
 static void print_bs_record(bgpstream_record_t *bs_record);
 static int print_elem(bgpstream_record_t *bs_record, bgpstream_elem_t *elem);
 static void print_rib_control_message(bgpstream_record_t *bs_record);
+static void print_err_message(int args, char *minmax, char* type);
 
 int main(int argc, char *argv[])
 {
@@ -198,6 +203,14 @@ int main(int argc, char *argv[])
   char *interface_options[OPTION_CMD_CNT];
   int interface_options_cnt = 0;
 
+  char *rtr[RTR_CMD_CNT];
+  int rtr_cnt = 2;
+  int rtr_cnt_arg = 0;
+
+  char *host;
+  char *port;
+  char *arg;
+
   int rib_period = 0;
   int live = 0;
   int output_info = 0;
@@ -229,7 +242,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "R:d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -237,6 +250,34 @@ int main(int argc, char *argv[])
       }
       switch (opt)
 	{
+
+	case 'R':
+
+    rtr_cnt++;
+    if(rtr_cnt == RTR_MAX_CNT) {
+        print_err_message(RTR_MAX_CNT-1,"maximum","parameters");
+	  }
+    
+    arg = strtok(optarg, ","); 
+    while(arg != NULL) {
+      rtr[rtr_cnt_arg++] = arg;
+      if(rtr_cnt_arg == RTR_MAX_CNT+1){
+        print_err_message(RTR_MAX_CNT,"maximum","arguments");
+      }
+      arg = strtok(NULL, ",");
+    }
+
+    host = rtr[0];
+    port = rtr[1];
+
+    if(!host||!port){
+      print_err_message(RTR_MAX_CNT,"minimum","arguments");
+	  }
+
+    bgpstream_set_rtr_config(host, port, true);
+
+	  break;
+  
 	case 'p':
 	  if(projects_cnt == PROJECT_CMD_CNT)
 	    {
@@ -605,6 +646,16 @@ int main(int argc, char *argv[])
 /* print utility functions */
 
 static char record_buf[65536];
+
+static void print_err_message(int args, char* minmax, char* type)
+{
+    fprintf(stderr,
+      "ERROR: A %s of %d %s %s be specified on "
+      "the command line\n",
+      minmax, args, type, (minmax == "maximum") ? "can" : "must");
+    usage();
+    exit(-1);
+}
 
 static void print_bs_record(bgpstream_record_t *bs_record)
 {

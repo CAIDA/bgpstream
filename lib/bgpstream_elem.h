@@ -25,6 +25,7 @@
 #define __BGPSTREAM_ELEM_H
 
 #include "bgpstream_utils.h"
+#include "bgpstream_utils_rtr.h"
 
 /** @file
  *
@@ -164,6 +165,18 @@ typedef struct struct_bgpstream_elem_t {
    * Available only for the Peer-state elem type
    */
   bgpstream_elem_peerstate_t new_state;
+
+  /** Validation status
+   *
+   * Validation_status for the given prefix
+   */
+  char *validation_status;
+
+  /** Valid ASNs
+   *
+   * Valid ASNs for the given prefix, max: 16 entries
+   */
+  uint32_t valid_asn[16];
 
 } bgpstream_elem_t;
 

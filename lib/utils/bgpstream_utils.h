@@ -56,6 +56,7 @@
 #include "bgpstream_utils_pfx_set.h"       /*< Prefix Set utilities */
 #include "bgpstream_utils_str_set.h"       /*< String Set utilities */
 #include "bgpstream_utils_patricia.h"      /*< Patricia Tree utilities */
+#include "bgpstream_utils_rtr.h"           /*< RTR utilities */
 
 #endif /* __BGPSTREAM_UTILS_H */
 

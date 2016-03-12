@@ -29,17 +29,12 @@
 
 struct rtr_mgr_config* bgpstream_rtr_start_connection(char * host, char * port, uint32_t * polling_period, uint32_t * cache_timeout, char * ssh_user, char * ssh_hostkey, char * ssh_privkey){
 
-	char p[5]="8282\0";
-	if(port == NULL){
-		port = p;
-	}
-
-	uint32_t pp=240;
+	uint32_t pp = 240;
   if(polling_period == NULL){
     polling_period = &pp;
   }
 
-	uint32_t ct=520;
+	uint32_t ct = 520;
   if(cache_timeout == NULL){
     cache_timeout = &ct;
   }
@@ -93,7 +88,7 @@ enum pfxv_state bgpstream_rtr_validate (struct rtr_mgr_config* mgr_cfg, uint32_t
   return result;
 }
 
-struct reasoned_result bgpstream_rtr_validate_reason(struct rtr_mgr_config* mgr_cfg, uint32_t asn, char prefix[], uint32_t mask_len){	
+struct reasoned_result bgpstream_rtr_validate_reason(struct rtr_mgr_config* mgr_cfg, uint32_t asn, char prefix[], uint32_t mask_len){
   struct lrtr_ip_addr pref;
   lrtr_ip_str_to_addr(prefix, &pref);
   enum pfxv_state result;
@@ -104,6 +99,7 @@ struct reasoned_result bgpstream_rtr_validate_reason(struct rtr_mgr_config* mgr_
 
 	struct reasoned_result reasoned_res;
 	reasoned_res.reason = reason;
+	reasoned_res.reason_len = reason_len;
 	reasoned_res.result = result; 
 
 	return(reasoned_res);
