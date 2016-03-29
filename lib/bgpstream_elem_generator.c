@@ -221,6 +221,8 @@ static int table_line_mrtd_route(bgpstream_elem_generator_t *self,
      entry->attr->aspath)
     {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
+      bgpstream_as_path_seg_t *seg = bgpstream_as_path_get_origin_seg(ri->aspath);
+      ri->origin_asnumber = ((bgpstream_as_path_seg_asn_t*)seg)->asn;
     }
 
   // communities
@@ -299,6 +301,8 @@ int table_line_dump_v2_prefix(bgpstream_elem_generator_t *self,
     // as path
     if (attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, attr->aspath);
+      bgpstream_as_path_seg_t *seg = bgpstream_as_path_get_origin_seg(ri->aspath);
+      ri->origin_asnumber = ((bgpstream_as_path_seg_asn_t*)seg)->asn;
     }
     // communities
     if (attr->community) {
@@ -355,6 +359,8 @@ static int table_line_announce(bgpstream_elem_generator_t *self,
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_AS_PATH) &&
        entry->attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
+      bgpstream_as_path_seg_t *seg = bgpstream_as_path_get_origin_seg(ri->aspath);
+      ri->origin_asnumber = ((bgpstream_as_path_seg_asn_t*)seg)->asn;
     }
     // communities
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
@@ -401,6 +407,8 @@ static int table_line_announce_1(bgpstream_elem_generator_t *self,
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_AS_PATH) &&
        entry->attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
+      bgpstream_as_path_seg_t *seg = bgpstream_as_path_get_origin_seg(ri->aspath);
+      ri->origin_asnumber = ((bgpstream_as_path_seg_asn_t*)seg)->asn;
     }
     // communities
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
@@ -447,6 +455,8 @@ static int table_line_announce6(bgpstream_elem_generator_t *self,
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_AS_PATH) &&
        entry->attr->aspath) {
       bgpstream_as_path_populate(ri->aspath, entry->attr->aspath);
+      bgpstream_as_path_seg_t *seg = bgpstream_as_path_get_origin_seg(ri->aspath);
+      ri->origin_asnumber = ((bgpstream_as_path_seg_asn_t*)seg)->asn;
     }
     // communities
     if(entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_COMMUNITIES) &&
