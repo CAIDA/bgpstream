@@ -22,6 +22,7 @@
  */
 
 #include <Python.h>
+#include "pyutils.h"
 
 #include <bgpstream.h>
 
@@ -31,7 +32,7 @@
 
 #define ADD_STR_TO_DICT(key_str, value_exp)             \
   do {                                                  \
-    PyObject *key = PyString_FromString(key_str);       \
+    PyObject *key = PYSTR_FROMSTR(key_str);       \
     PyObject *value = (value_exp);                      \
     if(PyDict_SetItem(dict, key, value) == -1)          \
       return NULL;                                      \
@@ -44,7 +45,7 @@ static PyObject *
 get_ip_pystr(bgpstream_ip_addr_t *ip) {
   char ip_str[INET6_ADDRSTRLEN] = "";
   bgpstream_addr_ntop(ip_str, INET6_ADDRSTRLEN, ip);
-  return PyString_FromString(ip_str);
+  return PYSTR_FROMSTR(ip_str);
 }
 
 static PyObject *
@@ -52,7 +53,7 @@ get_pfx_pystr(bgpstream_pfx_t *pfx) {
   char pfx_str[INET6_ADDRSTRLEN+3] = "";
   if(bgpstream_pfx_snprintf(pfx_str, INET6_ADDRSTRLEN+3, pfx) == NULL)
     return NULL;
-  return PyString_FromString(pfx_str);
+  return PYSTR_FROMSTR(pfx_str);
 }
 
 static PyObject *
@@ -61,7 +62,7 @@ get_aspath_pystr(bgpstream_as_path_t *aspath) {
   char buf[4096] = "";
   if(bgpstream_as_path_snprintf(buf, 4096, aspath) >= 4096)
     return NULL;
-  return PyString_FromString(buf);
+  return PYSTR_FROMSTR(buf);
 }
 
 static PyObject *
@@ -99,14 +100,14 @@ get_peerstate_pystr(bgpstream_elem_peerstate_t state) {
   char buf[128] = "";
   if(bgpstream_elem_peerstate_snprintf(buf, 128, state) >= 128)
     return NULL;
-  return PyString_FromString(buf);
+  return PYSTR_FROMSTR(buf);
 }
 
 static void
 BGPElem_dealloc(BGPElemObject *self)
 {
   bgpstream_elem_destroy(self->elem);
-  self->ob_type->tp_free((PyObject*)self);
+  Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static int
@@ -123,7 +124,7 @@ BGPElem_get_type(BGPElemObject *self, void *closure)
   char buf[128] = "";
   if(bgpstream_elem_type_snprintf(buf, 128, self->elem->type) >= 128)
     return NULL;
-  return PyString_FromString(buf);
+  return PYSTR_FROMSTR(buf);
 }
 
 /* timestamp */
@@ -248,8 +249,7 @@ static PyGetSetDef BGPElem_getsetters[] = {
 };
 
 static PyTypeObject BGPElemType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                                    /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "_pybgpstream.BGPElem",             /* tp_name */
   sizeof(BGPElemObject), /* tp_basicsize */
   0,                                    /* tp_itemsize */

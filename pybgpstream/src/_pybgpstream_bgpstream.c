@@ -21,6 +21,7 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Python.h>
+#include "pyutils.h"
 
 #include <bgpstream.h>
 
@@ -44,7 +45,7 @@ BGPStream_dealloc(BGPStreamObject *self)
       bgpstream_stop(self->bs);
       bgpstream_destroy(self->bs);
     }
-  self->ob_type->tp_free((PyObject*)self);
+  Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject *
@@ -156,7 +157,7 @@ BGPStream_add_interval_filter(BGPStreamObject *self, PyObject *args)
 
 #define ADD_TO_DICT(key_str, value_exp)                 \
   do {                                                  \
-    PyObject *key = PyString_FromString(key_str);       \
+    PyObject *key = PYSTR_FROMSTR(key_str);				\
     PyObject *value = (value_exp);                      \
     if(PyDict_SetItem(dict, key, value) == -1)          \
       return NULL;                                      \
@@ -193,13 +194,17 @@ BGPStream_get_data_interfaces(BGPStreamObject *self)
     /* add info to dict */
 
     /* id */
-    ADD_TO_DICT("id", PyInt_FromLong(ids[i]));
-
+#if PY_MAJOR_VERSION > 2
+    ADD_TO_DICT("id", PyLong_FromLong(ids[i]));
+#else
+	ADD_TO_DICT("id", PyInt_FromLong(ids[i]));
+#endif
+	
     /* name */
-    ADD_TO_DICT("name", PyString_FromString(info->name));
+    ADD_TO_DICT("name", PYSTR_FROMSTR(info->name));
 
     /* description */
-    ADD_TO_DICT("description", PyString_FromString(info->description));
+    ADD_TO_DICT("description", PYSTR_FROMSTR(info->description));
 
     /* add dict to list */
     if(PyList_Append(list, dict) == -1)
@@ -262,10 +267,10 @@ BGPStream_get_data_interface_options(BGPStreamObject *self, PyObject *args)
       return NULL;
 
     /* name */
-    ADD_TO_DICT("name", PyString_FromString(options[i].name));
+    ADD_TO_DICT("name", PYSTR_FROMSTR(options[i].name));
 
     /* description */
-    ADD_TO_DICT("description", PyString_FromString(options[i].description));
+    ADD_TO_DICT("description", PYSTR_FROMSTR(options[i].description));
 
     /* add dict to list */
     if(PyList_Append(list, dict) == -1)
@@ -437,8 +442,7 @@ static PyMethodDef BGPStream_methods[] = {
 };
 
 static PyTypeObject BGPStreamType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                                    /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "_pybgpstream.BGPStream",             /* tp_name */
   sizeof(BGPStreamObject), /* tp_basicsize */
   0,                                    /* tp_itemsize */
