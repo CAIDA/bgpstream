@@ -22,6 +22,7 @@
  */
 
 #include <Python.h>
+#include "pyutils.h"
 
 #include <bgpstream.h>
 
@@ -37,7 +38,7 @@ BGPRecord_dealloc(BGPRecordObject *self)
     {
       bgpstream_record_destroy(self->rec);
     }
-  self->ob_type->tp_free((PyObject*)self);
+  Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject *
@@ -268,8 +269,7 @@ static PyGetSetDef BGPRecord_getsetters[] = {
 };
 
 static PyTypeObject BGPRecordType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                                    /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "_pybgpstream.BGPRecord",             /* tp_name */
   sizeof(BGPRecordObject), /* tp_basicsize */
   0,                                    /* tp_itemsize */
