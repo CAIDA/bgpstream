@@ -429,6 +429,17 @@ bgpstream_as_path_get_origin_seg(bgpstream_as_path_t *path)
   return (bgpstream_as_path_seg_t*)(path->data+path->origin_offset);
 }
 
+int bgpstream_as_path_get_origin_val(bgpstream_as_path_t *path, uint32_t *asn)
+{
+    bgpstream_as_path_seg_t *origin_seg = bgpstream_as_path_get_origin_seg(path);
+    if (origin_seg == NULL || origin_seg->type != BGPSTREAM_AS_PATH_SEG_ASN) {
+        return -1;
+    } else {
+        *asn = ((bgpstream_as_path_seg_asn_t*)origin_seg)->asn;
+        return 0;
+    }
+}
+
 void bgpstream_as_path_iter_reset(bgpstream_as_path_iter_t *iter)
 {
   iter->cur_offset = 0;
