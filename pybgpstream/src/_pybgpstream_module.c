@@ -34,9 +34,9 @@ static PyMethodDef module_methods[] = {
 #define ADD_OBJECT(objname)                                             \
   do {                                                                  \
     if ((obj = _pybgpstream_bgpstream_get_##objname##Type()) == NULL)   \
-      return;                                                           \
+      return NULL;                                                      \
     if (PyType_Ready(obj) < 0)                                          \
-      return;                                                           \
+      return NULL;                                                      \
     Py_INCREF(obj);                                                     \
     PyModule_AddObject(m, #objname, (PyObject*)obj);         \
   } while(0)
@@ -73,9 +73,9 @@ static PyObject *moduleinit(void)
 					 module_methods,
 					 MODULE_DOCSTRING);
 #endif
-  
+
   if (m == NULL)
-    return;
+    return NULL;
 
   /* BGPStream object */
   ADD_OBJECT(BGPStream);
@@ -84,20 +84,10 @@ static PyObject *moduleinit(void)
   ADD_OBJECT(BGPRecord);
 
   /* BGPRecord object */
-  ADD_OBJECT(BGPElem);	
+  ADD_OBJECT(BGPElem);
 
   return m;
 }
-/*
-MOD_INIT(_pybgpstream)
-{
-#if PY_MAJOR_VERSION > 2
-	return moduleinit();
-#else
-	moduleinit();
-#endif
-}
-*/
 
 #if PY_MAJOR_VERSION > 2
 PyMODINIT_FUNC
