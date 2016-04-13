@@ -202,7 +202,9 @@ static bgpstream_patricia_node_t *bgpstream_patricia_node_create(bgpstream_patri
       pt->ipv6_active_nodes++;
     }
 
-  node->prefix = *((bgpstream_pfx_storage_t *) pfx);
+  node->prefix.mask_len = pfx->mask_len;
+  bgpstream_addr_copy((bgpstream_ip_addr_t *) &node->prefix.address , (bgpstream_ip_addr_t *) &pfx->address);
+
   node->parent = NULL;
   node->bit = pfx->mask_len;
   node->l = NULL;
@@ -686,8 +688,17 @@ bgpstream_patricia_node_t *bgpstream_patricia_tree_insert(bgpstream_patricia_tre
           return node_it;
         }
       /* otherwise replace the info in the glue node with proper
-       * prefix information */
+       * prefix information and increment the right counter*/
       node_it->prefix = *((bgpstream_pfx_storage_t *) pfx);
+      if(pfx->address.version == BGPSTREAM_ADDR_VERSION_IPV4)
+        {
+          pt->ipv4_active_nodes++;
+        }
+      else
+        {
+          pt->ipv6_active_nodes++;
+        }
+
       /* patricia_lookup: new node #1 (glue mod) */
       /* DEBUG fprintf(stderr, "Using %s to replace a GLUE node\n", buffer); */
       return node_it;
