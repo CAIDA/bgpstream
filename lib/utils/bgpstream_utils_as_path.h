@@ -255,6 +255,14 @@ int bgpstream_as_path_copy(bgpstream_as_path_t *dst, bgpstream_as_path_t *src);
 bgpstream_as_path_seg_t *
 bgpstream_as_path_get_origin_seg(bgpstream_as_path_t *path);
 
+/** Get the origin ASN from the given path if possible
+ *
+ * @param path          pointer to the AS path to extract the origin AS for
+ * @param asn           pointer to the 32-bit field in which the asn will be stored
+ * @return 0 if the asn is valid, -1 otherwise
+ */
+int bgpstream_as_path_get_origin_val(bgpstream_as_path_t *path, uint32_t *asn);
+
 /** Reset the segment iterator for the given path
  *
  * @param iter          pointer to the AS path iterator to reset
