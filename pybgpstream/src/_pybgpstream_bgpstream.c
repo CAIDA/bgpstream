@@ -190,6 +190,10 @@ BGPStream_get_data_interfaces(BGPStreamObject *self)
       return NULL;
 
     info = bgpstream_get_data_interface_info(self->bs, ids[i]);
+    if(info == NULL) {
+      /* this data interface is not available */
+      continue;
+    }
 
     /* add info to dict */
 
@@ -197,9 +201,9 @@ BGPStream_get_data_interfaces(BGPStreamObject *self)
 #if PY_MAJOR_VERSION > 2
     ADD_TO_DICT("id", PyLong_FromLong(ids[i]));
 #else
-	ADD_TO_DICT("id", PyInt_FromLong(ids[i]));
+    ADD_TO_DICT("id", PyInt_FromLong(ids[i]));
 #endif
-	
+
     /* name */
     ADD_TO_DICT("name", PYSTR_FROMSTR(info->name));
 
