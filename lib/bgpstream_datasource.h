@@ -24,6 +24,7 @@
 #ifndef _BGPSTREAM_DATASOURCE_H
 #define _BGPSTREAM_DATASOURCE_H
 
+#include "config.h"
 #include "bgpstream_constants.h"
 #include "bgpstream_filter.h"
 #include "bgpstream_input.h"
