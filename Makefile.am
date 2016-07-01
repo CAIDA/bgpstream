@@ -43,3 +43,9 @@ include_HEADERS =
 ACLOCAL_AMFLAGS = -I m4
 
 CLEANFILES = *~
+
+format:
+	find . -type f -name "*.[ch]" -not -path "./common/*" -exec \
+		clang-format -style=file -i {} \;
+
+.PHONY: format
