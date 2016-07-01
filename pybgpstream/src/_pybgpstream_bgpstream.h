@@ -21,10 +21,10 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Python.h>
-
 #ifndef ___PYBGPSTREAM_BGPSTREAM_H
 #define ___PYBGPSTREAM_BGPSTREAM_H
+
+#include <Python.h>
 
 /** Expose the BGPStreamType structure */
 PyTypeObject *_pybgpstream_bgpstream_get_BGPStreamType(void);
