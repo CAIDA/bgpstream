@@ -26,6 +26,7 @@
 #define __BGPSTREAM_UTILS_AS_PATH_H
 
 #include <limits.h>
+#include "bgpstream_utils_pfx.h"
 
 /** @file
  *
@@ -88,7 +89,6 @@ typedef struct bgpstream_as_path bgpstream_as_path_t;
  * @name Public Data Structures
  *
  * @{ */
-
 
 /** Generic AS Path Segment.
  *
@@ -357,7 +357,6 @@ bgpstream_as_path_hash(bgpstream_as_path_t *path);
  */
 int bgpstream_as_path_equal(bgpstream_as_path_t *path1,
                             bgpstream_as_path_t *path2);
-
 
 /** @} */
 

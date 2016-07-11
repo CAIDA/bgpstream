@@ -262,6 +262,43 @@ AC_DEFINE_UNQUOTED([ED_PLUGIN_INIT_ALL_ENABLED], $ED_PLUGIN_INIT_ALL_ENABLED,
 
 AC_MSG_NOTICE([----------------------------------])
 
+# RTR configuration
+AC_MSG_CHECKING([whether the RTR library is available])
+AC_ARG_WITH([rtr],
+	[AS_HELP_STRING([--without-rtr],
+	  [do not compile with rtr support])],
+	  [],
+	  [with_rtr=yes])
+AM_CONDITIONAL([WITH_rtr], [test "x$with_rtr" != xno])
+if test x"$with_rtr" = xyes; then
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "rtrlib/rtrlib.h"]])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE([WITH_RTR],[1],[Building with RTR support])],
+       AC_MSG_RESULT(no)
+  )
+else
+AC_MSG_RESULT([no])
+fi
+
+# SSH configuration
+AC_MSG_CHECKING([whether the RTR library is compiled with SSH])
+AC_ARG_WITH([ssh],
+	[AS_HELP_STRING([--without-ssh],
+	  [do not compile with ssh support])],
+	  [],
+	  [with_ssh=yes])
+AM_CONDITIONAL([WITH_ssh], [test "x$with_ssh" != xno])
+if test x"$with_ssh" = xyes; then
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include "rtrlib/rtrlib.h"]],
+                        [[struct tr_ssh_config config;]])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE([WITH_SSH],[1],[Building with SSH support])],
+       AC_MSG_RESULT(no)
+  )
+else
+AC_MSG_RESULT([no])
+fi
+
 # we may want to come back later and add compile-time configuration for things
 # like datastructure providers, but for now it will all get compiled
 

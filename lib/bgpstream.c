@@ -199,6 +199,11 @@ bgpstream_t *bgpstream_create() {
     bs = NULL;
     return NULL;
   }
+
+#ifdef WITH_RTR
+  bs->rtr_server_conf.active = 0;
+#endif
+
   /* memory for the bgpstream interface has been
    * allocated correctly */
   bs->status = BGPSTREAM_STATUS_ALLOCATED;
@@ -401,13 +406,46 @@ void bgpstream_set_live_mode(bgpstream_t *bs) {
   bgpstream_debug("BS: set_blocking stop");
 }
 
+#ifdef WITH_RTR
+/* Get the RTR-Socket & configuration
+*/
+struct rtr_mgr_config *bgpstream_get_rtr_config(bgpstream_t *bs)
+{
+  return bs->cfg_tr;
+}
+
+/* Set the RTR-Configuration
+*/
+int bgpstream_set_rtr_config(bgpstream_t *bs, char *host, char *port, char *ssh_user,
+                             char *ssh_hostkey, char *ssh_privatekey,
+                             int active)
+{
+
+  bs->rtr_server_conf.host = host;
+  bs->rtr_server_conf.port = port;
+  bs->rtr_server_conf.ssh_user = ssh_user;
+  bs->rtr_server_conf.ssh_hostkey = ssh_hostkey;
+  bs->rtr_server_conf.ssh_privatekey = ssh_privatekey;
+  bs->rtr_server_conf.active = active;
+  return 0;
+}
+#endif
 
 /* turn on the bgpstream interface, i.e.:
  * it makes the interface ready
  * for a new get next call
+ * it starts the RTR-Connection for validation if RTR is active
 */
 int bgpstream_start(bgpstream_t *bs) {
   bgpstream_debug("BS: init start");
+#ifdef WITH_RTR
+  if (bs->rtr_server_conf.active) {
+    bs->cfg_tr = bgpstream_rtr_start_connection(
+        bs->rtr_server_conf.host, bs->rtr_server_conf.port, NULL, NULL, NULL,
+        bs->rtr_server_conf.ssh_user, bs->rtr_server_conf.ssh_hostkey,
+        bs->rtr_server_conf.ssh_privatekey);
+  }
+#endif
   if(bs == NULL || (bs != NULL && bs->status != BGPSTREAM_STATUS_ALLOCATED)) {
     return 0; // nothing to init
   }
@@ -492,6 +530,12 @@ int bgpstream_get_next_record(bgpstream_t *bs,
 /* turn off the bgpstream interface */
 void bgpstream_stop(bgpstream_t *bs) {
   bgpstream_debug("BS: close start");
+#ifdef WITH_RTR
+  if (bs->rtr_server_conf.active) {
+    bgpstream_rtr_close_connection(bs->cfg_tr);
+    bs->rtr_server_conf.active = false;
+  }
+#endif
   if(bs == NULL || (bs != NULL && bs->status != BGPSTREAM_STATUS_ON)) {
     return; // nothing to close
   }

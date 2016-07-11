@@ -581,7 +581,6 @@ inline int bgpstream_as_path_equal(bgpstream_as_path_t *path1,
     !bcmp(path1->data, path2->data, path1->data_len);
 }
 
-
 /* ========== PRIVATE FUNCTIONS ========== */
 
 #ifdef PATH_COPY_DEBUG

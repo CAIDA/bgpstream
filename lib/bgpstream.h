@@ -146,12 +146,36 @@ typedef struct struct_bgpstream_data_interface_option
 
 } bgpstream_data_interface_option_t;
 
+#ifdef WITH_RTR
+
 /** @} */
 
 /**
  * @name Public API Functions
  *
  * @{ */
+
+/** Get the configuration of the RTR-Socket-Manager
+ *
+ * @return a pointer to the configuration of the rtr-socket-manager
+ */
+struct rtr_mgr_config *bgpstream_get_rtr_config();
+
+/** Set the configuration of the RTR-Socket-Manager
+*
+* @param bs             a pointer to a BGP Stream instance
+* @param host           the host of the cache server
+* @param port           the port of the cache server
+* @param ssh_user       the username for a SSH connection
+* @param ssh_hostkey    the hostkey for a SSH connection
+* @param ssh_privatekey the private key for a SSH connection
+* @param active         whether the rtr-validation is enabled
+*/
+int bgpstream_set_rtr_config(bgpstream_t *bs,
+                              char *host, char *port, char *ssh_user,
+                             char *ssh_hostkey, char *ssh_privatekey,
+                             int active);
+#endif
 
 /** Create a new BGP Stream instance
  *

@@ -31,6 +31,16 @@
 #include "bgpstream_reader.h"
 #include "bgpstream_filter.h"
 
+#ifdef WITH_RTR
+struct rtr_server_configure {
+  char *host;
+  char *port;
+  char *ssh_user;
+  char *ssh_hostkey;
+  char *ssh_privatekey;
+  int active;
+};
+#endif
 
 typedef enum {
   BGPSTREAM_STATUS_ALLOCATED,
@@ -44,6 +54,10 @@ struct struct_bgpstream_t {
   bgpstream_filter_mgr_t *filter_mgr;
   bgpstream_datasource_mgr_t *datasource_mgr;
   bgpstream_status status;
+#ifdef WITH_RTR
+  struct rtr_server_configure rtr_server_conf;
+  struct rtr_mgr_config *cfg_tr;
+#endif
 };
 
 

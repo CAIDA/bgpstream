@@ -35,6 +35,9 @@
 #include "bgpstream_debug.h"
 #include "bgpstream_int.h"
 
+#include "bgpstream.h"
+#include "utils/bgpstream_utils_rtr.h"
+
 
 /* allocate memory for a bs_record */
 bgpstream_record_t *bgpstream_record_create() {
@@ -172,9 +175,50 @@ bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record) {
    * then return elem, otherwise run again
    * bgpstream_record_get_next_elem(record) */
   if(elem == NULL || bgpstream_elem_check_filters(record->bs->filter_mgr, elem) == 1)
-    {
-      return elem;
+  {
+#ifdef WITH_RTR
+    if(record->bs->rtr_server_conf.active) {
+      if (elem != NULL && bgpstream_get_rtr_config(record->bs) != NULL) {
+        elem->annotations.active = BGPSTREAM_ELEM_RPKI_STATUS_ACTIVE;
+        elem->annotations.rpki_validation_status =
+            BGPSTREAM_ELEM_RPKI_VALIDATION_STATUS_NOTVALIDATED;
+
+        char prefix[INET6_ADDRSTRLEN];
+        bgpstream_pfx_t *addr_pfx;
+
+        switch (elem->prefix.address.version) {
+        case BGPSTREAM_ADDR_VERSION_IPV4:
+          addr_pfx = (bgpstream_pfx_t *)&(elem->prefix);
+          bgpstream_addr_ntop(prefix, INET_ADDRSTRLEN, &(addr_pfx->address));
+          break;
+
+        case BGPSTREAM_ADDR_VERSION_IPV6:
+          addr_pfx = (bgpstream_pfx_t *)&(elem->prefix);
+          bgpstream_addr_ntop(prefix, INET6_ADDRSTRLEN, &(addr_pfx->address));
+          break;
+
+        default:
+          addr_pfx = NULL;
+          break;
+        }
+        if (addr_pfx != NULL) {
+          uint32_t origin_asn = 0;
+          bgpstream_as_path_seg_t *origin_seg =
+              bgpstream_as_path_get_origin_seg(elem->aspath);
+          if (origin_seg != NULL &&
+              origin_seg->type == BGPSTREAM_AS_PATH_SEG_ASN) {
+            origin_asn = ((bgpstream_as_path_seg_asn_t *)origin_seg)->asn;
+          }
+
+          bgpstream_elem_get_rpki_validation_result(bgpstream_get_rtr_config(record->bs),
+                                                    elem, prefix, origin_asn,
+                                                    elem->prefix.mask_len);
+        }
+      }
     }
+#endif
+    return elem;
+  }
 
   return bgpstream_record_get_next_elem(record);
 }

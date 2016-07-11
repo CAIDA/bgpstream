@@ -31,14 +31,18 @@ TESTS = 				\
 	bgpstream-test-filters		\
 	bgpstream-test-utils-addr 	\
 	bgpstream-test-utils-pfx	\
-	bgpstream-test-utils-patricia
+	bgpstream-test-utils-patricia	\
+	bgpstream-test-utils-rtr  \
+	bgpstream-test-utils-rtr-func
 
 check_PROGRAMS =  			\
 	bgpstream-test 			\
 	bgpstream-test-filters		\
 	bgpstream-test-utils-addr 	\
 	bgpstream-test-utils-pfx	\
-	bgpstream-test-utils-patricia
+	bgpstream-test-utils-patricia	\
+	bgpstream-test-utils-rtr  \
+	bgpstream-test-utils-rtr-func
 
 bgpstream_test_SOURCES = bgpstream-test.c bgpstream_test.h
 bgpstream_test_LDADD   = $(top_builddir)/lib/libbgpstream.la
@@ -54,6 +58,13 @@ bgpstream_test_utils_pfx_LDADD   = $(top_builddir)/lib/libbgpstream.la
 
 bgpstream_test_utils_patricia_SOURCES = bgpstream-test-utils-patricia.c bgpstream_test.h
 bgpstream_test_utils_patricia_LDADD   = $(top_builddir)/lib/libbgpstream.la
+
+bgpstream_test_utils_rtr_SOURCES = bgpstream-test-utils-rtr.c bgpstream_test.h
+bgpstream_test_utils_rtr_LDADD = $(top_builddir)/lib/libbgpstream.la
+
+bgpstream_test_utils_rtr_func_SOURCES = bgpstream-test-utils-rtr-func.c bgpstream_test.h
+bgpstream_test_utils_rtr_func_LDADD = $(top_builddir)/lib/libbgpstream.la
+
 
 ACLOCAL_AMFLAGS = -I m4
 

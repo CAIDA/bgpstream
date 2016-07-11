@@ -25,6 +25,8 @@
 #define __BGPSTREAM_ELEM_H
 
 #include "bgpstream_utils.h"
+#include "bgpstream_constants.h"
+#include "khash.h"
 
 /** @file
  *
@@ -105,12 +107,80 @@ typedef enum {
 
 } bgpstream_elem_type_t;
 
+/** Validation types */
+typedef enum {
+
+  /** Valid */
+  BGPSTREAM_ELEM_RPKI_VALIDATION_STATUS_VALID = 1,
+
+  /** Invalid */
+  BGPSTREAM_ELEM_RPKI_VALIDATION_STATUS_INVALID = 0,
+
+  /** Not found */
+  BGPSTREAM_ELEM_RPKI_VALIDATION_STATUS_NOTFOUND = -1,
+
+  /** Not validated */
+  BGPSTREAM_ELEM_RPKI_VALIDATION_STATUS_NOTVALIDATED = 2,
+
+} bgpstream_validation_status_type_t;
+
+/** RPKI status */
+typedef enum {
+
+  /** Active */
+  BGPSTREAM_ELEM_RPKI_STATUS_ACTIVE = 1,
+
+  /** Inactive */
+  BGPSTREAM_ELEM_RPKI_STATUS_INACTIVE = 0,
+
+} bgpstream_rpki_status_type_t;
+
 /** @} */
 
 /**
  * @name Public Data Structures
  *
  * @{ */
+
+#ifdef WITH_RTR
+
+KHASH_INIT(rpki_result, khint32_t, char*, 1, kh_int_hash_func, kh_int_hash_equal)
+
+/** A BGP Stream Elem object for Annotations */
+typedef struct struct_bgpstream_elem_annotations_t {
+
+  /** RPKI validation status
+   *
+   * RPKI validation status for a given prefix
+   */
+  bgpstream_validation_status_type_t rpki_validation_status;
+
+  /** RPKI validation result khash init status
+   *
+   *  1 - RPKI hashtable is already initialized, 0 - otherwise
+   */
+  int khash_init;
+
+  /** RPKI validation result khash
+   *
+   * RPKI validation result hashtable (ASN -> prefixes)
+   */
+  khash_t(rpki_result) *rpki_kh;
+
+  /** RPKI valid prefixes
+   *
+   * All valid prefixes for a given prefix
+   */  
+  char valid_prefix[BGPSTREAM_RPKI_MAX__ROA_ENT][BGPSTREAM_RPKI_RST_MAX_LEN];
+
+  /** RPKI BGPStream status
+   *
+   * BGPstream status for RPKI validation
+   */
+  bgpstream_rpki_status_type_t active;
+
+} bgpstream_elem_annotations_t;
+#endif
 
 /** A BGP Stream Elem object */
 typedef struct struct_bgpstream_elem_t {
@@ -165,6 +235,13 @@ typedef struct struct_bgpstream_elem_t {
    */
   bgpstream_elem_peerstate_t new_state;
 
+#ifdef WITH_RTR
+  /** Annotations
+   *
+   * All additional annotations
+   */
+  bgpstream_elem_annotations_t annotations;
+#endif
 } bgpstream_elem_t;
 
 /** @} */
@@ -237,6 +314,25 @@ int bgpstream_elem_peerstate_snprintf(char *buf, size_t len,
  */
 char *bgpstream_elem_snprintf(char *buf, size_t len,
                               const bgpstream_elem_t *elem);
+
+#ifdef WITH_RTR
+/** Write the string representation of the RPKI validation result of an elem
+ *
+ * @param elem       the elem whose RPKI validation result will be printed
+ */
+int bgpstream_elem_get_rpki_validation_result_snprintf(
+    char *buf, size_t len, bgpstream_elem_t const *elem);
+
+/** Get the result of the RPKI-Validation for the elem
+ *
+ * @param elem       the elem which will be validated
+ */
+void bgpstream_elem_get_rpki_validation_result(struct rtr_mgr_config *cfg,
+                                               bgpstream_elem_t *elem,
+                                               char *prefix,
+                                               uint32_t origin_asn,
+                                               uint8_t mask_len);
+#endif
 
 /** @} */
 

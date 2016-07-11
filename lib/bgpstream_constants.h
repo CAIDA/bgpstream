@@ -30,6 +30,12 @@
 // dump name max length
 #define BGPSTREAM_DUMP_MAX_LEN 1024
 
+// RPKI validation result max length
+#define BGPSTREAM_RPKI_RST_MAX_LEN 2048
+
+// RPKI validation result max ROA entries
+#define BGPSTREAM_RPKI_MAX__ROA_ENT 16
+
 // parameters/attribute/filters max length
 #define BGPSTREAM_PAR_MAX_LEN 512
 
