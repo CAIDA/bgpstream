@@ -43,6 +43,8 @@
 #define PEERASN_CMD_CNT 1000
 #define WINDOW_CMD_CNT 1024
 #define OPTION_CMD_CNT 1024
+#define RTR_CMD_CNT 5
+#define RTR_MAX_CNT 5
 #define BGPSTREAM_RECORD_OUTPUT_FORMAT \
   "# Record format:\n" \
   "# <dump-type>|<dump-pos>|<project>|<collector>|<status>|<dump-time>\n" \
@@ -152,6 +154,8 @@ static void usage() {
           "   -m             print info for each BGP valid record in bgpdump -m format\n"
           "   -r             print info for each BGP record (used mostly for debugging BGPStream)\n"
           "   -i             print format information before output\n"
+          "   -R <host>,<port>[,<ssh-user>,<ssh-hostkey>,<ssh-privatekey>]\n"
+          "                  enable RTR-validation with a specified cache-server via TCP or SSH"
           "\n"
 	  "   -h             print this help menu\n"
 	  "* denotes an option that can be given multiple times\n"
@@ -163,6 +167,7 @@ static void usage() {
 static void print_bs_record(bgpstream_record_t *bs_record);
 static int print_elem(bgpstream_record_t *bs_record, bgpstream_elem_t *elem);
 static void print_rib_control_message(bgpstream_record_t *bs_record);
+static void print_err_message(int args, char *minmax, char* type);
 
 int main(int argc, char *argv[])
 {
@@ -198,6 +203,17 @@ int main(int argc, char *argv[])
   char *interface_options[OPTION_CMD_CNT];
   int interface_options_cnt = 0;
 
+  char *rtr[RTR_CMD_CNT];
+  int rtr_cnt = 2;
+  int rtr_cnt_arg = 0;
+
+  char *host;
+  char *port;
+  char *ssh_user;
+  char *ssh_hostkey;
+  char *ssh_privatekey;
+  char *arg;
+
   int rib_period = 0;
   int live = 0;
   int output_info = 0;
@@ -229,7 +245,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "R:d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -237,6 +253,63 @@ int main(int argc, char *argv[])
       }
       switch (opt)
 	{
+
+case 'R':
+#if !defined(FOUND_RTR)
+      fprintf(stderr, "ERROR: Could not validate the BGPStream because RTRlib "
+                      "is not installed\n");
+      exit(-1);
+#endif
+
+#if defined(FOUND_RTR)
+      rtr_cnt++;
+      if (rtr_cnt == RTR_MAX_CNT) {
+        print_err_message(RTR_MAX_CNT - 1, "maximum", "parameters");
+      }
+
+      for (int i = 0; i < RTR_MAX_CNT; i++) {
+        rtr[i] = NULL;
+      }
+
+      arg = strtok(optarg, ",");
+      while (arg != NULL) {
+        rtr[rtr_cnt_arg++] = arg;
+        if (rtr_cnt_arg == RTR_MAX_CNT + 1) {
+          print_err_message(RTR_MAX_CNT, "maximum", "arguments");
+        }
+        arg = strtok(NULL, ",");
+      }
+
+      host = rtr[0];
+      port = rtr[1];
+
+#if defined(FOUND_SSH)
+      ssh_user = rtr[2];
+      ssh_hostkey = rtr[3];
+      ssh_privatekey = rtr[4];
+
+      if (ssh_user != NULL && (ssh_hostkey == NULL || ssh_privatekey == NULL)) {
+        fprintf(stderr, "ERROR: The SSH-values are incomplete\n");
+        exit(-1);
+      }
+#endif /*FOUND_SSH */
+
+      if (!host || !port) {
+        print_err_message(RTR_MAX_CNT, "minimum", "arguments");
+      }
+
+#if !defined(FOUND_SSH)
+      if (rtr[2] != NULL || rtr[3] != NULL || rtr[4] != NULL) {
+        fprintf(stderr, "Warning: RTR-Library is not compiled with "
+                        "SSH-Support, TCP is used instead\n");
+      }
+#endif /*NOTFOUND_SSH */
+
+      bgpstream_set_rtr_config(host, port, ssh_user, ssh_hostkey,
+                               ssh_privatekey, true);
+#endif /*FOUND_RTR */
+      break;
+
 	case 'p':
 	  if(projects_cnt == PROJECT_CMD_CNT)
 	    {
@@ -570,6 +643,10 @@ int main(int argc, char *argv[])
                     {
                       goto err;
                     }
+      if(bs_elem->annotations.rpki_validation_status != BGPSTREAM_ELEM_RPKI_VALIDATION_STATUS_NOTVALIDATED){
+  
+                    bgpstream_rpki_validation_result_free(&bs_elem->annotations.rpki_validation_result);
+      }
 		}
               /* check if end of RIB has been reached */
               if(bs_record->attributes.dump_type == BGPSTREAM_RIB &&
@@ -605,6 +682,15 @@ int main(int argc, char *argv[])
 /* print utility functions */
 
 static char record_buf[65536];
+
+static void print_err_message(int args, char *minmax, char *type)
+{
+  fprintf(stderr, "ERROR: A %s of %d %s %s be specified on "
+                  "the command line\n",
+          minmax, args, type, (minmax == "maximum") ? "can" : "must");
+  usage();
+  exit(-1);
+}
 
 static void print_bs_record(bgpstream_record_t *bs_record)
 {

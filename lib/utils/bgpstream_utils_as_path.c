@@ -581,6 +581,125 @@ inline int bgpstream_as_path_equal(bgpstream_as_path_t *path1,
     !bcmp(path1->data, path2->data, path1->data_len);
 }
 
+void bgpstream_rpki_validation_result_init(
+    bgpstream_rpki_validation_result_t *asn_arr, size_t size)
+{
+  asn_arr->asn_pfx = malloc(size * sizeof(bgpstream_rpki_validation_asn_pfx_t));
+  asn_arr->asn_used = 0;
+  asn_arr->asn_size = size;
+
+  for (int i = 0; i < size; i++) {
+    bgpstream_rpki_validation_asn_pfx_t asn_pfx;
+    asn_arr->asn_pfx[i] = asn_pfx;
+    asn_arr->asn_pfx[i].pfxs =
+        malloc(size * sizeof(bgpstream_rpki_validation_asn_pfx_t));
+
+    bgpstream_pfx_storage_t pfx;
+
+    for (int j = 0; j < size; j++) {
+      asn_arr->asn_pfx[i].pfxs[j].pfx = pfx;
+      asn_arr->asn_pfx[i].pfxs[j].max_pfx_len = 0;
+    }
+
+    asn_arr->asn_pfx[i].pfx_used = 0;
+    asn_arr->asn_pfx[i].pfx_size = size;
+  }
+}
+
+void bgpstream_rpki_validation_result_insert_asn(
+    bgpstream_rpki_validation_result_t *asn_arr, uint32_t asn_seg)
+{
+  bool exist = false;
+  size_t size = 2;
+  for (int i = 0; i < asn_arr->asn_size; i++) {
+    if (asn_arr->asn_pfx[i].asn == asn_seg) {
+      exist = true;
+    }
+  }
+  if (!exist) {
+    if (asn_arr->asn_used == asn_arr->asn_size) {
+      asn_arr->asn_size *= 2;
+      asn_arr->asn_pfx = realloc(
+          asn_arr->asn_pfx,
+          asn_arr->asn_size * sizeof(bgpstream_rpki_validation_asn_pfx_t));
+
+      for (int i = asn_arr->asn_size / 2; i < asn_arr->asn_size; i++) {
+        bgpstream_rpki_validation_asn_pfx_t asn_pfx;
+        asn_arr->asn_pfx[i] = asn_pfx;
+        asn_arr->asn_pfx[i].pfxs =
+            malloc(size * sizeof(bgpstream_rpki_validation_pfx_t));
+
+        bgpstream_pfx_storage_t pfx;
+
+        for (int j = 0; j < size; j++) {
+          asn_arr->asn_pfx[i].pfxs[j].pfx = pfx;
+          asn_arr->asn_pfx[i].pfxs[j].max_pfx_len = 0;
+        }
+        asn_arr->asn_pfx[i].pfx_used = 0;
+        asn_arr->asn_pfx[i].pfx_size = size;
+      }
+    }
+    asn_arr->asn_pfx[asn_arr->asn_used++].asn = asn_seg;
+  }
+}
+
+void bgpstream_rpki_validation_result_insert_pfx(
+    bgpstream_rpki_validation_result_t *asn_arr, uint32_t asn_seg,
+    bgpstream_pfx_t *pfx, uint8_t max_pfx_len)
+{
+  int seg = 0;
+  for (int i = 0; i < asn_arr->asn_size; i++) {
+    if (asn_arr->asn_pfx[i].asn == asn_seg) {
+      seg = i;
+    }
+  }
+
+  bool exist = false;
+  for (int i = 0; i < asn_arr->asn_pfx[seg].pfx_used; i++) {
+    if (bgpstream_pfx_equal(
+            (bgpstream_pfx_t *)&asn_arr->asn_pfx[seg].pfxs[i].pfx, pfx) != 0 &&
+        asn_arr->asn_pfx[seg].pfxs[i].max_pfx_len == max_pfx_len) {
+      exist = true;
+    }
+  }
+  if (!exist) {
+    if (asn_arr->asn_pfx[seg].pfx_used == asn_arr->asn_pfx[seg].pfx_size) {
+      asn_arr->asn_pfx[seg].pfx_size *= 2;
+      asn_arr->asn_pfx[seg].pfxs =
+          realloc(asn_arr->asn_pfx[seg].pfxs,
+                  asn_arr->asn_pfx[seg].pfx_size *
+                      sizeof(bgpstream_rpki_validation_pfx_t));
+
+      bgpstream_pfx_storage_t pfxd;
+
+      for (int i = asn_arr->asn_pfx[seg].pfx_size / 2 + 1;
+           i < asn_arr->asn_pfx[seg].pfx_size; i++) {
+        asn_arr->asn_pfx[seg].pfxs[i].pfx = pfxd;
+        asn_arr->asn_pfx[seg].pfxs[i].max_pfx_len = 0;
+      }
+    }
+
+    asn_arr->asn_pfx[seg].pfxs[asn_arr->asn_pfx[seg].pfx_used].pfx =
+        *(bgpstream_pfx_storage_t *)pfx;
+    asn_arr->asn_pfx[seg].pfxs[asn_arr->asn_pfx[seg].pfx_used].max_pfx_len =
+        max_pfx_len;
+    asn_arr->asn_pfx[seg].pfx_used++;
+  }
+}
+
+void bgpstream_rpki_validation_result_free(
+    bgpstream_rpki_validation_result_t *asn_arr)
+{
+  for (int i = 0; i < asn_arr->asn_size; i++) {
+    free(asn_arr->asn_pfx[i].pfxs);
+    asn_arr->asn_pfx[i].pfxs = NULL;
+    asn_arr->asn_pfx[i].pfx_used = asn_arr->asn_pfx[i].pfx_size = 0;
+  }
+
+  free(asn_arr->asn_pfx);
+  asn_arr->asn_pfx = NULL;
+  asn_arr->asn_used = asn_arr->asn_size = 0;
+}
 
 /* ========== PRIVATE FUNCTIONS ========== */
 
