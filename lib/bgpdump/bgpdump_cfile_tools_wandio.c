@@ -6,6 +6,7 @@
  * 2014-08-14
  */
 
+#include "config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
