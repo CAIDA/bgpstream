@@ -109,6 +109,12 @@ seg_set_dup(bgpstream_as_path_seg_set_t *src)
       *bufp = '\0';                                                            \
   } while (0)
 
+/*
+ * WARNING: The output format of this function is documented in both
+ * bgpstream_utils_as_path.h and _pybgpstream_bgpelem.c. Ensure both places are
+ * updated if changing this format (and be very sure that you need to change it
+ * at all since this is a well-known format also used by bgpdump).
+ */
 int bgpstream_as_path_seg_snprintf(char *buf, size_t len,
                                    bgpstream_as_path_seg_t *seg)
 {

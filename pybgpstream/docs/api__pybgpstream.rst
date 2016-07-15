@@ -273,3 +273,24 @@ BGPElem
 	      (basestring)
             - 'new-state': The new state of the peer, shares the same possible
 	      values as old-state. (basestring)
+
+      The 'as-path' field is a string representation of the AS Path, constructed
+      using bgpstream_as_path_snprintf and is a space-separated sequence of AS
+      Path Segments, each constructed using bgpstream_as_path_seg_snprintf. As
+      noted in the libBGPStream API documention, AS Path Segments are converted
+      to strings using the following convention:
+      - If the segment is a simple ASN (BGPSTREAM_AS_PATH_SEG_ASN), then the
+        string will be the decimal representation of the ASN (not
+        dotted-decimal).
+      - If the segment is an AS Set (BGPSTREAM_AS_PATH_SEG_SET), then the string
+        will be a comma-separated list of ASNs, enclosed in braces. E.g.,
+        "{12345,6789}".
+      - If the segment is an AS Confederation Set
+        (BGPSTREAM_AS_PATH_SEG_CONFED_SET), then the string will be a
+        comma-separated list of ASNs, enclosed in brackets. E.g.,
+        "[12345,6789]".
+      - If the segment is an AS Sequence Set (BGPSTREAM_AS_PATH_SEG_CONFED_SEQ),
+        then the string will be a space-separated list of ASNs, enclosed in
+        parentheses. E.g., "(12345 6789)".
+      Note that it is possible to have a set/sequence with only a single
+      element.
