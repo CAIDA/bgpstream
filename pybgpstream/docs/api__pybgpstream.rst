@@ -232,8 +232,8 @@ BGPElem
 
    .. py:attribute:: type
 
-      The type of the element, can be one of 'rib', 'announcement',
-      'withdrawal', 'peerstate', 'unknown'. *(basestring, readonly)*
+      The type of the element, can be one of 'R' (rib), 'A' (announcement),
+      'W' (withdrawal), 'S' (peerstate), '\0' (unknown). *(basestring, readonly)*
 
 
    .. py:attribute:: time
