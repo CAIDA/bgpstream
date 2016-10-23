@@ -137,6 +137,13 @@ static void usage() {
 	  "   -p <project>   process records from only the given project (routeviews, ris)*\n"
 	  "   -c <collector> process records from only the given collector*\n"
 	  "   -t <type>      process records with only the given type (ribs, updates)*\n"
+    "   -f <filterstring>   filter records and elements using the rules \n"
+    "                       described in the given filter string\n"
+    "   -I <interval>       process records that were received recently, where the\n"
+    "                       interval describes how far back in time to go. The \n"
+    "                       interval should be expressed as '<num> <unit>', where\n"
+    "                       where <unit> can be one of 's', 'm', 'h', 'd' (seconds,\n"
+    "                       minutes, hours, days).\n" 
           "   -w <start>[,<end>]\n"
           "                  process records within the given time window\n"
           "                    (omitting the end parameter enables live mode)*\n"
@@ -198,6 +205,9 @@ int main(int argc, char *argv[])
   char *interface_options[OPTION_CMD_CNT];
   int interface_options_cnt = 0;
 
+  char *filterstring = NULL;
+  char *intervalstring = NULL;
+
   int rib_period = 0;
   int live = 0;
   int output_info = 0;
@@ -229,7 +239,7 @@ int main(int argc, char *argv[])
     }
 
   while (prevoptind = optind,
-	 (opt = getopt (argc, argv, "d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
+	 (opt = getopt (argc, argv, "f:I:d:o:p:c:t:w:j:k:y:P:lrmeivh?")) >= 0)
     {
       if (optind == prevoptind + 2 && (optarg == NULL || *optarg == '-') ) {
         opt = ':';
@@ -375,6 +385,12 @@ int main(int argc, char *argv[])
         case 'i':
 	  output_info = 1;
 	  break;
+  case 'f':
+    filterstring = optarg;
+    break;
+  case 'I':
+    intervalstring = optarg;
+    break;
 	case ':':
 	  fprintf(stderr, "ERROR: Missing option argument for -%c\n", optopt);
 	  usage();
@@ -435,7 +451,7 @@ int main(int argc, char *argv[])
     }
   interface_options_cnt = 0;
 
-  if(windows_cnt == 0)
+  if(windows_cnt == 0 && !intervalstring)
     {
       fprintf(stderr,
               "ERROR: At least one time window must be specified using -w\n");
@@ -452,6 +468,15 @@ int main(int argc, char *argv[])
   /* the program can now start */
 
   /* allocate memory for interface */
+  
+  /* Parse the filter string */
+  if (filterstring) {
+    bgpstream_parse_filter_string(bs, filterstring);
+  }
+
+  if (intervalstring) {
+    bgpstream_add_recent_interval_filter(bs, intervalstring, live);
+  }
 
   /* projects */
   for(i=0; i<projects_cnt; i++)

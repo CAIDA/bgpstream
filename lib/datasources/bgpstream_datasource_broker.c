@@ -568,7 +568,7 @@ bgpstream_broker_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
   // query later
   broker_ds->query_url_end =
     broker_ds->query_url_buf + strlen(broker_ds->query_url_buf);
-  assert(broker_ds->query_url_end == '\0');
+  assert((*broker_ds->query_url_end) == '\0');
 
   bgpstream_debug("\t\tBSDS_BROKER: create broker_ds end");
 
