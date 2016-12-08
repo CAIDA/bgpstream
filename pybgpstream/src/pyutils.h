@@ -30,11 +30,10 @@ static inline bool
 add_to_dict(PyObject* dict, const char* key_str, PyObject* value)
 {
     PyObject *key = PYSTR_FROMSTR(key_str);
-    if(PyDict_SetItem(dict, key, value) == -1)
-      return false;
+    int err = PyDict_SetItem(dict, key, value);
     Py_DECREF(key);
     Py_DECREF(value);
-    return true;
+    return err == 0;
 }
 
 #endif
