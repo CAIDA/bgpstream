@@ -18,8 +18,23 @@
 
 #if PY_MAJOR_VERSION > 2
 #define PYSTR_FROMSTR(str) PyUnicode_FromString(str)
+#define PYNUM_FROMLONG(num) PyLong_FromLong(num)
 #else
 #define PYSTR_FROMSTR(str) PyString_FromString(str)
+#define PYNUM_FROMLONG(num) PyInt_FromLong(num)
 #endif
+
+#include <stdbool.h>
+
+static inline bool
+add_to_dict(PyObject* dict, const char* key_str, PyObject* value)
+{
+    PyObject *key = PYSTR_FROMSTR(key_str);
+    if(PyDict_SetItem(dict, key, value) == -1)
+      return false;
+    Py_DECREF(key);
+    Py_DECREF(value);
+    return true;
+}
 
 #endif
