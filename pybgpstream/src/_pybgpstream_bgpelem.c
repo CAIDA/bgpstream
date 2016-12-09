@@ -75,8 +75,8 @@ get_communities_pylist(bgpstream_community_set_t *communities) {
       if((dict = PyDict_New()) == NULL)
         return NULL;
       /* add pair to dictionary */
-      if (!add_to_dict(dict, "asn", Py_BuildValue("k", c->asn)) ||
-          !add_to_dict(dict, "value", Py_BuildValue("k", c->value))) {
+      if (add_to_dict(dict, "asn", Py_BuildValue("k", c->asn)) ||
+          add_to_dict(dict, "value", Py_BuildValue("k", c->value))) {
         return NULL;
       }
 
@@ -156,23 +156,23 @@ BGPElem_get_fields(BGPElemObject *self, void *closure)
     {
     case BGPSTREAM_ELEM_TYPE_RIB:
     case BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT:
-      if (!add_to_dict(dict, "next-hop", get_ip_pystr((bgpstream_ip_addr_t *)&self->elem->nexthop)) ||
-          !add_to_dict(dict, "as-path", get_aspath_pystr(self->elem->aspath)) ||
-          !add_to_dict(dict, "communities", get_communities_pylist(self->elem->communities))) {
+      if (add_to_dict(dict, "next-hop", get_ip_pystr((bgpstream_ip_addr_t *)&self->elem->nexthop)) ||
+          add_to_dict(dict, "as-path", get_aspath_pystr(self->elem->aspath)) ||
+          add_to_dict(dict, "communities", get_communities_pylist(self->elem->communities))) {
         return NULL;
       }
 
       /* FALLTHROUGH */
 
     case BGPSTREAM_ELEM_TYPE_WITHDRAWAL:
-      if (!add_to_dict(dict, "prefix", get_pfx_pystr((bgpstream_pfx_t *)&self->elem->prefix))) {
+      if (add_to_dict(dict, "prefix", get_pfx_pystr((bgpstream_pfx_t *)&self->elem->prefix))) {
         return NULL;
       }
       break;
 
     case BGPSTREAM_ELEM_TYPE_PEERSTATE:
-      if (!add_to_dict(dict, "old-state", get_peerstate_pystr(self->elem->old_state)) ||
-          !add_to_dict(dict, "new-state", get_peerstate_pystr(self->elem->new_state))) {
+      if (add_to_dict(dict, "old-state", get_peerstate_pystr(self->elem->old_state)) ||
+          add_to_dict(dict, "new-state", get_peerstate_pystr(self->elem->new_state))) {
         return NULL;
       }
       break;

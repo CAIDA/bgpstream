@@ -24,16 +24,14 @@
 #define PYNUM_FROMLONG(num) PyInt_FromLong(num)
 #endif
 
-#include <stdbool.h>
-
-static inline bool
+static inline int
 add_to_dict(PyObject* dict, const char* key_str, PyObject* value)
 {
     PyObject *key = PYSTR_FROMSTR(key_str);
     int err = PyDict_SetItem(dict, key, value);
     Py_DECREF(key);
     Py_DECREF(value);
-    return err == 0;
+    return err;
 }
 
 #endif
