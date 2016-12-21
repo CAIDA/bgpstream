@@ -35,6 +35,9 @@
 #include "bgpstream_debug.h"
 #include "bgpstream_int.h"
 
+#include "bgpstream.h"
+#include "utils/bgpstream_utils_rtr.h"
+
 
 /* allocate memory for a bs_record */
 bgpstream_record_t *bgpstream_record_create() {
@@ -173,6 +176,59 @@ bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record) {
    * bgpstream_record_get_next_elem(record) */
   if(elem == NULL || bgpstream_elem_check_filters(record->bs->filter_mgr, elem) == 1)
     {
+      if(elem != NULL && bgpstream_get_rtr_config() != NULL){
+		    char ip_prefix[INET6_ADDRSTRLEN];
+        uint8_t addr_ver = elem->prefix.address.version;
+        uint8_t mask_len = elem->prefix.mask_len;
+        uint32_t asn = elem->peer_asnumber;
+        bgpstream_pfx_t *addr_pfx;
+  
+        switch(addr_ver)
+        {
+          case BGPSTREAM_ADDR_VERSION_IPV4:
+            addr_pfx = (bgpstream_pfx_t*)&(elem->prefix);
+            bgpstream_addr_ntop(ip_prefix, INET_ADDRSTRLEN, &(addr_pfx->address));
+            break;
+
+          case BGPSTREAM_ADDR_VERSION_IPV6:
+            addr_pfx = (bgpstream_pfx_t*)&(elem->prefix);
+            bgpstream_addr_ntop(ip_prefix, INET6_ADDRSTRLEN, &(addr_pfx->address));
+            break;
+
+          default:
+            addr_pfx = NULL;
+            break;
+        }
+
+        if(addr_pfx != NULL)
+        {
+          struct rtr_mgr_config *cfg_tr = bgpstream_get_rtr_config();
+          struct reasoned_result res_reasoned = bgpstream_rtr_validate_reason(cfg_tr, asn, ip_prefix, mask_len);
+          printf("\nRTR-Validation: %s\n", pfxv2str(res_reasoned.result));
+          if(res_reasoned.result != BGP_PFXV_STATE_NOT_FOUND){
+              elem->validation_status = pfxv2str(res_reasoned.result);
+              bool duplicate = false;        
+              printf("RTR-Valid ASNs:\t");
+              for(int i = 0; i < res_reasoned.reason_len; i++){
+                for(int j = 0; j < i; j++){
+                  if(res_reasoned.reason[i].asn == res_reasoned.reason[j].asn){
+                    duplicate = true;
+                  }
+                }
+                if(!duplicate){
+                    elem->valid_asn[i] = res_reasoned.reason[i].asn; 
+                    duplicate = false;
+                    printf("%lu ", elem->valid_asn[i]);
+                }
+              }
+              printf("\n");
+          }
+          else
+          {
+             printf("RTR-Valid ASNs:\t-\n");
+          }
+        }
+      }
       return elem;
     }
 

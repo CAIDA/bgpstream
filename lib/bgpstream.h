@@ -146,12 +146,34 @@ typedef struct struct_bgpstream_data_interface_option
 
 } bgpstream_data_interface_option_t;
 
+struct rtr_mgr_config* cfg_tr;
+
+struct rtr_server_configure {
+  char *host;
+  char *port;
+  bool active;
+} rtr_server_conf;
+
 /** @} */
 
 /**
  * @name Public API Functions
  *
  * @{ */
+
+/** Get the configuration of the RTR-Socket-Manager
+ *
+ * @return a pointer to the configuration of the rtr-socket-manager
+ */
+struct rtr_mgr_config *bgpstream_get_rtr_config();
+
+ /** Set the configuration of the RTR-Socket-Manager
+ *
+ * @param host    the host of the cache server
+ * @param port    the port of the cache server
+ * @param active  whether the rtr-validation is enabled
+ */
+int bgpstream_set_rtr_config(char *host, char *port, bool active);
 
 /** Create a new BGP Stream instance
  *

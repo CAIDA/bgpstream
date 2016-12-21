@@ -320,9 +320,9 @@ char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
       ADD_PIPE;
 
       /* ORIGIN AS */
-      if((seg = bgpstream_as_path_get_origin_seg(elem->aspath)) != NULL)
+      if(elem->origin_asnumber != 0)
         {
-          c = bgpstream_as_path_seg_snprintf(buf_p, B_REMAIN, seg);
+          c = snprintf(buf_p, B_REMAIN, "%"PRIu32, elem->origin_asnumber);
           written += c;
           buf_p += c;
         }
