@@ -20,10 +20,10 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "_pybgpstream_bgprecord.h"
 #include "pyutils.h"
 #include <Python.h>
 #include <bgpstream.h>
-#include "_pybgpstream_bgprecord.h"
 
 typedef struct {
   PyObject_HEAD

@@ -437,9 +437,8 @@ int main(int argc, char *argv[])
       usage();
       exit(-1);
     } else {
-      fprintf(stderr,
-              "WARN: No time windows specified, defaulting to all "
-              "available data\n");
+      fprintf(stderr, "WARN: No time windows specified, defaulting to all "
+                      "available data\n");
     }
   }
 

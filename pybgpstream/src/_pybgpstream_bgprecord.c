@@ -21,11 +21,11 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "_pybgpstream_bgprecord.h"
+#include "_pybgpstream_bgpelem.h"
 #include "pyutils.h"
 #include <Python.h>
 #include <bgpstream.h>
-#include "_pybgpstream_bgpelem.h"
-#include "_pybgpstream_bgprecord.h"
 
 #define BGPRecordDocstring "BGPRecord object"
 
