@@ -28,6 +28,8 @@
 #ifndef BGPSTREAM_UTILS_TIME_H_
 #define BGPSTREAM_UTILS_TIME_H_
 
+#include <stdint.h>
+
 int bgpstream_time_calc_recent_interval(uint32_t *start, uint32_t *end,
                                         const char *optval);
 
