@@ -56,19 +56,19 @@
 typedef enum {
 
   /** Peer state unknown */
-  BGPSTREAM_ELEM_PEERSTATE_UNKNOWN     = 0,
+  BGPSTREAM_ELEM_PEERSTATE_UNKNOWN = 0,
 
   /** Peer state idle */
-  BGPSTREAM_ELEM_PEERSTATE_IDLE        = 1,
+  BGPSTREAM_ELEM_PEERSTATE_IDLE = 1,
 
   /** Peer state connect */
-  BGPSTREAM_ELEM_PEERSTATE_CONNECT     = 2,
+  BGPSTREAM_ELEM_PEERSTATE_CONNECT = 2,
 
   /** Peer state active */
-  BGPSTREAM_ELEM_PEERSTATE_ACTIVE      = 3,
+  BGPSTREAM_ELEM_PEERSTATE_ACTIVE = 3,
 
   /** Peer state open-sent */
-  BGPSTREAM_ELEM_PEERSTATE_OPENSENT    = 4,
+  BGPSTREAM_ELEM_PEERSTATE_OPENSENT = 4,
 
   /** Peer state open-confirm */
   BGPSTREAM_ELEM_PEERSTATE_OPENCONFIRM = 5,
@@ -77,31 +77,30 @@ typedef enum {
   BGPSTREAM_ELEM_PEERSTATE_ESTABLISHED = 6,
 
   /** Peer state clearing */
-  BGPSTREAM_ELEM_PEERSTATE_CLEARING    = 7,
+  BGPSTREAM_ELEM_PEERSTATE_CLEARING = 7,
 
   /** Peer state clearing */
-  BGPSTREAM_ELEM_PEERSTATE_DELETED     = 8,
+  BGPSTREAM_ELEM_PEERSTATE_DELETED = 8,
 
 } bgpstream_elem_peerstate_t;
-
 
 /** Elem types */
 typedef enum {
 
   /** Unknown */
-  BGPSTREAM_ELEM_TYPE_UNKNOWN      = 0,
+  BGPSTREAM_ELEM_TYPE_UNKNOWN = 0,
 
   /** RIB Entry */
-  BGPSTREAM_ELEM_TYPE_RIB          = 1,
+  BGPSTREAM_ELEM_TYPE_RIB = 1,
 
   /** Announcement */
   BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT = 2,
 
   /** Withdrawal */
-  BGPSTREAM_ELEM_TYPE_WITHDRAWAL   = 3,
+  BGPSTREAM_ELEM_TYPE_WITHDRAWAL = 3,
 
   /** Peer state change */
-  BGPSTREAM_ELEM_TYPE_PEERSTATE    = 4,
+  BGPSTREAM_ELEM_TYPE_PEERSTATE = 4,
 
 } bgpstream_elem_type_t;
 

@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_PFX_H
 #define __BGPSTREAM_UTILS_PFX_H
 
@@ -91,13 +90,10 @@ typedef struct struct_bgpstream_pfx_storage_t {
 
 /** @} */
 
-
-
 /**
  * @name Public API Functions
  *
  * @{ */
-
 
 /** Write the string representation of the given prefix into the given
  * character buffer.
@@ -112,7 +108,6 @@ typedef struct struct_bgpstream_pfx_storage_t {
  */
 char *bgpstream_pfx_snprintf(char *buf, size_t len, bgpstream_pfx_t *pfx);
 
-
 /** Hash the given IPv4 Prefix into a 32bit number
  *
  * @param pfx          pointer to the IPv4 prefix to hash
@@ -124,7 +119,6 @@ unsigned int
 unsigned long
 #endif
 bgpstream_ipv4_pfx_hash(bgpstream_ipv4_pfx_t *pfx);
-
 
 /** Hash the given IPv6 prefix into a 64bit number
  *
@@ -150,7 +144,6 @@ unsigned long long
 #endif
 bgpstream_pfx_storage_hash(bgpstream_pfx_storage_t *pfx);
 
-
 /** Compare two prefixes for equality
  *
  * @param pfx1          pointer to the first prefix to compare
@@ -168,7 +161,6 @@ int bgpstream_pfx_equal(bgpstream_pfx_t *pfx1, bgpstream_pfx_t *pfx2);
 int bgpstream_ipv4_pfx_equal(bgpstream_ipv4_pfx_t *pfx1,
                              bgpstream_ipv4_pfx_t *pfx2);
 
-
 /** Compare two IPv6 prefixes for equality
  *
  * @param pfx1         pointer to the first prefix to compare
@@ -177,7 +169,6 @@ int bgpstream_ipv4_pfx_equal(bgpstream_ipv4_pfx_t *pfx1,
  */
 int bgpstream_ipv6_pfx_equal(bgpstream_ipv6_pfx_t *pfx1,
                              bgpstream_ipv6_pfx_t *pfx2);
-
 
 /** Compare two generic prefixes for equality
  *
@@ -196,25 +187,20 @@ int bgpstream_pfx_storage_equal(bgpstream_pfx_storage_t *pfx1,
  */
 int bgpstream_pfx_contains(bgpstream_pfx_t *outer, bgpstream_pfx_t *inner);
 
-
 /** Utility macros used to pass khashes objects by reference
  *  instead of copying them */
 
-#define bgpstream_pfx_storage_hash_val(arg) \
-        bgpstream_pfx_storage_hash(&(arg))
-#define bgpstream_pfx_storage_equal_val(arg1, arg2) \
-        bgpstream_pfx_storage_equal(&(arg1), &(arg2))
+#define bgpstream_pfx_storage_hash_val(arg) bgpstream_pfx_storage_hash(&(arg))
+#define bgpstream_pfx_storage_equal_val(arg1, arg2)                            \
+  bgpstream_pfx_storage_equal(&(arg1), &(arg2))
 
-#define bgpstream_ipv4_pfx_storage_hash_val(arg) \
-        bgpstream_ipv4_pfx_hash(&(arg))
-#define bgpstream_ipv4_pfx_storage_equal_val(arg1, arg2) \
-        bgpstream_ipv4_pfx_equal(&(arg1), &(arg2))
+#define bgpstream_ipv4_pfx_storage_hash_val(arg) bgpstream_ipv4_pfx_hash(&(arg))
+#define bgpstream_ipv4_pfx_storage_equal_val(arg1, arg2)                       \
+  bgpstream_ipv4_pfx_equal(&(arg1), &(arg2))
 
-#define bgpstream_ipv6_pfx_storage_hash_val(arg) \
-        bgpstream_ipv6_pfx_hash(&(arg))
-#define bgpstream_ipv6_pfx_storage_equal_val(arg1, arg2) \
-        bgpstream_ipv6_pfx_equal(&(arg1), &(arg2))
-
+#define bgpstream_ipv6_pfx_storage_hash_val(arg) bgpstream_ipv6_pfx_hash(&(arg))
+#define bgpstream_ipv6_pfx_storage_equal_val(arg1, arg2)                       \
+  bgpstream_ipv6_pfx_equal(&(arg1), &(arg2))
 
 /** Convert a string into a prefix storage
  *
@@ -223,10 +209,9 @@ int bgpstream_pfx_contains(bgpstream_pfx_t *outer, bgpstream_pfx_t *inner);
  * @return the pointer to an initialized pfx storage, NULL if the
  *         prefix is not valid
  */
-bgpstream_pfx_storage_t *
-bgpstream_str2pfx(const char *pfx_str, bgpstream_pfx_storage_t *pfx);
+bgpstream_pfx_storage_t *bgpstream_str2pfx(const char *pfx_str,
+                                           bgpstream_pfx_storage_t *pfx);
 
 /** @} */
 
 #endif /* __BGPSTREAM_UTILS_PFX_H */
-

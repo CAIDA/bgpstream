@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_STR_SET_H
 #define __BGPSTREAM_UTILS_STR_SET_H
 
@@ -49,7 +48,6 @@ typedef struct bgpstream_str_set_t bgpstream_str_set_t;
  *
  * @{ */
 
-
 /** Create a new string set instance
  *
  * @return a pointer to the structure, or NULL if an error occurred
@@ -65,7 +63,7 @@ bgpstream_str_set_t *bgpstream_str_set_create();
  *
  * @note this function copies the provided string
  */
-int bgpstream_str_set_insert(bgpstream_str_set_t *set, const char * val);
+int bgpstream_str_set_insert(bgpstream_str_set_t *set, const char *val);
 
 /** Remove a string from the set
  *
@@ -112,7 +110,7 @@ void bgpstream_str_set_rewind(bgpstream_str_set_t *set);
  *         (borrowed pointer), NULL if the end of the set
  *         has been reached
  */
-char* bgpstream_str_set_next(bgpstream_str_set_t *set);
+char *bgpstream_str_set_next(bgpstream_str_set_t *set);
 
 /** Empty the string set.
  *

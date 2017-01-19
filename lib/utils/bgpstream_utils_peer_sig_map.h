@@ -21,11 +21,10 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_PEER_SIG_MAP_H
 #define __BGPSTREAM_UTILS_PEER_SIG_MAP_H
 
-#include "bgpstream_utils.h"      /** < for COLLECTOR_NAME_LEN */
+#include "bgpstream_utils.h" /** < for COLLECTOR_NAME_LEN */
 #include "bgpstream_utils_addr.h"
 
 /** @file
@@ -50,7 +49,6 @@ typedef struct bgpstream_peer_sig_map bgpstream_peer_sig_map_t;
 
 /** @} */
 
-
 /**
  * @name Public Data Structures
  *
@@ -72,13 +70,10 @@ typedef struct struct_bgpstream_peer_sig_t {
 
 /** @} */
 
-
-
 /**
  * @name Public API Functions
  *
  * @{ */
-
 
 /** Create a new peer signature map
  *
@@ -96,10 +91,8 @@ bgpstream_peer_sig_map_t *bgpstream_peer_sig_map_create();
  *
  */
 bgpstream_peer_id_t bgpstream_peer_sig_map_get_id(
-                                        bgpstream_peer_sig_map_t *map,
-                                        char *collector_str,
-					bgpstream_ip_addr_t *peer_ip_addr,
-                                        uint32_t peer_asnumber);
+  bgpstream_peer_sig_map_t *map, char *collector_str,
+  bgpstream_ip_addr_t *peer_ip_addr, uint32_t peer_asnumber);
 
 /** Get the peer signature for the given peer ID
  *
@@ -108,9 +101,9 @@ bgpstream_peer_id_t bgpstream_peer_sig_map_get_id(
  * @return pointer to the peer signature for the given peer ID, NULL if it was
  * not found
  */
-bgpstream_peer_sig_t *bgpstream_peer_sig_map_get_sig(
-                                                  bgpstream_peer_sig_map_t *map,
-                                                  bgpstream_peer_id_t peer_id);
+bgpstream_peer_sig_t *
+bgpstream_peer_sig_map_get_sig(bgpstream_peer_sig_map_t *map,
+                               bgpstream_peer_id_t peer_id);
 
 /** Get the number of peer signatures in the given map
  *
@@ -134,4 +127,3 @@ void bgpstream_peer_sig_map_clear(bgpstream_peer_sig_map_t *map);
 /** @} */
 
 #endif /* __BGPSTREAM_UTILS_PEER_SIG_MAP_H */
-

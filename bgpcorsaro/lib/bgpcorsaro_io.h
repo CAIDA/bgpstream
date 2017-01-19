@@ -38,15 +38,16 @@
  */
 
 /** The suffix used to detect gzip output is desired */
-#define BGPCORSARO_IO_ZLIB_SUFFIX   ".gz"
+#define BGPCORSARO_IO_ZLIB_SUFFIX ".gz"
 
 /** The suffix used to detect bzip output is desired */
-#define BGPCORSARO_IO_BZ2_SUFFIX   ".bz2"
+#define BGPCORSARO_IO_BZ2_SUFFIX ".bz2"
 
 /** The character to replace with the name of the plugin */
-#define BGPCORSARO_IO_PLUGIN_PATTERN  'X'
-/** The pattern to replace in the output file name with the name of the plugin */
-#define BGPCORSARO_IO_PLUGIN_PATTERN_STR  "%X"
+#define BGPCORSARO_IO_PLUGIN_PATTERN 'X'
+/** The pattern to replace in the output file name with the name of the plugin
+ */
+#define BGPCORSARO_IO_PLUGIN_PATTERN_STR "%X"
 
 /** The character to replace with the monitor name */
 #define BGPCORSARO_IO_MONITOR_PATTERN 'N'
@@ -54,7 +55,7 @@
 #define BGPCORSARO_IO_MONITOR_PATTERN_STR "%N"
 
 /** The name to use for the log 'plugin' file */
-#define BGPCORSARO_IO_LOG_NAME        "log"
+#define BGPCORSARO_IO_LOG_NAME "log"
 
 /** Uses the given settings to open an bgpcorsaro file for the given plugin
  *
@@ -68,11 +69,10 @@
  * @return A pointer to a new wandio output file, or NULL if an error occurs
  */
 iow_t *bgpcorsaro_io_prepare_file_full(bgpcorsaro_t *bgpcorsaro,
-					     const char *plugin_name,
-					     bgpcorsaro_interval_t *interval,
-					     int compress,
-					     int compress_level,
-					     int flags);
+                                       const char *plugin_name,
+                                       bgpcorsaro_interval_t *interval,
+                                       int compress, int compress_level,
+                                       int flags);
 
 /** Uses the current settings to open an bgpcorsaro file for the given plugin
  *
@@ -82,9 +82,9 @@ iow_t *bgpcorsaro_io_prepare_file_full(bgpcorsaro_t *bgpcorsaro,
  *                     (inserted into the template)
  * @return A pointer to a new wandio output file, or NULL if an error occurs
  */
-iow_t *bgpcorsaro_io_prepare_file(bgpcorsaro_t* bgpcorsaro,
-				  const char *plugin_name,
-				  bgpcorsaro_interval_t *interval);
+iow_t *bgpcorsaro_io_prepare_file(bgpcorsaro_t *bgpcorsaro,
+                                  const char *plugin_name,
+                                  bgpcorsaro_interval_t *interval);
 
 /** Validates a output file template for needed features
  *
@@ -109,7 +109,7 @@ int bgpcorsaro_io_template_has_timestamp(bgpcorsaro_t *bgpcorsaro);
  * @return The amount of data written, or -1 if an error occurs
  */
 off_t bgpcorsaro_io_write_interval_start(bgpcorsaro_t *bgpcorsaro, iow_t *file,
-					 bgpcorsaro_interval_t *int_start);
+                                         bgpcorsaro_interval_t *int_start);
 
 /** Write the interval headers to stdout
  *
@@ -125,7 +125,7 @@ void bgpcorsaro_io_print_interval_start(bgpcorsaro_interval_t *int_start);
  * @return The amount of data written, or -1 if an error occurs
  */
 off_t bgpcorsaro_io_write_interval_end(bgpcorsaro_t *bgpcorsaro, iow_t *file,
-				       bgpcorsaro_interval_t *int_end);
+                                       bgpcorsaro_interval_t *int_end);
 
 /** Write the interval trailers to stdout
  *
@@ -141,7 +141,7 @@ void bgpcorsaro_io_print_interval_end(bgpcorsaro_interval_t *int_end);
  * @return The amount of data written, or -1 if an error occurs
  */
 off_t bgpcorsaro_io_write_plugin_start(bgpcorsaro_t *bgpcorsaro, iow_t *file,
-				       bgpcorsaro_plugin_t *plugin);
+                                       bgpcorsaro_plugin_t *plugin);
 
 /** Write the appropriate plugin trailer to the file
  *
@@ -151,6 +151,6 @@ off_t bgpcorsaro_io_write_plugin_start(bgpcorsaro_t *bgpcorsaro, iow_t *file,
  * @return The amount of data written, or -1 if an error occurs
  */
 off_t bgpcorsaro_io_write_plugin_end(bgpcorsaro_t *bgpcorsaro, iow_t *file,
-				     bgpcorsaro_plugin_t *plugin);
+                                     bgpcorsaro_plugin_t *plugin);
 
 #endif /* __BGPCORSARO_IO_H */

@@ -29,60 +29,57 @@
 #include <wandio.h>
 
 #define singlefile_RECORDS 537347
-#define csvfile_RECORDS    559424
-#define sqlite_RECORDS     538308
-#define broker_RECORDS     2153
+#define csvfile_RECORDS 559424
+#define sqlite_RECORDS 538308
+#define broker_RECORDS 2153
 
 bgpstream_t *bs;
 bgpstream_record_t *rec;
 bgpstream_data_interface_id_t datasource_id = 0;
 bgpstream_data_interface_option_t *option;
 
-#define RUN(interface)                                          \
-  do {                                                          \
-  int ret;                                                      \
-  int counter = 0;                                              \
-  CHECK("stream start ("STR(interface)")",                      \
-        bgpstream_start(bs) == 0);                              \
-  while((ret = bgpstream_get_next_record(bs, rec)) > 0) {       \
-    if(rec->status == BGPSTREAM_RECORD_STATUS_VALID_RECORD) {   \
-      counter++;                                                \
-    }                                                           \
-  }                                                             \
-  bgpstream_stop(bs);                                           \
-  CHECK("read records ("STR(interface)")",                      \
-        ret == 0 && counter == interface##_RECORDS);            \
-  } while(0)
+#define RUN(interface)                                                         \
+  do {                                                                         \
+    int ret;                                                                   \
+    int counter = 0;                                                           \
+    CHECK("stream start (" STR(interface) ")", bgpstream_start(bs) == 0);      \
+    while ((ret = bgpstream_get_next_record(bs, rec)) > 0) {                   \
+      if (rec->status == BGPSTREAM_RECORD_STATUS_VALID_RECORD) {               \
+        counter++;                                                             \
+      }                                                                        \
+    }                                                                          \
+    bgpstream_stop(bs);                                                        \
+    CHECK("read records (" STR(interface) ")",                                 \
+          ret == 0 && counter == interface##_RECORDS);                         \
+  } while (0)
 
-#define SETUP                                   \
-  do {                                          \
-    bs = bgpstream_create();                    \
-    rec = bgpstream_record_create();            \
-  } while(0)
+#define SETUP                                                                  \
+  do {                                                                         \
+    bs = bgpstream_create();                                                   \
+    rec = bgpstream_record_create();                                           \
+  } while (0)
 
-#define TEARDOWN                                \
-  do {                                          \
-    bgpstream_record_destroy(rec);              \
-    rec = NULL;                                 \
-    bgpstream_destroy(bs);                      \
-    bs = NULL;                                  \
-  } while(0)
+#define TEARDOWN                                                               \
+  do {                                                                         \
+    bgpstream_record_destroy(rec);                                             \
+    rec = NULL;                                                                \
+    bgpstream_destroy(bs);                                                     \
+    bs = NULL;                                                                 \
+  } while (0)
 
-#define CHECK_SET_INTERFACE(interface)                                  \
-  do {                                                                  \
-    CHECK("get data interface ID ("STR(interface)")",                   \
-          (datasource_id =                                              \
-           bgpstream_get_data_interface_id_by_name(bs, STR(interface))) != 0); \
-    bgpstream_set_data_interface(bs, datasource_id);                    \
-  } while(0)
+#define CHECK_SET_INTERFACE(interface)                                         \
+  do {                                                                         \
+    CHECK("get data interface ID (" STR(interface) ")",                        \
+          (datasource_id = bgpstream_get_data_interface_id_by_name(            \
+             bs, STR(interface))) != 0);                                       \
+    bgpstream_set_data_interface(bs, datasource_id);                           \
+  } while (0)
 
 int test_bgpstream()
 {
-  CHECK("BGPStream create",
-        (bs = bgpstream_create()) != NULL);
+  CHECK("BGPStream create", (bs = bgpstream_create()) != NULL);
 
-  CHECK("BGPStream record create",
-        (rec = bgpstream_record_create()) != NULL);
+  CHECK("BGPStream record create", (rec = bgpstream_record_create()) != NULL);
 
   TEARDOWN;
   return 0;
@@ -95,16 +92,14 @@ int test_singlefile()
   CHECK_SET_INTERFACE(singlefile);
 
   CHECK("get option (rib-file)",
-        (option =
-         bgpstream_get_data_interface_option_by_name(bs, datasource_id,
-                                                     "rib-file")) != NULL);
-  bgpstream_set_data_interface_option(bs, option,
-                           "routeviews.route-views.jinx.ribs.1427846400.bz2");
+        (option = bgpstream_get_data_interface_option_by_name(
+           bs, datasource_id, "rib-file")) != NULL);
+  bgpstream_set_data_interface_option(
+    bs, option, "routeviews.route-views.jinx.ribs.1427846400.bz2");
 
   CHECK("get option (upd-file)",
-        (option =
-         bgpstream_get_data_interface_option_by_name(bs, datasource_id,
-                                                     "upd-file")) != NULL);
+        (option = bgpstream_get_data_interface_option_by_name(
+           bs, datasource_id, "upd-file")) != NULL);
   bgpstream_set_data_interface_option(bs, option,
                                       "ris.rrc06.updates.1427846400.gz");
 
@@ -121,9 +116,8 @@ int test_csvfile()
   CHECK_SET_INTERFACE(csvfile);
 
   CHECK("get option (csv-file)",
-        (option =
-         bgpstream_get_data_interface_option_by_name(bs, datasource_id,
-                                                     "csv-file")) != NULL);
+        (option = bgpstream_get_data_interface_option_by_name(
+           bs, datasource_id, "csv-file")) != NULL);
   bgpstream_set_data_interface_option(bs, option, "csv_test.csv");
 
   bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_COLLECTOR, "rrc06");
@@ -141,9 +135,8 @@ int test_sqlite()
   CHECK_SET_INTERFACE(sqlite);
 
   CHECK("get option (db-file)",
-        (option =
-         bgpstream_get_data_interface_option_by_name(bs, datasource_id,
-                                                     "db-file")) != NULL);
+        (option = bgpstream_get_data_interface_option_by_name(
+           bs, datasource_id, "db-file")) != NULL);
   bgpstream_set_data_interface_option(bs, option, "sqlite_test.db");
 
   bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_PROJECT, "routeviews");
@@ -170,7 +163,7 @@ int test_broker()
 
   bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_COLLECTOR, "route-views6");
   bgpstream_add_filter(bs, BGPSTREAM_FILTER_TYPE_RECORD_TYPE, "updates");
-  bgpstream_add_interval_filter(bs,1427846550,1427846700);
+  bgpstream_add_interval_filter(bs, 1427846550, 1427846700);
 
   RUN(broker);
 
@@ -180,37 +173,31 @@ int test_broker()
 
 int main()
 {
-  CHECK_SECTION("BGPStream",
-                test_bgpstream() == 0);
+  CHECK_SECTION("BGPStream", test_bgpstream() == 0);
 
 #ifdef WITH_DATA_INTERFACE_SINGLEFILE
-  CHECK_SECTION("singlefile data interface",
-                test_singlefile() == 0);
+  CHECK_SECTION("singlefile data interface", test_singlefile() == 0);
 #else
   SKIPPED_SECTION("singlefile data interface");
 #endif
 
 #ifdef WITH_DATA_INTERFACE_CSVFILE
-  CHECK_SECTION("csvfile data interface",
-                test_csvfile() == 0);
+  CHECK_SECTION("csvfile data interface", test_csvfile() == 0);
 #else
   SKIPPED_SECTION("csvfile data interface");
 #endif
 
 #ifdef WITH_DATA_INTERFACE_SQLITE
-  CHECK_SECTION("sqlite data interface",
-                test_sqlite() == 0);
+  CHECK_SECTION("sqlite data interface", test_sqlite() == 0);
 #else
   SKIPPED_SECTION("sqlite data interface");
 #endif
 
 #ifdef WITH_DATA_INTERFACE_BROKER
-  CHECK_SECTION("broker data interface",
-                test_broker() == 0);
+  CHECK_SECTION("broker data interface", test_broker() == 0);
 #else
   SKIPPED_SECTION("broker data interface");
 #endif
 
   return 0;
 }
-

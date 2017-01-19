@@ -28,14 +28,14 @@
 #include "utils.h"
 #include "libjsmn/jsmn.h"
 
+#include <assert.h>
 #include <inttypes.h>
-#include <sys/types.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
-#include <stdint.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <wandio.h>
 
@@ -44,26 +44,24 @@
 // the max time we will wait between retries to the broker
 #define MAX_WAIT_TIME 900
 
-//indicates a fatal error
+// indicates a fatal error
 #define ERR_FATAL -1
 // indicates a non-fatal error
 #define ERR_RETRY -2
 
-#define APPEND_STR(str)                                                 \
-  do {                                                                  \
-    size_t len = strlen(str);                                           \
-    if(broker_ds->query_url_remaining < len+1)                          \
-      {                                                                 \
-        goto err;                                                       \
-      }                                                                 \
-    strncat(broker_ds->query_url_buf, str,                              \
-            broker_ds->query_url_remaining-1);                          \
-    broker_ds->query_url_remaining -= len;                              \
-  } while(0)
-
+#define APPEND_STR(str)                                                        \
+  do {                                                                         \
+    size_t len = strlen(str);                                                  \
+    if (broker_ds->query_url_remaining < len + 1) {                            \
+      goto err;                                                                \
+    }                                                                          \
+    strncat(broker_ds->query_url_buf, str,                                     \
+            broker_ds->query_url_remaining - 1);                               \
+    broker_ds->query_url_remaining -= len;                                     \
+  } while (0)
 
 struct struct_bgpstream_broker_datasource_t {
-  bgpstream_filter_mgr_t * filter_mgr;
+  bgpstream_filter_mgr_t *filter_mgr;
 
   // working space to build query urls
   char query_url_buf[URL_BUFLEN];
@@ -83,18 +81,18 @@ struct struct_bgpstream_broker_datasource_t {
   uint32_t current_window_end;
 };
 
-#define AMPORQ                                  \
-  do {                                          \
-    if (broker_ds->first_param) {               \
-      APPEND_STR("?");                          \
-      broker_ds->first_param = 0;               \
-    } else {                                    \
-      APPEND_STR("&");                          \
-    }                                           \
-  }                                             \
-  while(0)
+#define AMPORQ                                                                 \
+  do {                                                                         \
+    if (broker_ds->first_param) {                                              \
+      APPEND_STR("?");                                                         \
+      broker_ds->first_param = 0;                                              \
+    } else {                                                                   \
+      APPEND_STR("&");                                                         \
+    }                                                                          \
+  } while (0)
 
-static int json_isnull(const char *json, jsmntok_t *tok) {
+static int json_isnull(const char *json, jsmntok_t *tok)
+{
   if (tok->type == JSMN_PRIMITIVE &&
       strncmp("null", json + tok->start, tok->end - tok->start) == 0) {
     return 1;
@@ -102,9 +100,9 @@ static int json_isnull(const char *json, jsmntok_t *tok) {
   return 0;
 }
 
-static int json_strcmp(const char *json, jsmntok_t *tok, const char *s) {
-  if (tok->type == JSMN_STRING &&
-      (int) strlen(s) == tok->end - tok->start &&
+static int json_strcmp(const char *json, jsmntok_t *tok, const char *s)
+{
+  if (tok->type == JSMN_STRING && (int)strlen(s) == tok->end - tok->start &&
       strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
     return 0;
   }
@@ -112,13 +110,14 @@ static int json_strcmp(const char *json, jsmntok_t *tok, const char *s) {
 }
 
 // NB: this ONLY replaces \/ with /
-static void unescape_url(char *url) {
+static void unescape_url(char *url)
+{
   char *p = url;
 
-  while(*p != '\0') {
-    if (*p == '\\' && *(p+1) == '/') {
+  while (*p != '\0') {
+    if (*p == '\\' && *(p + 1) == '/') {
       // copy the remainder of the string backward (ugh)
-      memmove(p, p+1, strlen(p+1)+1);
+      memmove(p, p + 1, strlen(p + 1) + 1);
     }
     p++;
   }
@@ -128,68 +127,67 @@ static jsmntok_t *json_skip(jsmntok_t *t)
 {
   int i;
   jsmntok_t *s;
-  switch(t->type)
-    {
-    case JSMN_PRIMITIVE:
-    case JSMN_STRING:
-      t++;
-      break;
-    case JSMN_OBJECT:
-    case JSMN_ARRAY:
-      s = t;
-      t++; // move onto first key
-      for(i=0; i<s->size; i++) {
+  switch (t->type) {
+  case JSMN_PRIMITIVE:
+  case JSMN_STRING:
+    t++;
+    break;
+  case JSMN_OBJECT:
+  case JSMN_ARRAY:
+    s = t;
+    t++; // move onto first key
+    for (i = 0; i < s->size; i++) {
+      t = json_skip(t);
+      if (s->type == JSMN_OBJECT) {
         t = json_skip(t);
-        if (s->type == JSMN_OBJECT) {
-          t = json_skip(t);
-        }
       }
     }
+  }
 
   return t;
 }
 
-#define json_str_assert(js, t, str)             \
-  do {                                          \
-    if (json_strcmp(js, t, str) != 0) {         \
-      goto err;                                 \
-    }                                           \
-  } while(0)
+#define json_str_assert(js, t, str)                                            \
+  do {                                                                         \
+    if (json_strcmp(js, t, str) != 0) {                                        \
+      goto err;                                                                \
+    }                                                                          \
+  } while (0)
 
-#define json_type_assert(t, asstype)             \
-  do {                                           \
-    if (t->type != asstype) {                    \
-      goto err;                                  \
-    }                                            \
-  } while(0)
+#define json_type_assert(t, asstype)                                           \
+  do {                                                                         \
+    if (t->type != asstype) {                                                  \
+      goto err;                                                                \
+    }                                                                          \
+  } while (0)
 
 #define NEXT_TOK t++
 
-#define json_strcpy(dest, t, js)                         \
-  do {                                                   \
-    memcpy(dest, js+t->start, t->end  - t->start);       \
-    dest[t->end - t->start] = '\0';                      \
-  } while(0)
+#define json_strcpy(dest, t, js)                                               \
+  do {                                                                         \
+    memcpy(dest, js + t->start, t->end - t->start);                            \
+    dest[t->end - t->start] = '\0';                                            \
+  } while (0)
 
-#define json_strtoul(dest, t)                                           \
-  do {                                                                  \
-    char intbuf[20];                                                    \
-    char *endptr = NULL;                                                \
-    assert(t->end - t->start < 20);                                     \
-    strncpy(intbuf, js+t->start, t->end - t->start);                    \
-    intbuf[t->end-t->start] = '\0';                                     \
-    dest = strtoul(intbuf, &endptr, 10);                                \
-    if (*endptr != '\0') {                                              \
-      goto err;                                                         \
-    }                                                                   \
-  } while(0)
+#define json_strtoul(dest, t)                                                  \
+  do {                                                                         \
+    char intbuf[20];                                                           \
+    char *endptr = NULL;                                                       \
+    assert(t->end - t->start < 20);                                            \
+    strncpy(intbuf, js + t->start, t->end - t->start);                         \
+    intbuf[t->end - t->start] = '\0';                                          \
+    dest = strtoul(intbuf, &endptr, 10);                                       \
+    if (*endptr != '\0') {                                                     \
+      goto err;                                                                \
+    }                                                                          \
+  } while (0)
 
 static int process_json(bgpstream_broker_datasource_t *broker_ds,
-                        bgpstream_input_mgr_t *input_mgr,
-                        const char *js, jsmntok_t *root_tok, size_t count)
+                        bgpstream_input_mgr_t *input_mgr, const char *js,
+                        jsmntok_t *root_tok, size_t count)
 {
   int i, j, k;
-  jsmntok_t *t = root_tok+1;
+  jsmntok_t *t = root_tok + 1;
 
   int arr_len, obj_len;
 
@@ -224,11 +222,11 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
   }
 
   // iterate over the children of the root object
-  for (i=0; i<root_tok->size; i++) {
+  for (i = 0; i < root_tok->size; i++) {
     // all keys must be strings
     if (t->type != JSMN_STRING) {
       fprintf(stderr, "ERROR: Encountered non-string key: '%.*s'\n",
-                t->end - t->start, js+t->start);
+              t->end - t->start, js + t->start);
       goto err;
     }
     if (json_strcmp(js, t, "time") == 0) {
@@ -243,9 +241,9 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
       NEXT_TOK;
     } else if (json_strcmp(js, t, "error") == 0) {
       NEXT_TOK;
-      if (json_isnull(js, t) == 0) {  // i.e. there is an error set
+      if (json_isnull(js, t) == 0) { // i.e. there is an error set
         fprintf(stderr, "ERROR: Broker reported an error: %.*s\n",
-                t->end - t->start, js+t->start);
+                t->end - t->start, js + t->start);
         goto err;
       }
       NEXT_TOK;
@@ -262,8 +260,8 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
       NEXT_TOK;
       json_type_assert(t, JSMN_ARRAY);
       arr_len = t->size; // number of dump files
-      NEXT_TOK; // first elem in array
-      for (j=0; j<arr_len; j++) {
+      NEXT_TOK;          // first elem in array
+      for (j = 0; j < arr_len; j++) {
         json_type_assert(t, JSMN_OBJECT);
         obj_len = t->size;
         NEXT_TOK;
@@ -275,13 +273,13 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
         initial_time_set = 0;
         duration_set = 0;
 
-        for (k=0; k<obj_len; k++) {
+        for (k = 0; k < obj_len; k++) {
           if (json_strcmp(js, t, "urlType") == 0) {
             NEXT_TOK;
             if (json_strcmp(js, t, "simple") != 0) {
               // not yet supported?
               fprintf(stderr, "ERROR: Unsupported URL type '%.*s'\n",
-                      t->end - t->start, js+t->start);
+                      t->end - t->start, js + t->start);
               goto err;
             }
             NEXT_TOK;
@@ -330,8 +328,8 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
             duration_set = 1;
             NEXT_TOK;
           } else {
-            fprintf(stderr, "ERROR: Unknown field '%.*s'\n",
-                    t->end - t->start, js+t->start);
+            fprintf(stderr, "ERROR: Unknown field '%.*s'\n", t->end - t->start,
+                    js + t->start);
             goto err;
           }
         }
@@ -347,22 +345,18 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
         fprintf(stderr, "Project: %s\n", project);
         fprintf(stderr, "Collector: %s\n", collector);
         fprintf(stderr, "Type: %s\n", type);
-        fprintf(stderr, "InitialTime: %"PRIu32"\n", initial_time);
-        fprintf(stderr, "Duration: %"PRIu32"\n", duration);
+        fprintf(stderr, "InitialTime: %" PRIu32 "\n", initial_time);
+        fprintf(stderr, "Duration: %" PRIu32 "\n", duration);
 #endif
 
         // do we need to update our current_window_end?
-        if (initial_time+duration > broker_ds->current_window_end) {
-          broker_ds->current_window_end = (initial_time+duration);
+        if (initial_time + duration > broker_ds->current_window_end) {
+          broker_ds->current_window_end = (initial_time + duration);
         }
 
-        if (bgpstream_input_mgr_push_sorted_input(input_mgr,
-                                                  strdup(url),
-                                                  strdup(project),
-                                                  strdup(collector),
-                                                  strdup(type),
-                                                  initial_time,
-                                                  duration) <= 0) {
+        if (bgpstream_input_mgr_push_sorted_input(
+              input_mgr, strdup(url), strdup(project), strdup(collector),
+              strdup(type), initial_time, duration) <= 0) {
           goto err;
         }
 
@@ -379,19 +373,18 @@ static int process_json(bgpstream_broker_datasource_t *broker_ds,
   free(url);
   return num_results;
 
- retry:
+retry:
   free(url);
   return ERR_RETRY;
 
- err:
+err:
   fprintf(stderr, "ERROR: Invalid JSON response received from broker\n");
   free(url);
   return ERR_RETRY;
 }
 
 static int read_json(bgpstream_broker_datasource_t *broker_ds,
-                     bgpstream_input_mgr_t *input_mgr,
-                     io_t *jsonfile)
+                     bgpstream_input_mgr_t *input_mgr, io_t *jsonfile)
 {
   jsmn_parser p;
   jsmntok_t *tok = NULL;
@@ -400,7 +393,7 @@ static int read_json(bgpstream_broker_datasource_t *broker_ds,
   int ret;
   char *js = NULL;
   size_t jslen = 0;
-  #define BUFSIZE 1024
+#define BUFSIZE 1024
   char buf[BUFSIZE];
 
   // prepare parser
@@ -413,7 +406,7 @@ static int read_json(bgpstream_broker_datasource_t *broker_ds,
   }
 
   // slurp the whole file into a buffer
-  while(1) {
+  while (1) {
     /* do a read */
     ret = wandio_read(jsonfile, buf, BUFSIZE);
     if (ret < 0) {
@@ -428,11 +421,11 @@ static int read_json(bgpstream_broker_datasource_t *broker_ds,
       fprintf(stderr, "ERROR: Could not realloc json string\n");
       goto err;
     }
-    strncpy(js+jslen, buf, ret);
+    strncpy(js + jslen, buf, ret);
     jslen += ret;
   }
 
-  again:
+again:
   if ((ret = jsmn_parse(&p, js, jslen, tok, tokcount)) < 0) {
     if (ret == JSMN_ERROR_NOMEM) {
       tokcount *= 2;
@@ -458,31 +451,32 @@ static int read_json(bgpstream_broker_datasource_t *broker_ds,
   }
   return ret;
 
- err:
+err:
   free(js);
   free(tok);
-  fprintf(stderr,"%s: Returning fatal error code\n", __func__);
+  fprintf(stderr, "%s: Returning fatal error code\n", __func__);
   return ERR_FATAL;
 }
 
 bgpstream_broker_datasource_t *
 bgpstream_broker_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
-                                   char *broker_url,
-                                   char **params, int params_cnt)
+                                   char *broker_url, char **params,
+                                   int params_cnt)
 {
   int i;
   bgpstream_debug("\t\tBSDS_BROKER: create broker_ds start");
   bgpstream_broker_datasource_t *broker_ds;
 
-  if ((broker_ds = malloc_zero(sizeof(bgpstream_broker_datasource_t))) == NULL) {
-    bgpstream_log_err("\t\tBSDS_BROKER: create broker_ds can't allocate memory");
+  if ((broker_ds = malloc_zero(sizeof(bgpstream_broker_datasource_t))) ==
+      NULL) {
+    bgpstream_log_err(
+      "\t\tBSDS_BROKER: create broker_ds can't allocate memory");
     goto err;
   }
-  if (broker_url == NULL)
-    {
-      bgpstream_log_err("\t\tBSDS_BROKER: create broker_ds no file provided");
-      goto err;
-    }
+  if (broker_url == NULL) {
+    bgpstream_log_err("\t\tBSDS_BROKER: create broker_ds no file provided");
+    goto err;
+  }
   broker_ds->filter_mgr = filter_mgr;
   broker_ds->first_param = 1;
   broker_ds->query_url_remaining = URL_BUFLEN;
@@ -496,31 +490,31 @@ bgpstream_broker_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
 
   // projects, collectors, bgp_types, and time_intervals are used as filters
   // only if they are provided by the user
-  bgpstream_interval_filter_t * tif;
+  bgpstream_interval_filter_t *tif;
 
   // projects
   char *f;
-  if(filter_mgr->projects != NULL) {
-    bgpstream_str_set_rewind(filter_mgr->projects);    
-    while((f = bgpstream_str_set_next(filter_mgr->projects)) != NULL) {
+  if (filter_mgr->projects != NULL) {
+    bgpstream_str_set_rewind(filter_mgr->projects);
+    while ((f = bgpstream_str_set_next(filter_mgr->projects)) != NULL) {
       AMPORQ;
       APPEND_STR("projects[]=");
       APPEND_STR(f);
     }
   }
   // collectors
-  if(filter_mgr->collectors != NULL) {
-    bgpstream_str_set_rewind(filter_mgr->collectors);    
-    while((f = bgpstream_str_set_next(filter_mgr->collectors)) != NULL) {
+  if (filter_mgr->collectors != NULL) {
+    bgpstream_str_set_rewind(filter_mgr->collectors);
+    while ((f = bgpstream_str_set_next(filter_mgr->collectors)) != NULL) {
       AMPORQ;
       APPEND_STR("collectors[]=");
       APPEND_STR(f);
     }
   }
   // bgp_types
-  if(filter_mgr->bgp_types != NULL) {
-    bgpstream_str_set_rewind(filter_mgr->bgp_types);    
-    while((f = bgpstream_str_set_next(filter_mgr->bgp_types)) != NULL) {
+  if (filter_mgr->bgp_types != NULL) {
+    bgpstream_str_set_rewind(filter_mgr->bgp_types);
+    while ((f = bgpstream_str_set_next(filter_mgr->bgp_types)) != NULL) {
       AMPORQ;
       APPEND_STR("types[]=");
       APPEND_STR(f);
@@ -528,36 +522,33 @@ bgpstream_broker_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
   }
 
   // user-provided params
-  for(i=0; i<params_cnt; i++)
-    {
-      assert(params[i] != NULL);
-      AMPORQ;
-      APPEND_STR(params[i]);
-    }
+  for (i = 0; i < params_cnt; i++) {
+    assert(params[i] != NULL);
+    AMPORQ;
+    APPEND_STR(params[i]);
+  }
 
-  // time_intervals
-  #define BUFLEN 20
+// time_intervals
+#define BUFLEN 20
   char int_buf[BUFLEN];
-  if(filter_mgr->time_intervals != NULL) {
+  if (filter_mgr->time_intervals != NULL) {
     tif = filter_mgr->time_intervals;
 
-    while(tif != NULL) {
+    while (tif != NULL) {
       AMPORQ;
       APPEND_STR("intervals[]=");
 
       // BEGIN TIME
-      if(snprintf(int_buf, BUFLEN, "%"PRIu32, tif->begin_time) >= BUFLEN)
-        {
-          goto err;
-        }
+      if (snprintf(int_buf, BUFLEN, "%" PRIu32, tif->begin_time) >= BUFLEN) {
+        goto err;
+      }
       APPEND_STR(int_buf);
       APPEND_STR(",");
 
       // END TIME
-      if(snprintf(int_buf, BUFLEN, "%"PRIu32, tif->end_time) >= BUFLEN)
-        {
-          goto err;
-        }
+      if (snprintf(int_buf, BUFLEN, "%" PRIu32, tif->end_time) >= BUFLEN) {
+        goto err;
+      }
       APPEND_STR(int_buf);
 
       tif = tif->next;
@@ -573,24 +564,24 @@ bgpstream_broker_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
   bgpstream_debug("\t\tBSDS_BROKER: create broker_ds end");
 
   return broker_ds;
- err:
+err:
   bgpstream_broker_datasource_destroy(broker_ds);
   return NULL;
 }
 
-int
-bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* broker_ds,
-                                               bgpstream_input_mgr_t *input_mgr)
+int bgpstream_broker_datasource_update_input_queue(
+  bgpstream_broker_datasource_t *broker_ds, bgpstream_input_mgr_t *input_mgr)
 {
 
-  // we need to set two parameters:
-  //  - dataAddedSince ("time" from last response we got)
-  //  - minInitialTime (max("initialTime"+"duration") of any file we've ever seen)
+// we need to set two parameters:
+//  - dataAddedSince ("time" from last response we got)
+//  - minInitialTime (max("initialTime"+"duration") of any file we've ever seen)
 
-  #define BUFLEN 20
+#define BUFLEN 20
   char buf[BUFLEN];
 
-  io_t *jsonfile = NULL;;
+  io_t *jsonfile = NULL;
+  ;
 
   int num_results;
 
@@ -601,8 +592,8 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
 
   if (broker_ds->last_response_time > 0) {
     // need to add dataAddedSince
-    if (snprintf(buf, BUFLEN, "%"PRIu32, broker_ds->last_response_time)
-        >= BUFLEN) {
+    if (snprintf(buf, BUFLEN, "%" PRIu32, broker_ds->last_response_time) >=
+        BUFLEN) {
       fprintf(stderr, "ERROR: Could not build dataAddedSince param string\n");
       goto err;
     }
@@ -613,8 +604,8 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
 
   if (broker_ds->current_window_end > 0) {
     // need to add minInitialTime
-    if (snprintf(buf, BUFLEN, "%"PRIu32, broker_ds->current_window_end)
-        >= BUFLEN) {
+    if (snprintf(buf, BUFLEN, "%" PRIu32, broker_ds->current_window_end) >=
+        BUFLEN) {
       fprintf(stderr, "ERROR: Could not build minInitialTime param string\n");
       goto err;
     }
@@ -625,8 +616,7 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
 
   do {
     if (attempts > 0) {
-      fprintf(stderr,
-              "WARN: Broker request failed, waiting %ds before retry\n",
+      fprintf(stderr, "WARN: Broker request failed, waiting %ds before retry\n",
               wait_time);
       sleep(wait_time);
       if (wait_time < MAX_WAIT_TIME) {
@@ -645,7 +635,8 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
       goto retry;
     }
 
-    if ((num_results = read_json(broker_ds, input_mgr, jsonfile)) == ERR_FATAL) {
+    if ((num_results = read_json(broker_ds, input_mgr, jsonfile)) ==
+        ERR_FATAL) {
       fprintf(stderr, "ERROR: Received fatal error code from read_json\n");
       goto err;
     } else if (num_results == ERR_RETRY) {
@@ -660,7 +651,7 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
       wandio_destroy(jsonfile);
       jsonfile = NULL;
     }
-  } while(success == 0);
+  } while (success == 0);
 
   // reset the variable params
   *broker_ds->query_url_end = '\0';
@@ -668,7 +659,7 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
     URL_BUFLEN - strlen(broker_ds->query_url_end);
   return num_results;
 
- err:
+err:
   fprintf(stderr, "ERROR: Fatal error in broker data source\n");
   if (jsonfile != NULL) {
     wandio_destroy(jsonfile);
@@ -676,14 +667,12 @@ bgpstream_broker_datasource_update_input_queue(bgpstream_broker_datasource_t* br
   return -1;
 }
 
-
-void
-bgpstream_broker_datasource_destroy(bgpstream_broker_datasource_t* broker_ds)
+void bgpstream_broker_datasource_destroy(
+  bgpstream_broker_datasource_t *broker_ds)
 {
-  if(broker_ds == NULL)
-    {
-      return;
-    }
+  if (broker_ds == NULL) {
+    return;
+  }
 
   free(broker_ds);
 }
