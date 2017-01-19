@@ -179,8 +179,10 @@ void bgpstream_add_rib_period_filter(bgpstream_t *bs, uint32_t period);
  * @param begin_time    the first time that will match the filter (inclusive)
  * @param end_time      the last time that will match the filter (inclusive)
  *
- * If end_time is set to BGPSTREAM_FOREVER, the stream will be set to live mode,
- * and will process data forever.
+ * If end_time is set to BGPSTREAM_FOREVER (0), the stream will be set to live
+ * mode, and will process data forever. If no intervals are added, then
+ * BGPStream will default to processing every available record, however, this
+ * will trigger a run-time error if using the Broker data interface.
  */
 void bgpstream_add_interval_filter(bgpstream_t *bs, uint32_t begin_time,
                                    uint32_t end_time);

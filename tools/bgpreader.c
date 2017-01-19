@@ -410,10 +410,17 @@ int main(int argc, char *argv[])
   interface_options_cnt = 0;
 
   if (windows_cnt == 0) {
-    fprintf(stderr,
-            "ERROR: At least one time window must be specified using -w\n");
-    usage();
-    exit(-1);
+    if (datasource_id == BGPSTREAM_DATA_INTERFACE_BROKER) {
+      fprintf(stderr,
+              "ERROR: At least one time window must be set when using the "
+              "broker data interface\n");
+      usage();
+      exit(-1);
+    } else {
+      fprintf(stderr,
+              "WARN: No time windows specified, defaulting to all "
+              "available data\n");
+    }
   }
 
   /* if the user did not specify any output format
