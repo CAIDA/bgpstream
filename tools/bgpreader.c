@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
   }
   interface_options_cnt = 0;
 
-  if (windows_cnt == 0) {
+  if (windows_cnt == 0 && !intervalstring) {
     if (datasource_id == BGPSTREAM_DATA_INTERFACE_BROKER) {
       fprintf(stderr,
               "ERROR: At least one time window must be set when using the "
