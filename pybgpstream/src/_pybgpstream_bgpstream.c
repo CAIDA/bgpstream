@@ -22,9 +22,7 @@
  */
 #include "pyutils.h"
 #include <Python.h>
-
 #include <bgpstream.h>
-
 #include "_pybgpstream_bgprecord.h"
 
 typedef struct {

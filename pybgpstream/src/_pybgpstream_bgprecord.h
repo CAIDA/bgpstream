@@ -24,9 +24,8 @@
 #ifndef ___PYBGPSTREAM_BGPRECORD_H
 #define ___PYBGPSTREAM_BGPRECORD_H
 
+#include "bgpstream.h"
 #include <Python.h>
-
-#include <bgpstream.h>
 
 typedef struct {
   PyObject_HEAD
