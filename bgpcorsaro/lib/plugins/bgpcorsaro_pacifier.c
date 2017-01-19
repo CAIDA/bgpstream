@@ -20,8 +20,8 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "config.h"
 #include "bgpcorsaro_int.h"
+#include "config.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -58,13 +58,12 @@
 
 /** Common plugin information across all instances */
 static bgpcorsaro_plugin_t bgpcorsaro_pacifier_plugin = {
-  PLUGIN_NAME,                                  /* name */
-  PLUGIN_VERSION,                               /* version */
-  BGPCORSARO_PLUGIN_ID_PACIFIER,                 /* id */
+  PLUGIN_NAME,                                          /* name */
+  PLUGIN_VERSION,                                       /* version */
+  BGPCORSARO_PLUGIN_ID_PACIFIER,                        /* id */
   BGPCORSARO_PLUGIN_GENERATE_PTRS(bgpcorsaro_pacifier), /* func ptrs */
   BGPCORSARO_PLUGIN_GENERATE_TAIL,
 };
-
 
 /** Holds the state for an instance of this plugin */
 struct bgpcorsaro_pacifier_state_t {
@@ -87,24 +86,23 @@ struct bgpcorsaro_pacifier_state_t {
 
   // adaptive behavior
   uint8_t adaptive;
-  
 };
 
 /** Extends the generic plugin state convenience macro in bgpcorsaro_plugin.h */
-#define STATE(bgpcorsaro)						\
+#define STATE(bgpcorsaro)                                                      \
   (BGPCORSARO_PLUGIN_STATE(bgpcorsaro, pacifier, BGPCORSARO_PLUGIN_ID_PACIFIER))
-/** Extends the generic plugin plugin convenience macro in bgpcorsaro_plugin.h */
-#define PLUGIN(bgpcorsaro)						\
+/** Extends the generic plugin plugin convenience macro in bgpcorsaro_plugin.h
+ */
+#define PLUGIN(bgpcorsaro)                                                     \
   (BGPCORSARO_PLUGIN_PLUGIN(bgpcorsaro, BGPCORSARO_PLUGIN_ID_PACIFIER))
 
 /** Print usage information to stderr */
 static void usage(bgpcorsaro_plugin_t *plugin)
 {
-  fprintf(stderr,
-	  "plugin usage: %s [-w interval-lenght] -a\n"
-	  "       -w interval-lenght  (default: 30s)\n"
-	  "       -a                  adaptive (default:off) \n",
-	  plugin->argv[0]);
+  fprintf(stderr, "plugin usage: %s [-w interval-lenght] -a\n"
+                  "       -w interval-lenght  (default: 30s)\n"
+                  "       -a                  adaptive (default:off) \n",
+          plugin->argv[0]);
 }
 
 /** Parse the arguments given to the plugin */
@@ -114,37 +112,31 @@ static int parse_args(bgpcorsaro_t *bgpcorsaro)
   struct bgpcorsaro_pacifier_state_t *state = STATE(bgpcorsaro);
   int opt;
 
-  if(plugin->argc <= 0)
-    {
-      return 0;
-    }
+  if (plugin->argc <= 0) {
+    return 0;
+  }
 
   /* NB: remember to reset optind to 1 before using getopt! */
   optind = 1;
 
-  while((opt = getopt(plugin->argc, plugin->argv, ":w:a?")) >= 0)
-    {
-      switch(opt)
-	{
-	case 'w':
-	  state->wait = atoi(optarg);
-	  break;
-	case 'a':
-	  state->adaptive = 1;
-	  break;
-	case '?':
-	case ':':
-	default:
-	  usage(plugin);
-	  return -1;
-	}
+  while ((opt = getopt(plugin->argc, plugin->argv, ":w:a?")) >= 0) {
+    switch (opt) {
+    case 'w':
+      state->wait = atoi(optarg);
+      break;
+    case 'a':
+      state->adaptive = 1;
+      break;
+    case '?':
+    case ':':
+    default:
+      usage(plugin);
+      return -1;
     }
+  }
 
   return 0;
 }
-
-
-
 
 /* == PUBLIC PLUGIN FUNCS BELOW HERE == */
 
@@ -161,34 +153,35 @@ int bgpcorsaro_pacifier_init_output(bgpcorsaro_t *bgpcorsaro)
   bgpcorsaro_plugin_t *plugin = PLUGIN(bgpcorsaro);
   assert(plugin != NULL);
 
-  if((state = malloc_zero(sizeof(struct bgpcorsaro_pacifier_state_t))) == NULL)
-    {
-      bgpcorsaro_log(__func__, bgpcorsaro,
-		     "could not malloc bgpcorsaro_pacifier_state_t");
-      goto err;
-    }
+  if ((state = malloc_zero(sizeof(struct bgpcorsaro_pacifier_state_t))) ==
+      NULL) {
+    bgpcorsaro_log(__func__, bgpcorsaro,
+                   "could not malloc bgpcorsaro_pacifier_state_t");
+    goto err;
+  }
   bgpcorsaro_plugin_register_state(bgpcorsaro->plugin_manager, plugin, state);
-
 
   // initializing state
   state = STATE(bgpcorsaro);
-  state->tv_start = 0;      // 0 means it is the first interval, so the time has to be initialized at interval start
-  state->wait = 30;         // 30 seconds is the default wait time, between start and end
-  state->tv_first_time = 0; // 0 means it is the first interval, so the time has to be initialized at interval start
+  state->tv_start = 0; // 0 means it is the first interval, so the time has to
+                       // be initialized at interval start
+  state->wait =
+    30; // 30 seconds is the default wait time, between start and end
+  state->tv_first_time = 0; // 0 means it is the first interval, so the time has
+                            // to be initialized at interval start
   state->intervals = 0;     // number of intervals processed
   state->adaptive = 0;      // default behavior is not adaptive
-  
+
   /* parse the arguments */
-  if(parse_args(bgpcorsaro) != 0)
-    {
-      return -1;
-    }
+  if (parse_args(bgpcorsaro) != 0) {
+    return -1;
+  }
 
   /* defer opening the output file until we start the first interval */
 
   return 0;
 
- err:
+err:
   bgpcorsaro_pacifier_close_output(bgpcorsaro);
   return -1;
 }
@@ -199,59 +192,50 @@ int bgpcorsaro_pacifier_close_output(bgpcorsaro_t *bgpcorsaro)
   int i;
   struct bgpcorsaro_pacifier_state_t *state = STATE(bgpcorsaro);
 
-  if(state != NULL)
-    {
-      /* close all the outfile pointers */
-      for(i = 0; i < OUTFILE_POINTERS; i++)
-	{
-	  if(state->outfile_p[i] != NULL)
-	    {
-	      wandio_wdestroy(state->outfile_p[i]);
-	      state->outfile_p[i] = NULL;
-	    }
-	}
-      state->outfile = NULL;
-      bgpcorsaro_plugin_free_state(bgpcorsaro->plugin_manager, PLUGIN(bgpcorsaro));
+  if (state != NULL) {
+    /* close all the outfile pointers */
+    for (i = 0; i < OUTFILE_POINTERS; i++) {
+      if (state->outfile_p[i] != NULL) {
+        wandio_wdestroy(state->outfile_p[i]);
+        state->outfile_p[i] = NULL;
+      }
     }
+    state->outfile = NULL;
+    bgpcorsaro_plugin_free_state(bgpcorsaro->plugin_manager,
+                                 PLUGIN(bgpcorsaro));
+  }
   return 0;
 }
 
 /** Implements the start_interval function of the plugin API */
 int bgpcorsaro_pacifier_start_interval(bgpcorsaro_t *bgpcorsaro,
-				       bgpcorsaro_interval_t *int_start)
+                                       bgpcorsaro_interval_t *int_start)
 {
   struct bgpcorsaro_pacifier_state_t *state = STATE(bgpcorsaro);
 
-  if(state->outfile == NULL)
-    {
-      if((
-	  state->outfile_p[state->outfile_n] =
-	  bgpcorsaro_io_prepare_file(bgpcorsaro,
-				     PLUGIN(bgpcorsaro)->name,
-				     int_start)) == NULL)
-	{
-	  bgpcorsaro_log(__func__, bgpcorsaro, "could not open %s output file",
-			 PLUGIN(bgpcorsaro)->name);
-	  return -1;
-	}
-      state->outfile = state->
-	outfile_p[state->outfile_n];
+  if (state->outfile == NULL) {
+    if ((state->outfile_p[state->outfile_n] = bgpcorsaro_io_prepare_file(
+           bgpcorsaro, PLUGIN(bgpcorsaro)->name, int_start)) == NULL) {
+      bgpcorsaro_log(__func__, bgpcorsaro, "could not open %s output file",
+                     PLUGIN(bgpcorsaro)->name);
+      return -1;
     }
+    state->outfile = state->outfile_p[state->outfile_n];
+  }
 
   bgpcorsaro_io_write_interval_start(bgpcorsaro, state->outfile, int_start);
 
   struct timeval tv;
 
-  if(state->tv_start == 0)
-    {
-      gettimeofday_wrap(&tv);
-      state->tv_start = tv.tv_sec;
-      state->tv_first_time = state->tv_start;
-    }
+  if (state->tv_start == 0) {
+    gettimeofday_wrap(&tv);
+    state->tv_start = tv.tv_sec;
+    state->tv_first_time = state->tv_start;
+  }
 
   // a new interval is starting
   state->intervals++;
-  
+
   // fprintf(stderr, "START INTERVAL TIME: %d \n", state->tv_start);
 
   return 0;
@@ -259,56 +243,48 @@ int bgpcorsaro_pacifier_start_interval(bgpcorsaro_t *bgpcorsaro,
 
 /** Implements the end_interval function of the plugin API */
 int bgpcorsaro_pacifier_end_interval(bgpcorsaro_t *bgpcorsaro,
-				 bgpcorsaro_interval_t *int_end)
+                                     bgpcorsaro_interval_t *int_end)
 {
   struct bgpcorsaro_pacifier_state_t *state = STATE(bgpcorsaro);
 
   bgpcorsaro_io_write_interval_end(bgpcorsaro, state->outfile, int_end);
 
   /* if we are rotating, now is when we should do it */
-  if(bgpcorsaro_is_rotate_interval(bgpcorsaro))
-    {
-      /* leave the current file to finish draining buffers */
-      assert(state->outfile != NULL);
+  if (bgpcorsaro_is_rotate_interval(bgpcorsaro)) {
+    /* leave the current file to finish draining buffers */
+    assert(state->outfile != NULL);
 
-      /* move on to the next output pointer */
-      state->outfile_n = (state->outfile_n+1) %
-	OUTFILE_POINTERS;
+    /* move on to the next output pointer */
+    state->outfile_n = (state->outfile_n + 1) % OUTFILE_POINTERS;
 
-      if(state->outfile_p[state->outfile_n] != NULL)
-	{
-	  /* we're gonna have to wait for this to close */
-	  wandio_wdestroy(state->outfile_p[state->outfile_n]);
-	  state->outfile_p[state->outfile_n] =  NULL;
-	}
-
-      state->outfile = NULL;
+    if (state->outfile_p[state->outfile_n] != NULL) {
+      /* we're gonna have to wait for this to close */
+      wandio_wdestroy(state->outfile_p[state->outfile_n]);
+      state->outfile_p[state->outfile_n] = NULL;
     }
 
+    state->outfile = NULL;
+  }
 
   struct timeval tv;
   gettimeofday_wrap(&tv);
-  
+
   int expected_time = 0;
   int diff = 0;
 
-  if(state->adaptive == 0)
-    {
-      diff = state->wait - (tv.tv_sec - state->tv_start);
-    }
-  else
-    {
-      expected_time = state->tv_first_time + state->intervals *  state->wait;
-      diff = expected_time - tv.tv_sec ;
-    }
+  if (state->adaptive == 0) {
+    diff = state->wait - (tv.tv_sec - state->tv_start);
+  } else {
+    expected_time = state->tv_first_time + state->intervals * state->wait;
+    diff = expected_time - tv.tv_sec;
+  }
   // if the end interval is faster than "the wait" time
   // then we wait for the remaining seconds
-  if(diff > 0)
-    {
-      // fprintf(stderr, "\tWaiting: %d s\n", diff);
-      sleep(diff);
-      gettimeofday_wrap(&tv);
-    }  
+  if (diff > 0) {
+    // fprintf(stderr, "\tWaiting: %d s\n", diff);
+    sleep(diff);
+    gettimeofday_wrap(&tv);
+  }
   state->tv_start = tv.tv_sec;
 
   // fprintf(stderr, "END INTERVAL TIME: %d \n", state->tv_start);
@@ -322,10 +298,9 @@ int bgpcorsaro_pacifier_process_record(bgpcorsaro_t *bgpcorsaro,
 
   /* no point carrying on if a previous plugin has already decided we should
      ignore this record */
-  if((record->state.flags & BGPCORSARO_RECORD_STATE_FLAG_IGNORE) != 0)
-    {
-      return 0;
-    }
+  if ((record->state.flags & BGPCORSARO_RECORD_STATE_FLAG_IGNORE) != 0) {
+    return 0;
+  }
 
   return 0;
 }

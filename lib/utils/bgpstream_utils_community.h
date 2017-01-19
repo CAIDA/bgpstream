@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_COMMUNITY_H
 #define __BGPSTREAM_UTILS_COMMUNITY_H
 
@@ -50,18 +49,17 @@
 
 /** Well-known Community Types (see RFC 1997) */
 
-#define BGPSTREAM_COMMUNITY_NO_EXPORT            0xFFFFFF01
+#define BGPSTREAM_COMMUNITY_NO_EXPORT 0xFFFFFF01
 
-#define BGPSTREAM_COMMUNITY_NO_ADVERTISE         0xFFFFFF02
+#define BGPSTREAM_COMMUNITY_NO_ADVERTISE 0xFFFFFF02
 
-#define BGPSTREAM_COMMUNITY_NO_EXPORT_SUBCONFED  0xFFFFFF03
+#define BGPSTREAM_COMMUNITY_NO_EXPORT_SUBCONFED 0xFFFFFF03
 
 /** Community mask used for filtering */
 
-#define BGPSTREAM_COMMUNITY_FILTER_EXACT         0b0011
-#define BGPSTREAM_COMMUNITY_FILTER_ASN           0b0010
-#define BGPSTREAM_COMMUNITY_FILTER_VALUE         0b0001
-
+#define BGPSTREAM_COMMUNITY_FILTER_EXACT 0b0011
+#define BGPSTREAM_COMMUNITY_FILTER_ASN 0b0010
+#define BGPSTREAM_COMMUNITY_FILTER_VALUE 0b0001
 
 /** @} */
 
@@ -79,7 +77,6 @@ typedef struct bgpstream_community_set bgpstream_community_set_t;
  * @name Public Data Structures
  *
  * @{ */
-
 
 /** Community attribute value */
 typedef struct bgpstream_community {
@@ -145,7 +142,6 @@ unsigned int
 unsigned long
 #endif
 bgpstream_community_hash(bgpstream_community_t *comm);
-
 
 /** Hash the given community into a 32bit number
  *
@@ -271,9 +267,8 @@ int bgpstream_community_set_populate_from_array(bgpstream_community_set_t *set,
  * @note this function **does not** copy the data into the set. The set is
  * only valid as long as the comms array passed to this function is valid.
  */
-int bgpstream_community_set_populate_from_array_zc(bgpstream_community_set_t *set,
-                                                   bgpstream_community_t *comms,
-                                                   int comms_cnt);
+int bgpstream_community_set_populate_from_array_zc(
+  bgpstream_community_set_t *set, bgpstream_community_t *comms, int comms_cnt);
 
 /** Hash the given community set into a 32bit number
  *
@@ -299,7 +294,6 @@ bgpstream_community_set_hash(bgpstream_community_set_t *set);
 int bgpstream_community_set_equal(bgpstream_community_set_t *set1,
                                   bgpstream_community_set_t *set2);
 
-
 /** Check if a community is part of a community set
  *
  * @param set          pointer to the community set to check
@@ -324,6 +318,4 @@ int bgpstream_community_set_match(bgpstream_community_set_t *set,
 
 /** @} */
 
-
 #endif /* __BGPSTREAM_UTILS_COMMUNITY_H */
-

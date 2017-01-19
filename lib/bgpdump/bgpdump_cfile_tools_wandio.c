@@ -6,38 +6,38 @@
  * 2014-08-14
  */
 
+#include "bgpdump_cfile_tools.h"
+#include <assert.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <assert.h>
 #include <wandio.h>
-#include "bgpdump_cfile_tools.h"
 
-#define WFILE(x) ((io_t*)(x)->data2)
+#define WFILE(x) ((io_t *)(x)->data2)
 
 // API Functions
 
-CFRFILE *cfr_open(const char *path) {
+CFRFILE *cfr_open(const char *path)
+{
   CFRFILE *cfr = NULL;
 
-  if((cfr = malloc(sizeof(CFRFILE))) == NULL)
-    {
-      return NULL;
-    }
+  if ((cfr = malloc(sizeof(CFRFILE))) == NULL) {
+    return NULL;
+  }
   memset(cfr, 0, sizeof(CFRFILE));
 
   /* sweet hax */
-  if((cfr->data2 = wandio_create(path)) == NULL)
-    {
-      free(cfr);
-      return NULL;
-    }
+  if ((cfr->data2 = wandio_create(path)) == NULL) {
+    free(cfr);
+    return NULL;
+  }
 
   return cfr;
 }
 
-int cfr_close(CFRFILE *stream) {
-  if(stream == NULL) {
+int cfr_close(CFRFILE *stream)
+{
+  if (stream == NULL) {
     return 0;
   }
 
@@ -48,6 +48,7 @@ int cfr_close(CFRFILE *stream) {
   return 0;
 }
 
-size_t cfr_read_n(CFRFILE *stream, void *ptr, size_t bytes) {
+size_t cfr_read_n(CFRFILE *stream, void *ptr, size_t bytes)
+{
   return wandio_read(WFILE(stream), ptr, bytes);
 }

@@ -12,12 +12,10 @@ typedef enum {
   ENDVALUE = 5
 } fp_state_t;
 
-
 typedef struct single_filter {
 
   bgpstream_filter_type_t termtype;
   char *value;
 } bgpstream_filter_item_t;
-
 
 #endif

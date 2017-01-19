@@ -27,23 +27,23 @@
 
 #include "config.h"
 
+#include "bgpstream_utils_time.h"
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include "bgpstream_utils_time.h"
-
 
 int bgpstream_time_calc_recent_interval(uint32_t *start, uint32_t *end,
-    const char *optval) {
+                                        const char *optval)
+{
 
   char *timetok;
   char *unittok;
   uint32_t unitcount = 0;
 
   struct timeval tv;
-  
+
   timetok = strtok((char *)optval, " ");
 
   if (timetok == NULL) {
@@ -58,19 +58,19 @@ int bgpstream_time_calc_recent_interval(uint32_t *start, uint32_t *end,
   }
 
   switch (*unittok) {
-    case 's':
-      break;
-    case 'm':
-      unitcount = unitcount * 60;
-      break;
-    case 'h':
-      unitcount = unitcount * 60 * 60;
-      break;
-    case 'd':
-      unitcount = unitcount * 60 * 60 * 24;
-      break;
-    default:
-      return 0;
+  case 's':
+    break;
+  case 'm':
+    unitcount = unitcount * 60;
+    break;
+  case 'h':
+    unitcount = unitcount * 60 * 60;
+    break;
+  case 'd':
+    unitcount = unitcount * 60 * 60 * 24;
+    break;
+  default:
+    return 0;
   }
 
   if (gettimeofday(&tv, NULL)) {
@@ -80,5 +80,4 @@ int bgpstream_time_calc_recent_interval(uint32_t *start, uint32_t *end,
   *start = tv.tv_sec - unitcount;
   *end = tv.tv_sec;
   return 1;
-
 }

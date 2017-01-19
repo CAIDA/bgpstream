@@ -57,12 +57,11 @@ typedef struct bgpcorsaro_interval bgpcorsaro_interval_t;
  * @{ */
 
 /** Settings for interval alignment */
-typedef enum bgpcorsaro_interval_align
-  {
-    BGPCORSARO_INTERVAL_ALIGN_NO      = 0,
-    BGPCORSARO_INTERVAL_ALIGN_YES     = 1,
-    BGPCORSARO_INTERVAL_ALIGN_DEFAULT = BGPCORSARO_INTERVAL_ALIGN_NO,
-  } bgpcorsaro_interval_align_t;
+typedef enum bgpcorsaro_interval_align {
+  BGPCORSARO_INTERVAL_ALIGN_NO = 0,
+  BGPCORSARO_INTERVAL_ALIGN_YES = 1,
+  BGPCORSARO_INTERVAL_ALIGN_DEFAULT = BGPCORSARO_INTERVAL_ALIGN_NO,
+} bgpcorsaro_interval_align_t;
 
 /** @} */
 
@@ -75,7 +74,8 @@ typedef enum bgpcorsaro_interval_align
  * The basic process for using bgpcorsaro to generate output is:
  * -# init bgpcorsaro using bgpcorsaro_alloc_output
  * -# optionally call bgpcorsaro_set_interval to set the interval time
- * -# call bgpcorsaro_start_output to initialize the plugins (and create the files)
+ * -# call bgpcorsaro_start_output to initialize the plugins (and create the
+ * files)
  * -# call bgpcorsaro_per_record with each record to be processed
  * -# call bgpcorsaro_finalize when all records have been processed
  *
@@ -127,8 +127,8 @@ int bgpcorsaro_start_output(bgpcorsaro_t *bgpcorsaro);
  * sense when the interval length is evenly divisible into 1 hour.
  * The default is no interval alignment.
  */
-void bgpcorsaro_set_interval_alignment(bgpcorsaro_t *bgpcorsaro,
-				    bgpcorsaro_interval_align_t interval_align);
+void bgpcorsaro_set_interval_alignment(
+  bgpcorsaro_t *bgpcorsaro, bgpcorsaro_interval_align_t interval_align);
 
 /** Accessor function to set the interval length
  *
@@ -149,8 +149,7 @@ void bgpcorsaro_set_interval(bgpcorsaro_t *bgpcorsaro, unsigned int interval);
  * If this is set to > 0, all output files will be rotated at the end of
  * n intervals. The default is 0 (no rotation).
  */
-void bgpcorsaro_set_output_rotation(bgpcorsaro_t *bgpcorsaro,
-				    int intervals);
+void bgpcorsaro_set_output_rotation(bgpcorsaro_t *bgpcorsaro, int intervals);
 
 /** Accessor function to set the rotation frequency of meta output files
  *
@@ -163,7 +162,7 @@ void bgpcorsaro_set_output_rotation(bgpcorsaro_t *bgpcorsaro,
  * rotation interval specified by bgpcorsaro_set_output_rotation.
  */
 void bgpcorsaro_set_meta_output_rotation(bgpcorsaro_t *bgpcorsaro,
-					 int intervals);
+                                         int intervals);
 
 /** Convenience function to determine if the output files should be rotated
  *
@@ -204,7 +203,7 @@ void bgpcorsaro_disable_logfile(bgpcorsaro_t *bgpcorsaro);
  * enabled using this function will be used
  */
 int bgpcorsaro_enable_plugin(bgpcorsaro_t *bgpcorsaro, const char *plugin_name,
-			     const char *plugin_args);
+                             const char *plugin_args);
 
 /** Return an array of the names of plugins which are compiled into bgpcorsaro
  *

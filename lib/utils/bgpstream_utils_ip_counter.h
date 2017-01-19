@@ -21,14 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_IPCNT_H
 #define __BGPSTREAM_UTILS_IPCNT_H
 
 #include <stdint.h>
 
 #include "bgpstream_utils_pfx.h"
-
 
 /** @file
  *
@@ -39,7 +37,6 @@
  *
  */
 
-
 /**
  * @name Opaque Data Structures
  *
@@ -49,7 +46,6 @@
 typedef struct bgpstream_ip_counter bgpstream_ip_counter_t;
 
 /** @} */
-
 
 /**
  * @name Public API Functions
@@ -68,8 +64,7 @@ bgpstream_ip_counter_t *bgpstream_ip_counter_create();
  * @param pfx          prefix to insert in IP Counter
  * @return             0 if a prefix was added correctly, -1 otherwise
  */
-int bgpstream_ip_counter_add(bgpstream_ip_counter_t *ipc,
-                             bgpstream_pfx_t *pfx);
+int bgpstream_ip_counter_add(bgpstream_ip_counter_t *ipc, bgpstream_pfx_t *pfx);
 
 /** Get the number of unique IPs in the IP Counter
  *
@@ -87,11 +82,12 @@ uint64_t bgpstream_ip_counter_get_ipcount(bgpstream_ip_counter_t *ipc,
  * @param counter        pointer to the IP Counter
  * @param pfx            prefix to compare
  * @param more_specific  it is set to 1 if the prefix is a more specific
- * @return               number of unique IPs in the IP Counter that 
+ * @return               number of unique IPs in the IP Counter that
  *                       overlap with pfx
  */
 uint64_t bgpstream_ip_counter_is_overlapping(bgpstream_ip_counter_t *ipc,
-                                             bgpstream_pfx_t *pfx, uint8_t *more_specific);
+                                             bgpstream_pfx_t *pfx,
+                                             uint8_t *more_specific);
 
 /** Empty the IP Counter
  *
@@ -105,6 +101,4 @@ void bgpstream_ip_counter_clear(bgpstream_ip_counter_t *ipc);
  */
 void bgpstream_ip_counter_destroy(bgpstream_ip_counter_t *ipc);
 
-
 #endif /* __BGPSTREAM_UTILS_IPCNT_H */
-

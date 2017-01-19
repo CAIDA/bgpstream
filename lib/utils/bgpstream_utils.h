@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_H
 #define __BGPSTREAM_UTILS_H
 
@@ -51,12 +50,11 @@
 #include "bgpstream_utils_community.h"     /*< Community utilities */
 #include "bgpstream_utils_id_set.h"        /*< ID Set utilities */
 #include "bgpstream_utils_ip_counter.h"    /*< IP Overlap Counter */
+#include "bgpstream_utils_patricia.h"      /*< Patricia Tree utilities */
 #include "bgpstream_utils_peer_sig_map.h"  /*< Peer Signature utilities */
 #include "bgpstream_utils_pfx.h"           /*< Prefix utilities */
 #include "bgpstream_utils_pfx_set.h"       /*< Prefix Set utilities */
 #include "bgpstream_utils_str_set.h"       /*< String Set utilities */
-#include "bgpstream_utils_patricia.h"      /*< Patricia Tree utilities */
 #include "bgpstream_utils_time.h"          /*< Time management utilities */
 
 #endif /* __BGPSTREAM_UTILS_H */
-
