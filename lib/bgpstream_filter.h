@@ -28,6 +28,11 @@
 #include "bgpstream_constants.h"
 #include "khash.h"
 
+#define BGPSTREAM_FILTER_ELEM_TYPE_RIB 0x1
+#define BGPSTREAM_FILTER_ELEM_TYPE_ANNOUNCEMENT 0x2
+#define BGPSTREAM_FILTER_ELEM_TYPE_WITHDRAWAL 0x4
+#define BGPSTREAM_FILTER_ELEM_TYPE_PEERSTATE 0x8
+
 /* hash table community filter:
  * community -> filter mask (asn only, value only, both) */
 KHASH_INIT(bgpstream_community_filter, bgpstream_community_t, uint8_t, 1,
@@ -49,12 +54,15 @@ typedef struct struct_bgpstream_filter_mgr_t {
   bgpstream_str_set_t *projects;
   bgpstream_str_set_t *collectors;
   bgpstream_str_set_t *bgp_types;
+  bgpstream_str_set_t *aspath_exprs;
   bgpstream_id_set_t *peer_asns;
   bgpstream_patricia_tree_t *prefixes;
   bgpstream_community_filter_t *communities;
   bgpstream_interval_filter_t *time_intervals;
   collector_ts_t *last_processed_ts;
   uint32_t rib_period;
+  uint8_t ipversion;
+  uint8_t elemtype_mask;
 } bgpstream_filter_mgr_t;
 
 /* allocate memory for a new bgpstream filter */

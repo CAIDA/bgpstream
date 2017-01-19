@@ -44,109 +44,168 @@ bgpstream_filter_mgr_t *bgpstream_filter_mgr_create()
 }
 
 void bgpstream_filter_mgr_filter_add(bgpstream_filter_mgr_t *bs_filter_mgr,
-                                     bgpstream_filter_type_t filter_type,
-                                     const char *filter_value)
-{
+				     bgpstream_filter_type_t filter_type,
+				     const char* filter_value) {
+  bgpstream_str_set_t **v = NULL;
   bgpstream_debug("\tBSF_MGR:: add_filter start");
-  if (bs_filter_mgr == NULL) {
+  if(bs_filter_mgr == NULL) {
     return; // nothing to customize
   }
 
-  if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN) {
-    if (bs_filter_mgr->peer_asns == NULL) {
-      if ((bs_filter_mgr->peer_asns = bgpstream_id_set_create()) == NULL) {
-        bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-        bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
-        return;
-      }
-    }
-    bgpstream_id_set_insert(bs_filter_mgr->peer_asns,
-                            (uint32_t)strtoul(filter_value, NULL, 10));
-    return;
-  }
+  switch(filter_type) {
+    case BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN:
+      if(bs_filter_mgr->peer_asns == NULL)
+        {
+          if((bs_filter_mgr->peer_asns = bgpstream_id_set_create()) == NULL)
+            {
+              bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+              bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+              return;
+            }
+        }
+      bgpstream_id_set_insert(bs_filter_mgr->peer_asns, (uint32_t) strtoul(filter_value, NULL, 10));
+      return;
 
-  if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX) {
-    bgpstream_pfx_storage_t pfx;
-    if (bs_filter_mgr->prefixes == NULL) {
-      if ((bs_filter_mgr->prefixes = bgpstream_patricia_tree_create(NULL)) ==
-          NULL) {
-        bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-        bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
-        return;
+    case BGPSTREAM_FILTER_TYPE_ELEM_TYPE:
+      if (strcmp(filter_value, "ribs") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_RIB);
+      } else if (strcmp(filter_value, "announcements") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_ANNOUNCEMENT);
+      } else if (strcmp(filter_value, "withdrawals") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_WITHDRAWAL);
+      } else if (strcmp(filter_value, "peerstates") == 0) {
+        bs_filter_mgr->elemtype_mask |= (BGPSTREAM_FILTER_ELEM_TYPE_PEERSTATE);
+      } else {
+        bgpstream_log_warn("\tBSF_MGR: %s is not a known element type",
+            filter_value);
       }
-    }
-    bgpstream_str2pfx(filter_value, &pfx);
-    if (bgpstream_patricia_tree_insert(bs_filter_mgr->prefixes,
-                                       (bgpstream_pfx_t *)&pfx) == NULL) {
-      bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-      bgpstream_log_warn("\tBSF_MGR: can't add prefix");
+      return;
+
+    case BGPSTREAM_FILTER_TYPE_ELEM_ASPATH:
+      if (bs_filter_mgr->aspath_exprs == NULL) {
+        if ((bs_filter_mgr->aspath_exprs = bgpstream_str_set_create()) == NULL)
+        {
+          bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+          bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+          return;
+        }
+      }
+
+      bgpstream_str_set_insert(bs_filter_mgr->aspath_exprs, filter_value);
+      return;
+
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT:
+    case BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY:
+    {
+      bgpstream_pfx_storage_t pfx;
+      uint8_t matchtype;
+
+      if(bs_filter_mgr->prefixes == NULL)
+        {
+          if((bs_filter_mgr->prefixes = bgpstream_patricia_tree_create(NULL)) == NULL)
+            {
+              bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+              bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+              return;
+            }
+        }
+      bgpstream_str2pfx(filter_value, &pfx);
+      if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE ||
+            filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX) {
+        matchtype = BGPSTREAM_PREFIX_MATCH_MORE;
+      } else if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS) {
+        matchtype = BGPSTREAM_PREFIX_MATCH_LESS;
+      } else if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT) {
+        matchtype = BGPSTREAM_PREFIX_MATCH_EXACT;
+      } else {
+        matchtype = BGPSTREAM_PREFIX_MATCH_ANY;
+      }
+
+      pfx.allowed_matches = matchtype;
+      if(bgpstream_patricia_tree_insert(bs_filter_mgr->prefixes, (bgpstream_pfx_t *) &pfx) == NULL)
+        {
+          bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+          bgpstream_log_warn("\tBSF_MGR: can't add prefix");
+          return;
+        }
       return;
     }
-    return;
-  }
+    case BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY:
+    {
+      int mask = 0;
+      khiter_t k;
+      int khret;
 
-  int mask = 0;
-  khiter_t k;
-  int khret;
+      bgpstream_community_t comm;
+      if(bs_filter_mgr->communities == NULL)
+        {
+          if((bs_filter_mgr->communities = kh_init(bgpstream_community_filter)) == NULL)
+            {
+              bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+              bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+              return;
+            }
+        }
+      if((mask = bgpstream_str2community(filter_value, &comm)) < 0)
+        {
+          bgpstream_debug("\tBSF_MGR:: can't convert community");
+          return;
+        }
 
-  if (filter_type == BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY) {
-    bgpstream_community_t comm;
-    if (bs_filter_mgr->communities == NULL) {
-      if ((bs_filter_mgr->communities = kh_init(bgpstream_community_filter)) ==
-          NULL) {
-        bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-        bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
-        return;
+      if((k = kh_get(bgpstream_community_filter, bs_filter_mgr->communities, comm)) ==
+         kh_end(bs_filter_mgr->communities))
+        {
+          k = kh_put(bgpstream_community_filter, bs_filter_mgr->communities, comm, &khret);
+          kh_value(bs_filter_mgr->communities, k) = mask;
+        }
+
+      /* we use the AND because the less restrictive filter wins over the more restrictive:
+       * e.g. 10:0, 10:* is equivalent to 10:*
+       */
+      kh_value(bs_filter_mgr->communities, k) = kh_value(bs_filter_mgr->communities, k) & mask;
+      /* DEBUG: fprintf(stderr, "%s - %d\n",
+       *                filter_value, kh_value(bs_filter_mgr->communities, k) ); */
+      return;
+    }
+
+    case BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION:
+      if (strcmp(filter_value, "4") == 0) {
+        bs_filter_mgr->ipversion = BGPSTREAM_ADDR_VERSION_IPV4;
+      } else if (strcmp(filter_value, "6") == 0) {
+        bs_filter_mgr->ipversion = BGPSTREAM_ADDR_VERSION_IPV6;
+      } else {
+        bgpstream_log_warn("\tBSF_MGR: Unknown IP version %s, ignoring",
+            filter_value);
       }
-    }
-    if ((mask = bgpstream_str2community(filter_value, &comm)) < 0) {
-      bgpstream_debug("\tBSF_MGR:: can't convert community");
       return;
-    }
 
-    if ((k = kh_get(bgpstream_community_filter, bs_filter_mgr->communities,
-                    comm)) == kh_end(bs_filter_mgr->communities)) {
-      k = kh_put(bgpstream_community_filter, bs_filter_mgr->communities, comm,
-                 &khret);
-      kh_value(bs_filter_mgr->communities, k) = mask;
-    }
 
-    /* we use the AND because the less restrictive filter wins over the more
-     * restrictive:
-     * e.g. 10:0, 10:* is equivalent to 10:*
-     */
-    kh_value(bs_filter_mgr->communities, k) =
-      kh_value(bs_filter_mgr->communities, k) & mask;
-    /* DEBUG: fprintf(stderr, "%s - %d\n",
-     *                filter_value, kh_value(bs_filter_mgr->communities, k) );
-     */
-    return;
-  }
-
-  /* add filter to the appropriate list */
-  bgpstream_str_set_t **v = NULL;
-  switch (filter_type) {
-  case BGPSTREAM_FILTER_TYPE_PROJECT:
-    v = &bs_filter_mgr->projects;
-    break;
-  case BGPSTREAM_FILTER_TYPE_COLLECTOR:
-    v = &bs_filter_mgr->collectors;
-    break;
-  case BGPSTREAM_FILTER_TYPE_RECORD_TYPE:
-    v = &bs_filter_mgr->bgp_types;
-    break;
-  default:
-    bgpstream_log_warn("\tBSF_MGR: unknown filter - ignoring");
-    return;
-  }
-
-  if (*v == NULL) {
-    if ((*v = bgpstream_str_set_create()) == NULL) {
-      bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
-      bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+    case BGPSTREAM_FILTER_TYPE_PROJECT:
+      v = &bs_filter_mgr->projects;
+      break;
+    case BGPSTREAM_FILTER_TYPE_COLLECTOR:
+      v = &bs_filter_mgr->collectors;
+      break;
+    case BGPSTREAM_FILTER_TYPE_RECORD_TYPE:
+      v = &bs_filter_mgr->bgp_types;
+      break;
+    default:
+      bgpstream_log_warn("\tBSF_MGR: unknown filter - ignoring");
       return;
-    }
   }
+
+  if(*v == NULL)
+    {
+      if((*v = bgpstream_str_set_create()) == NULL)
+        {
+          bgpstream_debug("\tBSF_MGR:: add_filter malloc failed");
+          bgpstream_log_warn("\tBSF_MGR: can't allocate memory");
+          return;
+        }
+    }
   bgpstream_str_set_insert(*v, filter_value);
 
   bgpstream_debug("\tBSF_MGR:: add_filter stop");
@@ -240,6 +299,10 @@ void bgpstream_filter_mgr_destroy(bgpstream_filter_mgr_t *bs_filter_mgr)
   // peer asns
   if (bs_filter_mgr->peer_asns != NULL) {
     bgpstream_id_set_destroy(bs_filter_mgr->peer_asns);
+  }
+  // aspath expressions
+  if (bs_filter_mgr->aspath_exprs != NULL) {
+    bgpstream_str_set_destroy(bs_filter_mgr->aspath_exprs);
   }
   // prefixes
   if (bs_filter_mgr->prefixes != NULL) {

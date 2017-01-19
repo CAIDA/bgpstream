@@ -31,8 +31,12 @@ stream = BGPStream()
 rec = BGPRecord()
 
 # configure the stream to retrieve Updates records from the RRC06 collector
-stream.add_filter('collector', 'rrc06')
-stream.add_filter('record-type', 'updates')
+# The commented out add_filter lines are the old way, the parse_filter_string
+# way is the new method for applying filters
+
+#stream.add_filter('collector', 'rrc06')
+#stream.add_filter('record-type', 'updates')
+stream.parse_filter_string('collector rrc06 and type updates')
 
 # select the time interval to process:
 # Wed Apr 1 00:02:50 UTC 2015 -> Wed Apr 1 00:04:30

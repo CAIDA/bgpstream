@@ -228,8 +228,10 @@ int bgpstream_as_path_seg_equal(bgpstream_as_path_seg_t *seg1,
 
 /* AS PATH FUNCTIONS */
 
-int bgpstream_as_path_snprintf(char *buf, size_t len, bgpstream_as_path_t *path)
+static inline int bgpstream_as_path_snprintf_custom_separator(
+  char *buf, size_t len, bgpstream_as_path_t *path, char separator)
 {
+
   bgpstream_as_path_iter_t iter;
   size_t written = 0;
   bgpstream_as_path_seg_t *seg;
@@ -240,7 +242,7 @@ int bgpstream_as_path_snprintf(char *buf, size_t len, bgpstream_as_path_t *path)
   bgpstream_as_path_iter_reset(&iter);
   while ((seg = bgpstream_as_path_get_next_seg(path, &iter)) != NULL) {
     if (need_sep != 0) {
-      ADD_CHAR(' ');
+      ADD_CHAR(separator);
     }
     need_sep = 1;
     written += bgpstream_as_path_seg_snprintf(bufp, (len - written), seg);
@@ -252,6 +254,17 @@ int bgpstream_as_path_snprintf(char *buf, size_t len, bgpstream_as_path_t *path)
     buf[len - 1] = '\0';
   }
   return written;
+}
+
+int bgpstream_as_path_snprintf(char *buf, size_t len, bgpstream_as_path_t *path)
+{
+  return bgpstream_as_path_snprintf_custom_separator(buf, len, path, ' ');
+}
+
+int bgpstream_as_path_get_filterable(char *buf, size_t len,
+                                     bgpstream_as_path_t *path)
+{
+  return bgpstream_as_path_snprintf_custom_separator(buf, len, path, '_');
 }
 
 bgpstream_as_path_t *bgpstream_as_path_create()

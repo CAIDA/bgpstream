@@ -56,6 +56,8 @@ libbgpstream_la_SOURCES = 	\
 	bgpstream_elem_generator.h \
 	bgpstream_filter.h	\
 	bgpstream_filter.c	\
+	bgpstream_filter_parser.h	\
+	bgpstream_filter_parser.c	\
 	bgpstream_input.h	\
 	bgpstream_input.c	\
 	bgpstream_int.h		\

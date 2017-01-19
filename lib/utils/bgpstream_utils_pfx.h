@@ -26,6 +26,11 @@
 
 #include "bgpstream_utils_addr.h"
 
+#define BGPSTREAM_PREFIX_MATCH_ANY 0
+#define BGPSTREAM_PREFIX_MATCH_EXACT 1
+#define BGPSTREAM_PREFIX_MATCH_MORE 2
+#define BGPSTREAM_PREFIX_MATCH_LESS 3
+
 /** @file
  *
  * @brief Header file that exposes the public interface of BGP Stream Prefix
@@ -50,6 +55,11 @@ typedef struct struct_bgpstream_pfx_t {
   /** Length of the prefix mask */
   uint8_t mask_len;
 
+  /** Indicates what type of matches are allowed with this prefix.
+   *  For filtering purposes only.
+   */
+  uint8_t allowed_matches;
+
   /** Pointer to the address portion */
   bgpstream_ip_addr_t address;
 
@@ -60,6 +70,11 @@ typedef struct struct_bgpstream_ipv4_pfx_t {
 
   /** Length of the prefix mask */
   uint8_t mask_len;
+
+  /** Indicates what type of matches are allowed with this prefix.
+   *  For filtering purposes only.
+   */
+  uint8_t allowed_matches;
 
   /** The address */
   bgpstream_ipv4_addr_t address;
@@ -72,6 +87,11 @@ typedef struct struct_bgpstream_ipv6_pfx_t {
   /** Length of the prefix mask */
   uint8_t mask_len;
 
+  /** Indicates what type of matches are allowed with this prefix.
+   *  For filtering purposes only.
+   */
+  uint8_t allowed_matches;
+
   /** The address */
   bgpstream_ipv6_addr_t address;
 
@@ -82,6 +102,11 @@ typedef struct struct_bgpstream_pfx_storage_t {
 
   /** Length of the prefix mask */
   uint8_t mask_len;
+
+  /** Indicates what type of matches are allowed with this prefix.
+   *  For filtering purposes only.
+   */
+  uint8_t allowed_matches;
 
   /** The address */
   bgpstream_addr_storage_t address;
