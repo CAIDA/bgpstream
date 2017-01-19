@@ -154,6 +154,20 @@ typedef struct bgpstream_as_path_iter {
  * @return the number of characters written given an infinite len (not including
  * the trailing nul). If this value is greater than or equal to len, then the
  * output was truncated.
+ *
+ * String representation format:
+ * - If the segment is a simple ASN (BGPSTREAM_AS_PATH_SEG_ASN), then the string
+ *   will be the decimal representation of the ASN (not dotted-decimal).
+ * - If the segment is an AS Set (BGPSTREAM_AS_PATH_SEG_SET), then the string
+ *   will be a comma-separated list of ASNs, enclosed in braces. E.g.,
+ *   "{12345,6789}".
+ * - If the segment is an AS Confederation Set
+ *   (BGPSTREAM_AS_PATH_SEG_CONFED_SET), then the string will be a
+ *   comma-separated list of ASNs, enclosed in brackets. E.g., "[12345,6789]".
+ * - If the segment is an AS Sequence Set (BGPSTREAM_AS_PATH_SEG_CONFED_SEQ),
+ *   then the string will be a space-separated list of ASNs, enclosed in
+ *   parentheses. E.g., "(12345 6789)".
+ * Note that it is possible to have a set/sequence with only a single element.
  */
 int bgpstream_as_path_seg_snprintf(char *buf, size_t len,
                                    bgpstream_as_path_seg_t *seg);
