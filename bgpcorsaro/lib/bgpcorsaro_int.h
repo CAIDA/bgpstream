@@ -43,39 +43,39 @@
 /** @todo either make use of those that libtrace defines, or copy the way that
     libtrace does this*/
 #if __GNUC__ >= 3
-#  ifndef DEPRECATED
-#    define DEPRECATED __attribute__((deprecated))
-#  endif
-#  ifndef SIMPLE_FUNCTION
-#    define SIMPLE_FUNCTION __attribute__((pure))
-#  endif
-#  ifndef UNUSED
-#    define UNUSED __attribute__((unused))
-#  endif
-#  ifndef PACKED
-#    define PACKED __attribute__((packed))
-#  endif
-#  ifndef PRINTF
-#    define PRINTF(formatpos,argpos) __attribute__((format(printf,formatpos,argpos)))
-#  endif
-#else
-#  ifndef DEPRECATED
-#    define DEPRECATED
-#  endif
-#  ifndef SIMPLE_FUNCTION
-#    define SIMPLE_FUNCTION
-#  endif
-#  ifndef UNUSED
-#    define UNUSED
-#  endif
-#  ifndef PACKED
-#    define PACKED
-#  endif
-#  ifndef PRINTF
-#    define PRINTF(formatpos,argpos)
-#  endif
+#ifndef DEPRECATED
+#define DEPRECATED __attribute__((deprecated))
 #endif
-
+#ifndef SIMPLE_FUNCTION
+#define SIMPLE_FUNCTION __attribute__((pure))
+#endif
+#ifndef UNUSED
+#define UNUSED __attribute__((unused))
+#endif
+#ifndef PACKED
+#define PACKED __attribute__((packed))
+#endif
+#ifndef PRINTF
+#define PRINTF(formatpos, argpos)                                              \
+  __attribute__((format(printf, formatpos, argpos)))
+#endif
+#else
+#ifndef DEPRECATED
+#define DEPRECATED
+#endif
+#ifndef SIMPLE_FUNCTION
+#define SIMPLE_FUNCTION
+#endif
+#ifndef UNUSED
+#define UNUSED
+#endif
+#ifndef PACKED
+#define PACKED
+#endif
+#ifndef PRINTF
+#define PRINTF(formatpos, argpos)
+#endif
+#endif
 
 /**
  * @name Bgpcorsaro data structures
@@ -103,12 +103,11 @@
  *
  * Values are all in HOST byte order
  */
-struct bgpcorsaro_interval
-{
+struct bgpcorsaro_interval {
   /** The interval number (starts at 0) */
-  uint16_t         number;
+  uint16_t number;
   /** The time this interval started/ended */
-  uint32_t         time;
+  uint32_t time;
 };
 
 /** @} */
@@ -121,37 +120,32 @@ struct bgpcorsaro_interval
  * This is passed, along with the record, to each plugin.
  * Plugins can add data to it, or check for data from earlier plugins.
  */
-struct bgpcorsaro_record_state
-{
+struct bgpcorsaro_record_state {
   /** Features of the record that have been identified by earlier plugins */
   uint8_t flags;
 };
 
 /** The possible record state flags */
-enum
-  {
-    /** The record should be ignored by filter-aware plugins */
-    BGPCORSARO_RECORD_STATE_FLAG_IGNORE         = 0x01,
-  };
+enum {
+  /** The record should be ignored by filter-aware plugins */
+  BGPCORSARO_RECORD_STATE_FLAG_IGNORE = 0x01,
+};
 
 /** A lightweight wrapper around a bgpstream record */
-struct bgpcorsaro_record
-{
+struct bgpcorsaro_record {
   /** The bgpcorsaro state associated with this record */
-  bgpcorsaro_record_state_t  state;
+  bgpcorsaro_record_state_t state;
 
   /** A pointer to the underlying bgpstream record */
-  bgpstream_record_t    *bsrecord;
-
+  bgpstream_record_t *bsrecord;
 };
 
 /** Convenience macro to get to the bgpstream recprd inside a bgpcorsaro
     record */
-#define BS_REC(bgpcorsaro_record)   (bgpcorsaro_record->bsrecord)
+#define BS_REC(bgpcorsaro_record) (bgpcorsaro_record->bsrecord)
 
 /** Bgpcorsaro output state */
-struct bgpcorsaro
-{
+struct bgpcorsaro {
   /** The local wall time that bgpcorsaro was started at */
   struct timeval init_time;
 
@@ -219,28 +213,26 @@ struct bgpcorsaro
 
   /** Has this bgpcorsaro object been started yet? */
   int started;
-
 };
 
 #ifdef WITH_PLUGIN_TIMING
 /* Helper macros for doing timing */
 
 /** Start a timer with the given name */
-#define TIMER_START(timer)			\
-  struct timeval timer_start;			\
-  do {						\
-  gettimeofday_wrap(&timer_start);		\
-  } while(0)
+#define TIMER_START(timer)                                                     \
+  struct timeval timer_start;                                                  \
+  do {                                                                         \
+    gettimeofday_wrap(&timer_start);                                           \
+  } while (0)
 
-#define TIMER_END(timer)					\
-  struct timeval timer_end, timer_diff;				\
-  do {								\
-    gettimeofday_wrap(&timer_end);				\
-    timeval_subtract(&timer_diff, &timer_end, &timer_start);	\
-  } while(0)
+#define TIMER_END(timer)                                                       \
+  struct timeval timer_end, timer_diff;                                        \
+  do {                                                                         \
+    gettimeofday_wrap(&timer_end);                                             \
+    timeval_subtract(&timer_diff, &timer_end, &timer_start);                   \
+  } while (0)
 
-#define TIMER_VAL(timer)			\
-  ((timer_diff.tv_sec*1000000) + timer_diff.tv_usec)
+#define TIMER_VAL(timer) ((timer_diff.tv_sec * 1000000) + timer_diff.tv_usec)
 #endif
 
 #endif /* __BGPCORSARO_INT_H */

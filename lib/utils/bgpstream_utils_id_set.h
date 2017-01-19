@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_ID_SET_H
 #define __BGPSTREAM_UTILS_ID_SET_H
 
@@ -101,7 +100,7 @@ void bgpstream_id_set_rewind(bgpstream_id_set_t *set);
  *         (borrowed pointer), NULL if the end of the set
  *         has been reached
  */
-uint32_t* bgpstream_id_set_next(bgpstream_id_set_t *set);
+uint32_t *bgpstream_id_set_next(bgpstream_id_set_t *set);
 
 /** Destroy the given ID set
  *
@@ -116,4 +115,3 @@ void bgpstream_id_set_destroy(bgpstream_id_set_t *set);
 void bgpstream_id_set_clear(bgpstream_id_set_t *set);
 
 #endif /* __BGPSTREAM_UTILS_ID_SET_H */
-

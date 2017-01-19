@@ -23,41 +23,42 @@
 
 #include <Python.h>
 
-#include "_pybgpstream_bgpstream.h"
-#include "_pybgpstream_bgprecord.h"
 #include "_pybgpstream_bgpelem.h"
+#include "_pybgpstream_bgprecord.h"
+#include "_pybgpstream_bgpstream.h"
 
 static PyMethodDef module_methods[] = {
-    {NULL}  /* Sentinel */
+  {NULL} /* Sentinel */
 };
 
-#define ADD_OBJECT(objname)                                             \
-  do {                                                                  \
-    if ((obj = _pybgpstream_bgpstream_get_##objname##Type()) == NULL)   \
-      return NULL;                                                      \
-    if (PyType_Ready(obj) < 0)                                          \
-      return NULL;                                                      \
-    Py_INCREF(obj);                                                     \
-    PyModule_AddObject(m, #objname, (PyObject*)obj);         \
-  } while(0)
+#define ADD_OBJECT(objname)                                                    \
+  do {                                                                         \
+    if ((obj = _pybgpstream_bgpstream_get_##objname##Type()) == NULL)          \
+      return NULL;                                                             \
+    if (PyType_Ready(obj) < 0)                                                 \
+      return NULL;                                                             \
+    Py_INCREF(obj);                                                            \
+    PyModule_AddObject(m, #objname, (PyObject *)obj);                          \
+  } while (0)
 
-#define MODULE_DOCSTRING "Module that provides a low-level interface to libbgpstream"
+#define MODULE_DOCSTRING                                                       \
+  "Module that provides a low-level interface to libbgpstream"
 
 #if PY_MAJOR_VERSION > 2
 static struct PyModuleDef module_def = {
-	PyModuleDef_HEAD_INIT,
-	"_pybgpstream",
-	MODULE_DOCSTRING,
-	-1,
-	module_methods,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
+  PyModuleDef_HEAD_INIT,
+  "_pybgpstream",
+  MODULE_DOCSTRING,
+  -1,
+  module_methods,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
 };
 #endif
 
-#ifndef PyMODINIT_FUNC	/* declarations for DLL import/export */
+#ifndef PyMODINIT_FUNC /* declarations for DLL import/export */
 #define PyMODINIT_FUNC void
 #endif
 
@@ -69,9 +70,7 @@ static PyObject *moduleinit(void)
 #if PY_MAJOR_VERSION > 2
   m = PyModule_Create(&module_def);
 #else
-  m = Py_InitModule3("_pybgpstream",
-					 module_methods,
-					 MODULE_DOCSTRING);
+  m = Py_InitModule3("_pybgpstream", module_methods, MODULE_DOCSTRING);
 #endif
 
   if (m == NULL)
@@ -90,14 +89,12 @@ static PyObject *moduleinit(void)
 }
 
 #if PY_MAJOR_VERSION > 2
-PyMODINIT_FUNC
-PyInit__pybgpstream(void)
+PyMODINIT_FUNC PyInit__pybgpstream(void)
 {
   return moduleinit();
 }
 #else
-PyMODINIT_FUNC
-init_pybgpstream(void)
+PyMODINIT_FUNC init_pybgpstream(void)
 {
   moduleinit();
 }

@@ -2,8 +2,7 @@
 #define ___PYUTILS_H
 
 #ifndef PyVarObject_HEAD_INIT
-#define PyVarObject_HEAD_INIT(type, size) \
-	PyObject_HEAD_INIT(type) size,
+#define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
 #endif
 
 #if PY_MAJOR_VERSION > 2
@@ -13,7 +12,7 @@
 #endif
 
 #ifndef Py_TYPE
-#define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#define Py_TYPE(ob) (((PyObject *)(ob))->ob_type)
 #endif
 
 #if PY_MAJOR_VERSION > 2
@@ -24,14 +23,14 @@
 #define PYNUM_FROMLONG(num) PyInt_FromLong(num)
 #endif
 
-static inline int
-add_to_dict(PyObject* dict, const char* key_str, PyObject* value)
+static inline int add_to_dict(PyObject *dict, const char *key_str,
+                              PyObject *value)
 {
-    PyObject *key = PYSTR_FROMSTR(key_str);
-    int err = PyDict_SetItem(dict, key, value);
-    Py_DECREF(key);
-    Py_DECREF(value);
-    return err;
+  PyObject *key = PYSTR_FROMSTR(key_str);
+  int err = PyDict_SetItem(dict, key, value);
+  Py_DECREF(key);
+  Py_DECREF(value);
+  return err;
 }
 
 #endif

@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_PFX_SET_H
 #define __BGPSTREAM_UTILS_PFX_SET_H
 
@@ -98,7 +97,8 @@ int bgpstream_pfx_storage_set_size(bgpstream_pfx_storage_set_t *set);
  * @param v          IP version
  * @return the size of the prefix set
  */
-int bgpstream_pfx_storage_set_version_size(bgpstream_pfx_storage_set_t *set, bgpstream_addr_version_t v);
+int bgpstream_pfx_storage_set_version_size(bgpstream_pfx_storage_set_t *set,
+                                           bgpstream_addr_version_t v);
 
 /** Merge two prefix sets
  *
@@ -120,9 +120,6 @@ void bgpstream_pfx_storage_set_destroy(bgpstream_pfx_storage_set_t *set);
  * @param set           pointer to the prefix set to clear
  */
 void bgpstream_pfx_storage_set_clear(bgpstream_pfx_storage_set_t *set);
-
-
-
 
 /* IPv4 */
 
@@ -151,7 +148,7 @@ int bgpstream_ipv4_pfx_set_insert(bgpstream_ipv4_pfx_set_t *set,
  * @return 0 if the prefix is not in the set, 1 if it is in the set
  */
 int bgpstream_ipv4_pfx_set_exists(bgpstream_ipv4_pfx_set_t *set,
-                                     bgpstream_ipv4_pfx_t *pfx);
+                                  bgpstream_ipv4_pfx_t *pfx);
 
 /** Get the number of prefixes in the given set
  *
@@ -167,7 +164,7 @@ int bgpstream_ipv4_pfx_set_size(bgpstream_ipv4_pfx_set_t *set);
  * @return 0 if the sets were merged succsessfully, -1 otherwise
  */
 int bgpstream_ipv4_pfx_set_merge(bgpstream_ipv4_pfx_set_t *dst_set,
-                                  bgpstream_ipv4_pfx_set_t *src_set);
+                                 bgpstream_ipv4_pfx_set_t *src_set);
 
 /** Destroy the given prefix set
  *
@@ -180,8 +177,6 @@ void bgpstream_ipv4_pfx_set_destroy(bgpstream_ipv4_pfx_set_t *set);
  * @param set           pointer to the prefix set to clear
  */
 void bgpstream_ipv4_pfx_set_clear(bgpstream_ipv4_pfx_set_t *set);
-
-
 
 /** Create a new IPv6 Prefix set instance
  *
@@ -222,7 +217,7 @@ int bgpstream_ipv6_pfx_set_size(bgpstream_ipv6_pfx_set_t *set);
  * @return 0 if the sets were merged succsessfully, -1 otherwise
  */
 int bgpstream_ipv6_pfx_set_merge(bgpstream_ipv6_pfx_set_t *dst_set,
-                                  bgpstream_ipv6_pfx_set_t *src_set);
+                                 bgpstream_ipv6_pfx_set_t *src_set);
 
 /** Destroy the given prefix set
  *
@@ -237,5 +232,3 @@ void bgpstream_ipv6_pfx_set_destroy(bgpstream_ipv6_pfx_set_t *set);
 void bgpstream_ipv6_pfx_set_clear(bgpstream_ipv6_pfx_set_t *set);
 
 #endif /* __BGPSTREAM_UTILS_PFX_SET_H */
-
-

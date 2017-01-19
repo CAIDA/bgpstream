@@ -33,5 +33,4 @@
 // parameters/attribute/filters max length
 #define BGPSTREAM_PAR_MAX_LEN 512
 
-
 #endif /* _BGPSTREAM_CONSTANTS_H */

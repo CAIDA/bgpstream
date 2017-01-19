@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_AS_PATH_INT_H
 #define __BGPSTREAM_UTILS_AS_PATH_INT_H
 
@@ -57,7 +56,6 @@
  *
  * @{ */
 
-
 /** @} */
 
 /**
@@ -81,7 +79,6 @@ struct bgpstream_as_path {
 
   /* offset of the origin segment */
   uint16_t origin_offset;
-
 };
 
 /** @} */
@@ -108,6 +105,4 @@ void bgpstream_as_path_update_fields(bgpstream_as_path_t *path);
 
 /** @} */
 
-
 #endif /* __BGPSTREAM_UTILS_AS_PATH_INT_H */
-
