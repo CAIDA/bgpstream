@@ -21,10 +21,10 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Python.h>
 #include "_pybgpstream_bgpelem.h"
 #include "_pybgpstream_bgprecord.h"
 #include "_pybgpstream_bgpstream.h"
+#include <Python.h>
 
 static PyMethodDef module_methods[] = {
   {NULL} /* Sentinel */

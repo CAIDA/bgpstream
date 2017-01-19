@@ -1,0 +1,99 @@
+Description of the language used for filter strings.
+
+Author: Shane Alcock (salcock@waikato.ac.nz)
+
+----------------------------------------------------
+
+
+The language itself has a relative simple structure. A filter
+string is a series of clauses, separated by the word 'and'.
+A clause consists of two parts: a term which describes the feature
+to filter on and a value which is the value or expression that
+must be successfully matched for the record or element to pass
+the filter.
+
+If a term is specified multiple times, a match will occur if
+the record / element matches *any* of the clauses for that term,
+with the exception of 'aspath' where all clauses must be matched.
+
+If a filter string contains multiple different terms, a match
+will only occur if there is a successful match on *all* of the
+provided terms. 
+
+This behaviour is consistent with the previous filtering 
+approach in BGPStream, so hopefully it isn't too confusing.
+
+The list of accepted terms and their meaning are:
+
+  project (may be shortened to 'proj')
+      restrict the stream to only records from a specific project      
+
+  collector (coll)
+      restrict the stream to only records from a specific collector
+
+  type
+      restrict the stream to only records of a certain type, e.g. updates.
+
+  elemtype
+      restrict the stream to only elements of a certain type. Possible 
+      element types are "ribs", "announcements", "withdrawals", and
+      "peerstates".
+
+  peer
+      restrict the stream to only those elements from a particular peer ASN
+
+  prefix exact
+      restrict the stream to only elements with a prefix that *exactly*
+      matches the given prefix
+
+  prefix more
+      restrict the stream to only elements with a prefix that either matches
+      or is more specific than the given prefix
+
+  prefix less
+      restrict the stream to only elements with a prefix that either matches
+      or is less specific than the given prefix
+
+  prefix any
+      restrict the stream to only elements with a prefix that is either more
+      or less specific than the given prefix (exact matches also are included).
+
+  ipversion (ipv)
+      restrict the stream to only elements with prefixes belonging to the
+      given IP address family, i.e. IPv4 or IPv6.
+
+  community (comm)
+      restrict the stream to only elements that have a community that matches
+      the provided string. The string is formatted as 'asn:value' but '*' may
+      be used as a wildcard, e.g. '*:300' will match all elements with a
+      community value of 300, regardless of the ASN.
+
+  aspath (path)
+      restrict the stream to only elements with an AS Path that matches the
+      provided regular expression. The regular expression should be formatted
+      using the standard Cisco format, i.e. '^' represents the start of the
+      AS Path, '$' represents the end of the path and '_' represents the link
+      between two consecutive peers. Standard regex operators can also be
+      used, e.g. *,?,+ and [].
+
+      For example, the expression '$681_1444_' will match any AS Paths that
+      begin with AS681 followed by AS1444.
+
+      Placing a '!' in front of the regular expression will cause the result
+      to be negated, i.e. the element will only be streamed if the path does
+      NOT match the regular expression. For example, "!$681_" will stream
+      all paths that do not begin with AS681.
+
+Examples
+========
+
+Filter only updates from the rrc00 collector:
+  'collector rrc00 and type updates'
+
+Filter the prefix '1.2.3.0/22' or any more specific prefixes from either the
+rrc06 or the route-views.jinx collectors:
+  'prefix more 1.2.3.0/22 and collector rrc06 and collector route-views.jinx'
+
+Filter IPv6 records that have a peer asn of 25152 and include the ASN 4554 in
+the AS path:
+  'ipversion 6 and peer 25152 and path "_4554_"'

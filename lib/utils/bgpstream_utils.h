@@ -55,5 +55,6 @@
 #include "bgpstream_utils_pfx.h"           /*< Prefix utilities */
 #include "bgpstream_utils_pfx_set.h"       /*< Prefix Set utilities */
 #include "bgpstream_utils_str_set.h"       /*< String Set utilities */
+#include "bgpstream_utils_time.h"          /*< Time management utilities */
 
 #endif /* __BGPSTREAM_UTILS_H */

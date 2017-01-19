@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <inttypes.h>
+#include <regex.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -107,10 +108,85 @@ void bgpstream_record_print_mrt_data(bgpstream_record_t *const bs_record)
   bgpdump_print_entry(bs_record->bd_entry);
 }
 
+static int bgpstream_elem_prefix_match(bgpstream_patricia_tree_t *prefixes,
+                                       bgpstream_pfx_t *search)
+{
+
+  bgpstream_patricia_tree_result_set_t *res = NULL;
+  bgpstream_patricia_node_t *it;
+  int matched = 0;
+
+  /* If this is an exact match, the allowable matches don't matter */
+  if (bgpstream_patricia_tree_search_exact(prefixes, search)) {
+    return 1;
+  }
+
+  bgpstream_patricia_node_t *n =
+    bgpstream_patricia_tree_insert(prefixes, search);
+
+  /* Check for less specific prefixes that have the "MORE" match flag */
+  res = bgpstream_patricia_tree_result_set_create();
+  bgpstream_patricia_tree_get_less_specifics(prefixes, n, res);
+
+  while ((it = bgpstream_patricia_tree_result_set_next(res)) != NULL) {
+    bgpstream_pfx_t *pfx = bgpstream_patricia_tree_get_pfx(it);
+
+    if (pfx->allowed_matches == BGPSTREAM_PREFIX_MATCH_ANY ||
+        pfx->allowed_matches == BGPSTREAM_PREFIX_MATCH_MORE) {
+      matched = 1;
+      goto endmatch;
+    }
+  }
+
+  bgpstream_patricia_tree_get_more_specifics(prefixes, n, res);
+
+  while ((it = bgpstream_patricia_tree_result_set_next(res)) != NULL) {
+    bgpstream_pfx_t *pfx = bgpstream_patricia_tree_get_pfx(it);
+
+    /* TODO maybe have a way of limiting the amount of bits we are allowed to
+     * go back? or make it specifiable via the language? */
+    if (pfx->allowed_matches == BGPSTREAM_PREFIX_MATCH_ANY ||
+        pfx->allowed_matches == BGPSTREAM_PREFIX_MATCH_LESS) {
+      matched = 1;
+      goto endmatch;
+    }
+  }
+
+endmatch:
+  bgpstream_patricia_tree_result_set_destroy(&res);
+  bgpstream_patricia_tree_remove_node(prefixes, n);
+  return matched;
+}
+
 static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr,
                                         bgpstream_elem_t *elem)
 {
   int pass = 0;
+
+  /* First up, check if this element is the right type */
+  if (filter_mgr->elemtype_mask) {
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE &&
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_PEERSTATE)) {
+      return 0;
+    }
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_RIB &&
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_RIB)) {
+      return 0;
+    }
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_ANNOUNCEMENT &&
+        !(filter_mgr->elemtype_mask &
+          BGPSTREAM_FILTER_ELEM_TYPE_ANNOUNCEMENT)) {
+      return 0;
+    }
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL &&
+        !(filter_mgr->elemtype_mask & BGPSTREAM_FILTER_ELEM_TYPE_WITHDRAWAL)) {
+      return 0;
+    }
+  }
 
   /* Checking peer ASNs: if the filter is on and the peer asn is not in the
    * set, return 0 */
@@ -120,26 +196,103 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr,
     return 0;
   }
 
-  /* Checking prefixes (unless it is a peer state message) */
-  if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
-    return 1;
+  if (filter_mgr->ipversion) {
+    /* Determine address version for the element prefix */
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
+      return 0;
+    }
+
+    bgpstream_ip_addr_t *addr = &(((bgpstream_pfx_t *)&elem->prefix)->address);
+    if (addr->version != filter_mgr->ipversion)
+      return 0;
   }
 
-  if (filter_mgr->prefixes &&
-      (bgpstream_patricia_tree_get_pfx_overlap_info(
-         filter_mgr->prefixes, (bgpstream_pfx_t *)&elem->prefix) &
-       (BGPSTREAM_PATRICIA_EXACT_MATCH | BGPSTREAM_PATRICIA_LESS_SPECIFICS)) ==
-        0) {
-    return 0;
+  if (filter_mgr->prefixes) {
+    if (elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
+      return 0;
+    }
+    return bgpstream_elem_prefix_match(filter_mgr->prefixes,
+                                       (bgpstream_pfx_t *)&elem->prefix);
   }
 
+  /* Checking AS Path expressions */
+  if (filter_mgr->aspath_exprs) {
+    char aspath[65536];
+    char *regexstr;
+    int pathlen;
+    regex_t re;
+    int result;
+    int negatives = 0;
+    int positives = 0;
+    int totalpositives = 0;
+
+    if (elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL ||
+        elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
+      return 0;
+    }
+
+    pathlen = bgpstream_as_path_get_filterable(aspath, 65535, elem->aspath);
+
+    if (pathlen == 65535) {
+      bgpstream_log_warn("AS Path is too long? Filter may not work well.");
+    }
+
+    if (pathlen == 0) {
+      return 0;
+    }
+
+    bgpstream_str_set_rewind(filter_mgr->aspath_exprs);
+    while ((regexstr = bgpstream_str_set_next(filter_mgr->aspath_exprs)) !=
+           NULL) {
+      int negate = 0;
+
+      if (strlen(regexstr) == 0)
+        continue;
+
+      if (*regexstr == '!') {
+        negate = 1;
+        regexstr++;
+      } else {
+        totalpositives += 1;
+      }
+
+      if (regcomp(&re, regexstr, 0) < 0) {
+        /* XXX should really use regerror here for proper error reporting */
+        bgpstream_log_err("Failed to compile AS path regex");
+        break;
+      }
+
+      result = regexec(&re, aspath, 0, NULL, 0);
+      if (result == 0) {
+        if (!negate) {
+          positives++;
+        }
+        if (negate) {
+          negatives++;
+        }
+      }
+
+      regfree(&re);
+      if (result != REG_NOMATCH && result != 0) {
+        bgpstream_log_err("Error while matching AS path regex");
+        break;
+      }
+    }
+    if (positives == totalpositives && negatives == 0) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
   /* Checking communities (unless it is a withdrawal message) */
-  if (elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL) {
-    return 1;
-  }
-
   pass = (filter_mgr->communities != NULL) ? 0 : 1;
   if (filter_mgr->communities) {
+    if (elem->type == BGPSTREAM_ELEM_TYPE_WITHDRAWAL ||
+        elem->type == BGPSTREAM_ELEM_TYPE_PEERSTATE) {
+      return 0;
+    }
+
     bgpstream_community_t *c;
     khiter_t k;
     for (k = kh_begin(filter_mgr->communities);
@@ -153,8 +306,12 @@ static int bgpstream_elem_check_filters(bgpstream_filter_mgr_t *filter_mgr,
         }
       }
     }
+    if (pass == 0) {
+      return 0;
+    }
   }
-  return pass;
+
+  return 1;
 }
 
 bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record)

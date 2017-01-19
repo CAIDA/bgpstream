@@ -85,6 +85,30 @@ typedef enum {
   /** Filter elems based on the community attribute  */
   BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY = 6,
 
+  /** Filter elems based on exact prefix */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT = 7,
+
+  /** Filter elems based on a more specific prefix */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE = 8,
+
+  /** Filter elems based on a less specific prefix */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS = 9,
+
+  /** Filter elems based on any matching prefix, regardless of specificity */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY = 10,
+
+  /** Filter elems based on an AS path regex */
+  BGPSTREAM_FILTER_TYPE_ELEM_ASPATH = 11,
+
+  /** Filter elems based on an extended community attribute */
+  BGPSTREAM_FILTER_TYPE_ELEM_EXTENDED_COMMUNITY = 12,
+
+  /** Filter elems based on the IP address version */
+  BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION = 13,
+
+  /** Filter elems based on the element type, e.g. withdrawals, announcements */
+  BGPSTREAM_FILTER_TYPE_ELEM_TYPE = 14
+
 } bgpstream_filter_type_t;
 
 /** Data Interface IDs */
@@ -164,6 +188,15 @@ bgpstream_t *bgpstream_create();
 void bgpstream_add_filter(bgpstream_t *bs, bgpstream_filter_type_t filter_type,
                           const char *filter_value);
 
+/** Parse a filter string and create appropriate filters to select a subset
+ *  of the BGP data.
+ *
+ * @param bs            pointer to a BGP Stream instance to filter
+ * @param fstring   the filter string to be parsed.
+ * @returns 1 if the string was parsed successfully, 0 if not.
+ */
+int bgpstream_parse_filter_string(bgpstream_t *bs, const char *fstring);
+
 /** Add a filter to configure the minimum bgp time interval between RIB
  *  files that belong to the same collector. This information can be
  *  changed at run time.
@@ -172,6 +205,24 @@ void bgpstream_add_filter(bgpstream_t *bs, bgpstream_filter_type_t filter_type,
  * @param period    time period (if zero, all available RIBs are processed)
  */
 void bgpstream_add_rib_period_filter(bgpstream_t *bs, uint32_t period);
+
+/** Add a filter to select a specific time range starting from now and
+ *  going back a certain number of seconds, minutes, hours or days.
+ *
+ *  Intervals may be specified using the format 'num unit'. The unit can
+ *  be one of 's', 'm', 'h' or 'd', representing seconds, minutes, hours and
+ *  days respectively.
+ *
+ *  For example, an interval of "3 h" will go back three hours and an interval
+ *  of "45 s" will go back 45 seconds.
+ *
+ *  @param bs         pointer to a BGP Stream instance to filter
+ *  @param interval   string describing the interval to go back
+ *  @param islive     if not zero, live data will be provided once all historic
+ *                    data has been fetched.
+ */
+void bgpstream_add_recent_interval_filter(bgpstream_t *bs, const char *interval,
+                                          uint8_t islive);
 
 /** Add a filter to select a specific time range from the BGP data available
  *

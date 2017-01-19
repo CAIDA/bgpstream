@@ -20,10 +20,10 @@
  * You should have received a copy of the GNU General Public License along with
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "_pybgpstream_bgprecord.h"
 #include "pyutils.h"
 #include <Python.h>
 #include <bgpstream.h>
-#include "_pybgpstream_bgprecord.h"
 
 typedef struct {
   PyObject_HEAD
@@ -66,13 +66,30 @@ static int BGPStream_init(BGPStreamObject *self, PyObject *args, PyObject *kwds)
   return 0;
 }
 
+static PyObject *BGPStream_parse_filter_string(BGPStreamObject *self,
+                                               PyObject *args)
+{
+  const char *fstring;
+  if (!PyArg_ParseTuple(args, "s", &fstring)) {
+    return NULL;
+  }
+
+  if (bgpstream_parse_filter_string(self->bs, fstring) == 0) {
+    return PyErr_Format(PyExc_ValueError, "Invalid filter string: %s", fstring);
+  }
+
+  Py_RETURN_NONE;
+}
+
 /** Add a filter to the bgpstream. */
 static PyObject *BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
 {
   /* args: FILTER_TYPE (string), FILTER_VALUE (string) */
-  static char *filtertype_strs[] = {"project",  "collector", "record-type",
-                                    "peer-asn", "prefix",    "community",
-                                    NULL};
+  static char *filtertype_strs[] = {
+    "project",   "collector",    "record-type", "peer-asn",    "prefix",
+    "community", "prefix-exact", "prefix-more", "prefix-less", "prefix-any",
+    "aspath",    "ipversion",    "elemtype",    NULL};
+
   static int filtertype_vals[] = {
     BGPSTREAM_FILTER_TYPE_PROJECT,
     BGPSTREAM_FILTER_TYPE_COLLECTOR,
@@ -80,6 +97,13 @@ static PyObject *BGPStream_add_filter(BGPStreamObject *self, PyObject *args)
     BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN,
     BGPSTREAM_FILTER_TYPE_ELEM_PREFIX,
     BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY,
+    BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT,
+    BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE,
+    BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS,
+    BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY,
+    BGPSTREAM_FILTER_TYPE_ELEM_ASPATH,
+    BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION,
+    BGPSTREAM_FILTER_TYPE_ELEM_TYPE,
     -1,
   };
 
@@ -136,6 +160,20 @@ static PyObject *BGPStream_add_interval_filter(BGPStreamObject *self,
 
   bgpstream_add_interval_filter(self->bs, filter_start, filter_stop);
 
+  Py_RETURN_NONE;
+}
+
+static PyObject *BGPStream_add_recent_interval(BGPStreamObject *self,
+                                               PyObject *args)
+{
+  const char *intstring;
+  int islive;
+
+  if (!PyArg_ParseTuple(args, "si", &intstring, &islive)) {
+    return NULL;
+  }
+
+  bgpstream_add_recent_interval_filter(self->bs, intstring, islive);
   Py_RETURN_NONE;
 }
 
@@ -333,6 +371,9 @@ static PyObject *BGPStream_get_next_record(BGPStreamObject *self,
 }
 
 static PyMethodDef BGPStream_methods[] = {
+  {"parse_filter_string", (PyCFunction)BGPStream_parse_filter_string,
+   METH_VARARGS, "Parse a string to add filters to an un-started stream."},
+
   {"add_filter", (PyCFunction)BGPStream_add_filter, METH_VARARGS,
    "Add a filter to an un-started stream."},
 
@@ -341,6 +382,8 @@ static PyMethodDef BGPStream_methods[] = {
 
   {"add_interval_filter", (PyCFunction)BGPStream_add_interval_filter,
    METH_VARARGS, "Add an interval filter to an un-started stream."},
+  {"add_recent_interval_filter", (PyCFunction)BGPStream_add_recent_interval,
+   METH_VARARGS, "Add a recentinterval filter to an un-started stream."},
   {
     "get_data_interfaces", (PyCFunction)BGPStream_get_data_interfaces,
     METH_NOARGS, "Get a list of data interfaces available",
