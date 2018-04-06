@@ -431,7 +431,7 @@ int process_mrtd_table_dump(struct mstream *s, BGPDUMP_ENTRY *entry)
   read_asn(s, &entry->body.mrtd_table_dump.peer_as, asn_len);
 
   if ((entry->attr = process_attributes(s, asn_len, NULL)) == NULL) {
-    return 0;
+    return -1;
   }
 
   return 1;
