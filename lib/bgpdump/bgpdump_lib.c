@@ -240,8 +240,15 @@ BGPDUMP_ENTRY *bgpdump_read_next(BGPDUMP *dump)
   }
 
   free(buffer);
-  if (ok) {
+  if (ok > 0) {
     dump->parsed_ok++;
+  } else if (ok < 0) {
+    // corrupted
+    dump->corrupted_read = true;
+    bgpdump_free_mem(this_entry);
+    this_entry = NULL;
+    dump->eof = 1;
+    return NULL;
   } else {
     // printf("case 3 - not corrupted, just empty beginning\n");
     bgpdump_free_mem(this_entry);
@@ -423,7 +430,9 @@ int process_mrtd_table_dump(struct mstream *s, BGPDUMP_ENTRY *entry)
 
   read_asn(s, &entry->body.mrtd_table_dump.peer_as, asn_len);
 
-  entry->attr = process_attributes(s, asn_len, NULL);
+  if ((entry->attr = process_attributes(s, asn_len, NULL)) == NULL) {
+    return -1;
+  }
 
   return 1;
 }
@@ -493,7 +502,7 @@ int process_mrtd_table_dump_v2_peer_index_table(struct mstream *s,
   if (t->entries == NULL) {
     bgpdump_err("process_mrtd_table_dump_v2_peer_index_table: failed to "
                 "allocate memory for index table");
-    return 0;
+    return -1;
   }
 
   for (i = 0; i < t->peer_count; i++) {
@@ -524,6 +533,13 @@ int process_mrtd_table_dump_v2_ipv4_unicast(struct mstream *s,
   prefixdata = &entry->body.mrtd_table_dump_v2_prefix;
   uint16_t i;
 
+  /* in case there is a corrupt dump that does not include the peer table... */
+  if (entry->dump->table_dump_v2_peer_index_table == NULL) {
+    bgpdump_err(
+      "process_mrtd_table_dump_v2_ipv4_unicast: missing peer index table");
+    return -1;
+  }
+
   prefixdata->afi = AFI_IP;
   prefixdata->safi = SAFI_UNICAST;
 
@@ -535,11 +551,11 @@ int process_mrtd_table_dump_v2_ipv4_unicast(struct mstream *s,
   mstream_getw(s, &prefixdata->entry_count);
 
   prefixdata->entries =
-    malloc(sizeof(BGPDUMP_TABLE_DUMP_V2_ROUTE_ENTRY) * prefixdata->entry_count);
+    calloc(prefixdata->entry_count, sizeof(BGPDUMP_TABLE_DUMP_V2_ROUTE_ENTRY));
   if (prefixdata->entries == NULL) {
     bgpdump_err("process_mrtd_table_dump_v2_ipv4_unicast: failed to allocate "
                 "memory for entry table");
-    return 0;
+    return -1;
   }
 
   for (i = 0; i < prefixdata->entry_count; i++) {
@@ -551,7 +567,10 @@ int process_mrtd_table_dump_v2_ipv4_unicast(struct mstream *s,
       entry->dump->table_dump_v2_peer_index_table->entries[e->peer_index];
     mstream_getl(s, &e->originated_time);
 
-    e->attr = process_attributes(s, 4, NULL);
+    if((e->attr = process_attributes(s, 4, NULL)) == NULL) {
+      bgpdump_err("process_attributes failed");
+      return -1;
+    }
   }
 
   return 1;
@@ -563,6 +582,13 @@ int process_mrtd_table_dump_v2_ipv6_unicast(struct mstream *s,
   BGPDUMP_TABLE_DUMP_V2_PREFIX *prefixdata;
   prefixdata = &entry->body.mrtd_table_dump_v2_prefix;
   uint16_t i;
+
+  /* in case there is a corrupt dump that does not include the peer table... */
+  if (entry->dump->table_dump_v2_peer_index_table == NULL) {
+    bgpdump_err(
+      "process_mrtd_table_dump_v2_ipv6_unicast: missing peer index table");
+    return -1;
+  }
 
   prefixdata->afi = AFI_IP6;
   prefixdata->safi = SAFI_UNICAST;
@@ -581,7 +607,7 @@ int process_mrtd_table_dump_v2_ipv6_unicast(struct mstream *s,
   if (prefixdata->entries == NULL) {
     bgpdump_err("process_mrtd_table_dump_v2_ipv6_unicast: failed to allocate "
                 "memory for entry table");
-    return 0;
+    return -1;
   }
 
   for (i = 0; i < prefixdata->entry_count; i++) {
@@ -593,7 +619,9 @@ int process_mrtd_table_dump_v2_ipv6_unicast(struct mstream *s,
       entry->dump->table_dump_v2_peer_index_table->entries[e->peer_index];
     mstream_getl(s, &e->originated_time);
 
-    e->attr = process_attributes(s, 4, NULL);
+    if ((e->attr = process_attributes(s, 4, NULL)) == NULL) {
+      return -1;
+    }
   }
 
   return 1;
@@ -826,8 +854,10 @@ int process_zebra_bgp_message_update(struct mstream *s, BGPDUMP_ENTRY *entry,
     &withdraw_stream, AFI_IP, entry->body.zebra_message.withdraw,
     &entry->body.zebra_message.incomplete);
 
-  entry->attr =
-    process_attributes(s, asn_len, &entry->body.zebra_message.incomplete);
+  if ((entry->attr = process_attributes(
+         s, asn_len, &entry->body.zebra_message.incomplete)) == NULL) {
+    return -1;
+  }
 
   entry->body.zebra_message.announce_count =
     read_prefix_list(s, AFI_IP, entry->body.zebra_message.announce,
@@ -903,7 +933,7 @@ static void process_unknown_attr(struct mstream *s, attributes_t *attr,
   mstream_get(s, unknown.raw, len);
 }
 
-static void process_one_attr(struct mstream *outer_stream, attributes_t *attr,
+static int process_one_attr(struct mstream *outer_stream, attributes_t *attr,
                              u_int8_t asn_len,
                              struct zebra_incomplete *incomplete)
 {
@@ -922,7 +952,7 @@ static void process_one_attr(struct mstream *outer_stream, attributes_t *attr,
   if (mstream_can_read(s) != len) {
     bgpdump_warn("ERROR attribute is truncated: expected=%u remaining=%u\n",
                  len, mstream_can_read(s));
-    return;
+    return -1;
   }
 
   /* Take note of all attributes, including unknown ones */
@@ -937,37 +967,58 @@ static void process_one_attr(struct mstream *outer_stream, attributes_t *attr,
     process_mp_withdraw(s, attr->mp_info, incomplete);
     break;
   case BGP_ATTR_ORIGIN:
-    assert(attr->origin == -1);
+    if(attr->origin != -1) {
+      bgpdump_err("ERROR attr->origin is already set");
+      return -1;
+    }
     attr->origin = mstream_getc(s, NULL);
     break;
   case BGP_ATTR_AS_PATH:
-    assert(!attr->aspath);
+    if (attr->aspath) {
+      bgpdump_err("ERROR attr->aspath is already set");
+      return -1;
+    }
     attr->aspath = create_aspath(len, asn_len);
     mstream_get(s, attr->aspath->data, len);
     /*process_attr_aspath_string(attr->aspath);*/
     break;
   case BGP_ATTR_NEXT_HOP:
-    assert(INADDR_NONE == attr->nexthop.s_addr);
+    if (INADDR_NONE != attr->nexthop.s_addr) {
+      bgpdump_err("ERROR attr->nexthop is already set");
+      return -1;
+    }
     attr->nexthop = mstream_get_ipv4(s);
     break;
   case BGP_ATTR_MULTI_EXIT_DISC:
-    assert(-1 == attr->med);
+    if (-1 != attr->med) {
+      bgpdump_err("ERROR attr->med is already set");
+      return -1;
+    }
     mstream_getl(s, &attr->med);
     break;
   case BGP_ATTR_LOCAL_PREF:
-    assert(-1 == attr->local_pref);
+    if (-1 != attr->local_pref) {
+      bgpdump_err("ERROR attr->local_pref is already set");
+      return -1;
+    }
     mstream_getl(s, &attr->local_pref);
     break;
   case BGP_ATTR_ATOMIC_AGGREGATE:
     break;
   case BGP_ATTR_AGGREGATOR:
     // wrong aggregator as was checked here
-    assert(-1 == attr->aggregator_as);
+    if (-1 != attr->aggregator_as) {
+      bgpdump_err("ERROR attr->aggregator_as is already set");
+      return -1;
+    }
     read_asn(s, &attr->aggregator_as, asn_len);
     attr->aggregator_addr = mstream_get_ipv4(s);
     break;
   case BGP_ATTR_COMMUNITIES:
-    assert(!attr->community);
+    if (attr->community) {
+      bgpdump_err("ERROR attr->community is already set");
+      return -1;
+    }
     attr->community = malloc(sizeof(struct community));
     attr->community->size = len / 4;
     attr->community->val = malloc(len);
@@ -976,7 +1027,10 @@ static void process_one_attr(struct mstream *outer_stream, attributes_t *attr,
     /*process_attr_community_string(attr->community);*/
     break;
   case BGP_ATTR_NEW_AS_PATH:
-    assert(!attr->new_aspath);
+    if (attr->new_aspath) {
+      bgpdump_err("ERROR attr->new_aspath is already set");
+      return -1;
+    }
     attr->new_aspath = create_aspath(len, ASN32_LEN);
     mstream_get(s, attr->new_aspath->data, len);
     /*process_attr_aspath_string(attr->new_aspath);*/
@@ -984,16 +1038,25 @@ static void process_one_attr(struct mstream *outer_stream, attributes_t *attr,
     check_new_aspath(attr->new_aspath);
     break;
   case BGP_ATTR_NEW_AGGREGATOR:
-    assert(-1 == attr->new_aggregator_as);
+    if (-1 != attr->new_aggregator_as) {
+      bgpdump_err("ERROR attr->new_aggregator_as is already set");
+      return -1;
+    }
     read_asn(s, &attr->new_aggregator_as, ASN32_LEN);
     attr->new_aggregator_addr = mstream_get_ipv4(s);
     break;
   case BGP_ATTR_ORIGINATOR_ID:
-    assert(INADDR_NONE == attr->originator_id.s_addr);
+    if (INADDR_NONE != attr->originator_id.s_addr) {
+      bgpdump_err("ERROR attr->originator_id is already set");
+      return -1;
+    }
     attr->originator_id = mstream_get_ipv4(s);
     break;
   case BGP_ATTR_CLUSTER_LIST:
-    assert(!attr->cluster);
+    if (attr->cluster) {
+      bgpdump_err("ERROR attr->cluster is already set");
+      return -1;
+    }
     attr->cluster = malloc(sizeof(struct cluster_list));
     attr->cluster->length = len / 4;
     attr->cluster->list =
@@ -1006,6 +1069,8 @@ static void process_one_attr(struct mstream *outer_stream, attributes_t *attr,
   default:
     process_unknown_attr(s, attr, flag, type, len);
   }
+
+  return 0;
 }
 
 attributes_t *process_attributes(struct mstream *s, u_int8_t asn_len,
@@ -1020,8 +1085,12 @@ attributes_t *process_attributes(struct mstream *s, u_int8_t asn_len,
     bgpdump_warn("entry is truncated: expected=%u remaining=%u", total,
                  mstream_can_read(&copy));
 
-  while (mstream_can_read(&copy))
-    process_one_attr(&copy, attr, asn_len, incomplete);
+  while (mstream_can_read(&copy)) {
+    if (process_one_attr(&copy, attr, asn_len, incomplete) != 0) {
+      bgpdump_warn("process_one_attr failed, stopping attribute processing");
+      return NULL;
+    }
+  }
 
   // Once all attributes have been read, take care of ASN32 transition
   process_asn32_trans(attr, asn_len);
@@ -1290,7 +1359,7 @@ void process_mp_announce(struct mstream *s, struct mp_info *info,
   mstream_getw(s, &afi);
   mstream_getc(s, &safi);
 
-  if (afi > BGPDUMP_MAX_AFI || safi > BGPDUMP_MAX_SAFI) {
+  if (afi == 0 || afi > BGPDUMP_MAX_AFI || safi > BGPDUMP_MAX_SAFI) {
     bgpdump_warn("process_mp_announce: unknown protocol(AFI=%d, SAFI=%d)!", afi,
                  safi);
     return;
