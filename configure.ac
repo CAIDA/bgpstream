@@ -23,10 +23,10 @@
 
 AC_PREREQ([2.68])
 
-AC_INIT([bgpstream], [1.1.0], [bgpstream-info@caida.org])
+AC_INIT([bgpstream], [1.2.0], [bgpstream-info@caida.org])
 
 BGPSTREAM_MAJOR_VERSION=1
-BGPSTREAM_MID_VERSION=1
+BGPSTREAM_MID_VERSION=2
 BGPSTREAM_MINOR_VERSION=0
 
 LIBBGPSTREAM_MAJOR_VERSION=2
