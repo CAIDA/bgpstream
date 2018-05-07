@@ -19,6 +19,8 @@ v1.2.0
  - Improved documentations
 
 ### Bug Fixes
+ - Fixed assertion failure problem (#62)
+ - Improved bgpdump resiliency when it encounters unusual data
  - Fixed broken PyBGPStream includes
  - Fixed segfaults on 32bit machines caused by the usage of 64bit wandio off_t
  - Removed possible memory leak on pybgpstream
