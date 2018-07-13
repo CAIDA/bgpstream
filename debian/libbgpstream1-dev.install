@@ -1,0 +1,4 @@
+usr/include/bgpstream*.h
+usr/lib/x86_64-linux-gnu/*.la
+usr/lib/x86_64-linux-gnu/*.so.*
+usr/lib/x86_64-linux-gnu/*.a
