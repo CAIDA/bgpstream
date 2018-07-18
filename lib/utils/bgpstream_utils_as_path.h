@@ -25,6 +25,8 @@
 #define __BGPSTREAM_UTILS_AS_PATH_H
 
 #include <limits.h>
+#include <stdint.h>
+#include <stddef.h>
 
 /** @file
  *
