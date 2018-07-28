@@ -21,11 +21,12 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_AS_PATH_H
 #define __BGPSTREAM_UTILS_AS_PATH_H
 
 #include <limits.h>
+#include <stdint.h>
+#include <stddef.h>
 
 /** @file
  *
@@ -54,19 +55,19 @@
 typedef enum {
 
   /** Invalid Segment Type */
-  BGPSTREAM_AS_PATH_SEG_INVALID      = 0,
+  BGPSTREAM_AS_PATH_SEG_INVALID = 0,
 
   /** Simple ASN AS Path Segment */
-  BGPSTREAM_AS_PATH_SEG_ASN          = 1,
+  BGPSTREAM_AS_PATH_SEG_ASN = 1,
 
   /** AS Path Segment Set */
-  BGPSTREAM_AS_PATH_SEG_SET          = 2,
+  BGPSTREAM_AS_PATH_SEG_SET = 2,
 
   /** AS Path Segment Confederation Set */
-  BGPSTREAM_AS_PATH_SEG_CONFED_SET   = 3,
+  BGPSTREAM_AS_PATH_SEG_CONFED_SET = 3,
 
   /** AS Path Segment Confederation Sequence */
-  BGPSTREAM_AS_PATH_SEG_CONFED_SEQ   = 4,
+  BGPSTREAM_AS_PATH_SEG_CONFED_SEQ = 4,
 
   /** @todo etc */
 
@@ -88,7 +89,6 @@ typedef struct bgpstream_as_path bgpstream_as_path_t;
  * @name Public Data Structures
  *
  * @{ */
-
 
 /** Generic AS Path Segment.
  *
@@ -156,6 +156,20 @@ typedef struct bgpstream_as_path_iter {
  * @return the number of characters written given an infinite len (not including
  * the trailing nul). If this value is greater than or equal to len, then the
  * output was truncated.
+ *
+ * String representation format:
+ * - If the segment is a simple ASN (BGPSTREAM_AS_PATH_SEG_ASN), then the string
+ *   will be the decimal representation of the ASN (not dotted-decimal).
+ * - If the segment is an AS Set (BGPSTREAM_AS_PATH_SEG_SET), then the string
+ *   will be a comma-separated list of ASNs, enclosed in braces. E.g.,
+ *   "{12345,6789}".
+ * - If the segment is an AS Confederation Set
+ *   (BGPSTREAM_AS_PATH_SEG_CONFED_SET), then the string will be a
+ *   comma-separated list of ASNs, enclosed in brackets. E.g., "[12345,6789]".
+ * - If the segment is an AS Sequence Set (BGPSTREAM_AS_PATH_SEG_CONFED_SEQ),
+ *   then the string will be a space-separated list of ASNs, enclosed in
+ *   parentheses. E.g., "(12345 6789)".
+ * Note that it is possible to have a set/sequence with only a single element.
  */
 int bgpstream_as_path_seg_snprintf(char *buf, size_t len,
                                    bgpstream_as_path_seg_t *seg);
@@ -168,7 +182,8 @@ int bgpstream_as_path_seg_snprintf(char *buf, size_t len,
  * @note the returned segment must be destroyed using
  * bgpstream_as_path_seg_destroy
  */
-bgpstream_as_path_seg_t *bgpstream_as_path_seg_dup(bgpstream_as_path_seg_t *src);
+bgpstream_as_path_seg_t *
+bgpstream_as_path_seg_dup(bgpstream_as_path_seg_t *src);
 
 /** Destroy the given AS Path Segment
  *
@@ -188,7 +203,6 @@ unsigned long
 #endif
 bgpstream_as_path_seg_hash(bgpstream_as_path_seg_t *seg);
 
-
 /** Compare two AS path segments for equality
  *
  * @param seg1          pointer to the first AS path segment to compare
@@ -198,10 +212,10 @@ bgpstream_as_path_seg_hash(bgpstream_as_path_seg_t *seg);
 int bgpstream_as_path_seg_equal(bgpstream_as_path_seg_t *seg1,
                                 bgpstream_as_path_seg_t *seg2);
 
-
 /* AS PATH FUNCTIONS */
 
-/** Write the string representation of the given AS path into the given character
+/** Write the string representation of the given AS path into the given
+ * character
  *  buffer.
  *
  * @param buf           pointer to a character buffer at least len bytes long
@@ -213,6 +227,20 @@ int bgpstream_as_path_seg_equal(bgpstream_as_path_seg_t *seg1,
  */
 int bgpstream_as_path_snprintf(char *buf, size_t len,
                                bgpstream_as_path_t *as_path);
+
+/** Write the string representation of the given AS path into the given
+ *  character buffer, using a '_'-separated format that is suitable for
+ *  use with BGP path filtering expressions.
+ *
+ * @param buf           pointer to a character buffer at least len bytes long
+ * @param len           length of the given character buffer
+ * @param as_path       pointer to the bgpstream AS path to convert to string
+ * @return the number of characters written given an infinite len (not including
+ * the trailing nul). If this value is greater than or equal to len, then the
+ * output was truncated.
+ */
+int bgpstream_as_path_get_filterable(char *buf, size_t len,
+                                     bgpstream_as_path_t *as_path);
 
 /** Create an empty AS path structure.
  *
@@ -358,9 +386,6 @@ bgpstream_as_path_hash(bgpstream_as_path_t *path);
 int bgpstream_as_path_equal(bgpstream_as_path_t *path1,
                             bgpstream_as_path_t *path2);
 
-
 /** @} */
 
-
 #endif /* __BGPSTREAM_UTILS_AS_PATH_H */
-

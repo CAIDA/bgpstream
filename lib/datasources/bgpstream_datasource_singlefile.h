@@ -25,29 +25,26 @@
 #define _BGPSTREAM_DATASOURCE_SINGLEFILE_H
 
 #include "bgpstream_constants.h"
-#include "bgpstream_input.h"
 #include "bgpstream_filter.h"
+#include "bgpstream_input.h"
 
-#include <stdlib.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 /** Opaque handle that represents the single-file data source */
-typedef struct struct_bgpstream_singlefile_datasource_t bgpstream_singlefile_datasource_t;
-
-
-
+typedef struct struct_bgpstream_singlefile_datasource_t
+  bgpstream_singlefile_datasource_t;
 
 bgpstream_singlefile_datasource_t *
 bgpstream_singlefile_datasource_create(bgpstream_filter_mgr_t *filter_mgr,
                                        char *singlefile_rib_mrtfile,
                                        char *singlefile_upd_mrtfile);
 
-int
-bgpstream_singlefile_datasource_update_input_queue(bgpstream_singlefile_datasource_t* singlefile_ds,
-                                                   bgpstream_input_mgr_t *input_mgr);
+int bgpstream_singlefile_datasource_update_input_queue(
+  bgpstream_singlefile_datasource_t *singlefile_ds,
+  bgpstream_input_mgr_t *input_mgr);
 
-void
-bgpstream_singlefile_datasource_destroy(bgpstream_singlefile_datasource_t* singlefile_ds);
+void bgpstream_singlefile_datasource_destroy(
+  bgpstream_singlefile_datasource_t *singlefile_ds);
 
 #endif /* _BGPSTREAM_DATASOURCE_SINGLEFILE_H */

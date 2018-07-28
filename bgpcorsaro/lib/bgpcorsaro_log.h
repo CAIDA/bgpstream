@@ -47,7 +47,7 @@
  * This function takes the same style of arguments that printf(3) does.
  */
 void bgpcorsaro_log_va(const char *func, bgpcorsaro_t *bgpcorsaro,
-		       const char *format, va_list args);
+                       const char *format, va_list args);
 
 /** Write a formatted string to the logfile associated with an bgpcorsaro object
  *
@@ -59,7 +59,7 @@ void bgpcorsaro_log_va(const char *func, bgpcorsaro_t *bgpcorsaro,
  * This function takes the same style of arguments that printf(3) does.
  */
 void bgpcorsaro_log(const char *func, bgpcorsaro_t *bgpcorsaro,
-		    const char *format, ...);
+                    const char *format, ...);
 
 /** Write a formatted string to a generic log file
  *
@@ -70,8 +70,8 @@ void bgpcorsaro_log(const char *func, bgpcorsaro_t *bgpcorsaro,
  *
  * This function takes the same style of arguments that printf(3) does.
  */
-void bgpcorsaro_log_file(const char *func, iow_t *logfile,
-			 const char *format, ...);
+void bgpcorsaro_log_file(const char *func, iow_t *logfile, const char *format,
+                         ...);
 
 /** Initialize the logging sub-system for an bgpcorsaro output object
  *

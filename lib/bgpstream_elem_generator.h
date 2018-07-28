@@ -77,7 +77,8 @@ void bgpstream_elem_generator_clear(bgpstream_elem_generator_t *generator);
  * @param generator     pointer to the generator
  * @return 1 if the generator is ready for use, 0 otherwise
  */
-int bgpstream_elem_generator_is_populated(bgpstream_elem_generator_t *generator);
+int bgpstream_elem_generator_is_populated(
+  bgpstream_elem_generator_t *generator);
 
 /** Populate a generator with elems from the given record
  *
@@ -100,7 +101,6 @@ int bgpstream_elem_generator_populate(bgpstream_elem_generator_t *generator,
  */
 bgpstream_elem_t *
 bgpstream_elem_generator_get_next_elem(bgpstream_elem_generator_t *generator);
-
 
 /** @} */
 

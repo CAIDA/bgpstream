@@ -1,11 +1,38 @@
 BGPStream Change Log
 ====================
 
+v1.2.0
+------
+ - Released 2018-05-08
+ - All users should upgrade to this release. Contact bgpstream-info@caida.org
+	for help upgrading.
+
+### Major Features
+ - Added filtering language and parser
+
+### Minor Features
+ - No longer require time interval to be set (default to process all available data)
+ - Improved processing performance by avoid round-robin processing among files
+ - Improved code style consistency
+ - Add example script showing to use BGPStream with Spark
+ - Add an accessor for retrieving origin ASN value
+ - Improved documentations
+
+### Bug Fixes
+ - Fixed assertion failure problem (#62)
+ - Improved bgpdump resiliency when it encounters unusual data
+ - Fixed broken PyBGPStream includes
+ - Fixed segfaults on 32bit machines caused by the usage of 64bit wandio off_t
+ - Removed possible memory leak on pybgpstream
+ - Fixed segfault in `BGPStream.get_data_interfaces`
+ - Fixed compiler warnings when building with Python2
+ - Fixed bugs in patricia tree data structure
+
+
+
 v1.1.0
 ------
  - Released 2016-01-28
- - All users should upgrade to this release. Contact bgpstream-info@caida.org
-	for help upgrading.
 
 ### Major Features
  - Added native support for communities.

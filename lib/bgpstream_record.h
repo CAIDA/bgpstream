@@ -24,8 +24,8 @@
 #ifndef __BGPSTREAM_RECORD_H
 #define __BGPSTREAM_RECORD_H
 
-#include "bgpstream_utils.h"
 #include "bgpstream_elem.h"
+#include "bgpstream_utils.h"
 
 /** @file
  *
@@ -69,7 +69,7 @@ typedef enum {
   BGPSTREAM_UPDATE = 0,
 
   /** The record contains data for a BGP RIB message */
-  BGPSTREAM_RIB    = 1,
+  BGPSTREAM_RIB = 1,
 
 } bgpstream_record_dump_type_t;
 
@@ -77,14 +77,14 @@ typedef enum {
 typedef enum {
 
   /** This is the first record of the dump */
-  BGPSTREAM_DUMP_START  = 0,
+  BGPSTREAM_DUMP_START = 0,
 
   /** This is a record in the middle of the dump. i.e. not the first or the last
       record of the dump */
   BGPSTREAM_DUMP_MIDDLE = 1,
 
   /** This is the last record of the dump */
-  BGPSTREAM_DUMP_END    = 2,
+  BGPSTREAM_DUMP_END = 2,
 
 } bgpstream_dump_position_t;
 
@@ -92,13 +92,13 @@ typedef enum {
 typedef enum {
 
   /** The record is valid and may be used */
-  BGPSTREAM_RECORD_STATUS_VALID_RECORD     = 0,
+  BGPSTREAM_RECORD_STATUS_VALID_RECORD = 0,
 
   /** Source is not empty, but no valid record was found */
-  BGPSTREAM_RECORD_STATUS_FILTERED_SOURCE  = 1,
+  BGPSTREAM_RECORD_STATUS_FILTERED_SOURCE = 1,
 
   /** Source has no entries */
-  BGPSTREAM_RECORD_STATUS_EMPTY_SOURCE     = 2,
+  BGPSTREAM_RECORD_STATUS_EMPTY_SOURCE = 2,
 
   /* Error in opening dump */
   BGPSTREAM_RECORD_STATUS_CORRUPTED_SOURCE = 3,
@@ -135,7 +135,6 @@ typedef struct struct_bgpstream_record_attributes_t {
   long record_time;
 
 } bgpstream_record_attributes_t;
-
 
 /** Record structure */
 typedef struct struct_bgpstream_record_t {
@@ -211,7 +210,7 @@ bgpstream_elem_t *bgpstream_record_get_next_elem(bgpstream_record_t *record);
  *
  * See https://bitbucket.org/ripencc/bgpdump for more information about bgpdump
  */
-void bgpstream_record_print_mrt_data(bgpstream_record_t * const bs_record);
+void bgpstream_record_print_mrt_data(bgpstream_record_t *const bs_record);
 
 /** Write the string representation of the record dump type into the provided
  *  buffer
@@ -225,7 +224,8 @@ void bgpstream_record_print_mrt_data(bgpstream_record_t * const bs_record);
 int bgpstream_record_dump_type_snprintf(char *buf, size_t len,
                                         bgpstream_record_dump_type_t dump_type);
 
-/** Write the string representation of the record dump position into the provided
+/** Write the string representation of the record dump position into the
+ * provided
  *  buffer
  *
  * @param buf           pointer to a char array
@@ -235,7 +235,7 @@ int bgpstream_record_dump_type_snprintf(char *buf, size_t len,
  * unlimited
  */
 int bgpstream_record_dump_pos_snprintf(char *buf, size_t len,
-                                        bgpstream_dump_position_t dump_pos);
+                                       bgpstream_dump_position_t dump_pos);
 
 /** Write the string representation of the record status into the provided
  *  buffer
@@ -258,8 +258,8 @@ int bgpstream_record_status_snprintf(char *buf, size_t len,
  * @return pointer to the start of the buffer if successful, NULL otherwise
  */
 char *bgpstream_record_elem_snprintf(char *buf, size_t len,
-                                     const bgpstream_record_t * bs_record,
-                                     const bgpstream_elem_t * elem);
+                                     const bgpstream_record_t *bs_record,
+                                     const bgpstream_elem_t *elem);
 
 /** @} */
 

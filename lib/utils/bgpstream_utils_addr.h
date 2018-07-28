@@ -21,15 +21,14 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_ADDR_H
 #define __BGPSTREAM_UTILS_ADDR_H
 
-#include <limits.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <limits.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <sys/socket.h>
 
 /** @file
  *
@@ -45,7 +44,6 @@
  *
  * @{ */
 
-
 /** Version of a BGP Stream IP Address
  *
  * These share values with AF_INET and AF_INET6 so that the version field of a
@@ -55,13 +53,13 @@
 typedef enum {
 
   /** Address type unknown */
-  BGPSTREAM_ADDR_VERSION_UNKNOWN  = 0,
+  BGPSTREAM_ADDR_VERSION_UNKNOWN = 0,
 
   /** Address type IPv4 */
-  BGPSTREAM_ADDR_VERSION_IPV4          = AF_INET,
+  BGPSTREAM_ADDR_VERSION_IPV4 = AF_INET,
 
   /** Address type IPv6 */
-  BGPSTREAM_ADDR_VERSION_IPV6          = AF_INET6
+  BGPSTREAM_ADDR_VERSION_IPV6 = AF_INET6
 
 } bgpstream_addr_version_t;
 
@@ -125,7 +123,6 @@ typedef struct struct_bgpstream_addr_storage_t {
 
     /** IPv6 Address */
     struct in6_addr ipv6;
-
   };
 
 } bgpstream_addr_storage_t;
@@ -147,9 +144,8 @@ typedef struct struct_bgpstream_addr_storage_t {
  * You will likely want to use INET_ADDRSTRLEN or INET6_ADDRSTRLEN to dimension
  * the buffer.
  */
-#define bgpstream_addr_ntop(buf, len, bsaddr)                           \
-  inet_ntop((bsaddr)->version,                                          \
-            &(((bgpstream_ip_addr_t*)(bsaddr))->addr),                  \
+#define bgpstream_addr_ntop(buf, len, bsaddr)                                  \
+  inet_ntop((bsaddr)->version, &(((bgpstream_ip_addr_t *)(bsaddr))->addr),     \
             buf, len)
 
 /** Hash the given IPv4 address into a 32bit number
@@ -278,43 +274,36 @@ void bgpstream_addr_copy(bgpstream_ip_addr_t *dst, bgpstream_ip_addr_t *src);
  * @return the pointer to an initialized address storage, NULL if the
  *         address is not valid
  */
-bgpstream_addr_storage_t *
-bgpstream_str2addr(char *addr_str, bgpstream_addr_storage_t *addr);
-
-
+bgpstream_addr_storage_t *bgpstream_str2addr(char *addr_str,
+                                             bgpstream_addr_storage_t *addr);
 
 /** Returns the index associated to an IP version
  * @param v             enum rapresenting the IP address version
  * @return the index associated with the IP version, 255 if
  * there is an error in the translation
  */
-uint8_t
-bgpstream_ipv2idx(bgpstream_addr_version_t v);
+uint8_t bgpstream_ipv2idx(bgpstream_addr_version_t v);
 
 /** Returns the IP version associated with an index
  * @param i             index associated to the IP address version
  * @return the IP version associated with an index
  */
-bgpstream_addr_version_t
-bgpstream_idx2ipv(uint8_t i);
+bgpstream_addr_version_t bgpstream_idx2ipv(uint8_t i);
 
 /** Returns the number associated to an IP version
  * @param v             enum rapresenting the IP address version
  * @return the IP version number, 255 if there is an error in the
  * translation
  */
-uint8_t
-bgpstream_ipv2number(bgpstream_addr_version_t v);
+uint8_t bgpstream_ipv2number(bgpstream_addr_version_t v);
 
 /** Returns the number associated to the index (associated to an IP version)
  * @param i             index associated to the IP address version
  * @return the index number, 255 if there is an error in the
  * translation
  */
-uint8_t
-bgpstream_idx2number(uint8_t i);
+uint8_t bgpstream_idx2number(uint8_t i);
 
 /** @} */
 
 #endif /* __BGPSTREAM_UTILS_ADDR_H */
-

@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_COMMUNITY_INT_H
 #define __BGPSTREAM_UTILS_COMMUNITY_INT_H
 
@@ -57,7 +56,6 @@
  *
  * @{ */
 
-
 /** @} */
 
 /**
@@ -83,6 +81,4 @@ int bgpstream_community_set_populate(bgpstream_community_set_t *set,
 
 /** @} */
 
-
 #endif /* __BGPSTREAM_UTILS_COMMUNITY_INT_H */
-

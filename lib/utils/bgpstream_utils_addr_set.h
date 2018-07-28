@@ -21,7 +21,6 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef __BGPSTREAM_UTILS_ADDR_SET_H
 #define __BGPSTREAM_UTILS_ADDR_SET_H
 
@@ -104,9 +103,6 @@ void bgpstream_addr_storage_set_destroy(bgpstream_addr_storage_set_t *set);
  */
 void bgpstream_addr_storage_set_clear(bgpstream_addr_storage_set_t *set);
 
-
-
-
 /* IPv4 */
 
 /** Create a new IPv4 Address set instance
@@ -125,7 +121,7 @@ bgpstream_ipv4_addr_set_t *bgpstream_ipv4_addr_set_create();
  * This function takes a copy of the address before it is inserted in the set.
  */
 int bgpstream_ipv4_addr_set_insert(bgpstream_ipv4_addr_set_t *set,
-                                      bgpstream_ipv4_addr_t *addr);
+                                   bgpstream_ipv4_addr_t *addr);
 
 /** Get the number of addresses in the given set
  *
@@ -155,8 +151,6 @@ void bgpstream_ipv4_addr_set_destroy(bgpstream_ipv4_addr_set_t *set);
  */
 void bgpstream_ipv4_addr_set_clear(bgpstream_ipv4_addr_set_t *set);
 
-
-
 /** Create a new IPv6 Address set instance
  *
  * @return a pointer to the structure, or NULL if an error occurred
@@ -171,7 +165,7 @@ bgpstream_ipv6_addr_set_t *bgpstream_ipv6_addr_set_create();
  * error occurred
  */
 int bgpstream_ipv6_addr_set_insert(bgpstream_ipv6_addr_set_t *set,
-                                      bgpstream_ipv6_addr_t *addr);
+                                   bgpstream_ipv6_addr_t *addr);
 
 /** Get the number of addresses in the given set
  *
@@ -202,5 +196,3 @@ void bgpstream_ipv6_addr_set_destroy(bgpstream_ipv6_addr_set_t *set);
 void bgpstream_ipv6_addr_set_clear(bgpstream_ipv6_addr_set_t *set);
 
 #endif /* __BGPSTREAM_UTILS_ADDR_SET_H */
-
-

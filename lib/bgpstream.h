@@ -24,9 +24,9 @@
 #ifndef __BGPSTREAM_H
 #define __BGPSTREAM_H
 
-#include "bgpstream_utils.h"
 #include "bgpstream_elem.h"
 #include "bgpstream_record.h"
+#include "bgpstream_utils.h"
 
 /** @file
  *
@@ -68,43 +68,65 @@ typedef struct struct_bgpstream_t bgpstream_t;
 typedef enum {
 
   /** Filter records based on associated project (e.g. 'ris') */
-  BGPSTREAM_FILTER_TYPE_PROJECT       = 1,
+  BGPSTREAM_FILTER_TYPE_PROJECT = 1,
 
   /** Filter records based on collector (e.g. 'rrc01') */
-  BGPSTREAM_FILTER_TYPE_COLLECTOR     = 2,
+  BGPSTREAM_FILTER_TYPE_COLLECTOR = 2,
 
   /** Filter records based on record type (e.g. 'updates') */
-  BGPSTREAM_FILTER_TYPE_RECORD_TYPE   = 3,
+  BGPSTREAM_FILTER_TYPE_RECORD_TYPE = 3,
 
   /** Filter elems based on peer ASN  */
   BGPSTREAM_FILTER_TYPE_ELEM_PEER_ASN = 4,
 
   /** Filter elems based on prefix  */
-  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX   = 5,
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX = 5,
 
   /** Filter elems based on the community attribute  */
   BGPSTREAM_FILTER_TYPE_ELEM_COMMUNITY = 6,
 
-} bgpstream_filter_type_t;
+  /** Filter elems based on exact prefix */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_EXACT = 7,
 
+  /** Filter elems based on a more specific prefix */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_MORE = 8,
+
+  /** Filter elems based on a less specific prefix */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_LESS = 9,
+
+  /** Filter elems based on any matching prefix, regardless of specificity */
+  BGPSTREAM_FILTER_TYPE_ELEM_PREFIX_ANY = 10,
+
+  /** Filter elems based on an AS path regex */
+  BGPSTREAM_FILTER_TYPE_ELEM_ASPATH = 11,
+
+  /** Filter elems based on an extended community attribute */
+  BGPSTREAM_FILTER_TYPE_ELEM_EXTENDED_COMMUNITY = 12,
+
+  /** Filter elems based on the IP address version */
+  BGPSTREAM_FILTER_TYPE_ELEM_IP_VERSION = 13,
+
+  /** Filter elems based on the element type, e.g. withdrawals, announcements */
+  BGPSTREAM_FILTER_TYPE_ELEM_TYPE = 14
+
+} bgpstream_filter_type_t;
 
 /** Data Interface IDs */
 typedef enum {
 
   /** Broker data interface */
-  BGPSTREAM_DATA_INTERFACE_BROKER     = 1,
+  BGPSTREAM_DATA_INTERFACE_BROKER = 1,
 
   /** Customlist interface */
   BGPSTREAM_DATA_INTERFACE_SINGLEFILE = 2,
 
   /** CSV file interface */
-  BGPSTREAM_DATA_INTERFACE_CSVFILE    = 3,
+  BGPSTREAM_DATA_INTERFACE_CSVFILE = 3,
 
   /** SQLITE file interface */
-  BGPSTREAM_DATA_INTERFACE_SQLITE     = 4,
+  BGPSTREAM_DATA_INTERFACE_SQLITE = 4,
 
 } bgpstream_data_interface_id_t;
-
 
 /** @} */
 
@@ -114,8 +136,7 @@ typedef enum {
  * @{ */
 
 /** Structure that contains information about a BGP Stream Data Interface */
-typedef struct struct_bgpstream_data_interface_info
-{
+typedef struct struct_bgpstream_data_interface_info {
 
   /** The ID of this data interface */
   bgpstream_data_interface_id_t id;
@@ -129,8 +150,7 @@ typedef struct struct_bgpstream_data_interface_info
 } bgpstream_data_interface_info_t;
 
 /** Structure that represents BGP Stream Data Interface Option */
-typedef struct struct_bgpstream_data_interface_option
-{
+typedef struct struct_bgpstream_data_interface_option {
 
   /** The ID of the data interface that this option applies to */
   bgpstream_data_interface_id_t if_id;
@@ -165,12 +185,20 @@ bgpstream_t *bgpstream_create();
  * @param filter_type   the type of the filter to apply
  * @param filter_value  the value to set the filter to
  */
-void bgpstream_add_filter(bgpstream_t *bs,
-                          bgpstream_filter_type_t filter_type,
-			  const char* filter_value);
+void bgpstream_add_filter(bgpstream_t *bs, bgpstream_filter_type_t filter_type,
+                          const char *filter_value);
+
+/** Parse a filter string and create appropriate filters to select a subset
+ *  of the BGP data.
+ *
+ * @param bs            pointer to a BGP Stream instance to filter
+ * @param fstring   the filter string to be parsed.
+ * @returns 1 if the string was parsed successfully, 0 if not.
+ */
+int bgpstream_parse_filter_string(bgpstream_t *bs, const char *fstring);
 
 /** Add a filter to configure the minimum bgp time interval between RIB
- *  files that belong to the same collector. This information can be 
+ *  files that belong to the same collector. This information can be
  *  changed at run time.
  *
  * @param bs        pointer to a BGP Stream instance to filter
@@ -178,17 +206,36 @@ void bgpstream_add_filter(bgpstream_t *bs,
  */
 void bgpstream_add_rib_period_filter(bgpstream_t *bs, uint32_t period);
 
+/** Add a filter to select a specific time range starting from now and
+ *  going back a certain number of seconds, minutes, hours or days.
+ *
+ *  Intervals may be specified using the format 'num unit'. The unit can
+ *  be one of 's', 'm', 'h' or 'd', representing seconds, minutes, hours and
+ *  days respectively.
+ *
+ *  For example, an interval of "3 h" will go back three hours and an interval
+ *  of "45 s" will go back 45 seconds.
+ *
+ *  @param bs         pointer to a BGP Stream instance to filter
+ *  @param interval   string describing the interval to go back
+ *  @param islive     if not zero, live data will be provided once all historic
+ *                    data has been fetched.
+ */
+void bgpstream_add_recent_interval_filter(bgpstream_t *bs, const char *interval,
+                                          uint8_t islive);
+
 /** Add a filter to select a specific time range from the BGP data available
  *
  * @param bs            pointer to a BGP Stream instance to filter
  * @param begin_time    the first time that will match the filter (inclusive)
  * @param end_time      the last time that will match the filter (inclusive)
  *
- * If end_time is set to BGPSTREAM_FOREVER, the stream will be set to live mode,
- * and will process data forever.
+ * If end_time is set to BGPSTREAM_FOREVER (0), the stream will be set to live
+ * mode, and will process data forever. If no intervals are added, then
+ * BGPStream will default to processing every available record, however, this
+ * will trigger a run-time error if using the Broker data interface.
  */
-void bgpstream_add_interval_filter(bgpstream_t *bs,
-				   uint32_t begin_time,
+void bgpstream_add_interval_filter(bgpstream_t *bs, uint32_t begin_time,
                                    uint32_t end_time);
 
 /** Get a list of data interfaces that are currently supported
@@ -235,9 +282,9 @@ bgpstream_get_data_interface_info(bgpstream_t *bs,
  * @note the returned array belongs to BGP Stream. It must not be freed by the
  * user.
  */
-int bgpstream_get_data_interface_options(bgpstream_t *bs,
-                                      bgpstream_data_interface_id_t if_id,
-                                      bgpstream_data_interface_option_t **opts);
+int bgpstream_get_data_interface_options(
+  bgpstream_t *bs, bgpstream_data_interface_id_t if_id,
+  bgpstream_data_interface_option_t **opts);
 
 /** Get the data interface option for the given data interface and option name
  *
@@ -247,10 +294,8 @@ int bgpstream_get_data_interface_options(bgpstream_t *bs,
  * @return pointer to the option information with the given name, NULL if either
  * the interface ID is not valid, or the name does not match any options
  */
-bgpstream_data_interface_option_t *
-bgpstream_get_data_interface_option_by_name(bgpstream_t *bs,
-                                            bgpstream_data_interface_id_t if_id,
-                                            const char *name);
+bgpstream_data_interface_option_t *bgpstream_get_data_interface_option_by_name(
+  bgpstream_t *bs, bgpstream_data_interface_id_t if_id, const char *name);
 
 /** Set a data interface option
  *
@@ -261,9 +306,9 @@ bgpstream_get_data_interface_option_by_name(bgpstream_t *bs,
  * Use the bgpstream_get_data_interface_options function to discover the set of
  * options for an interface.
  */
-void bgpstream_set_data_interface_option(bgpstream_t *bs,
-                                bgpstream_data_interface_option_t *option_type,
-                                const char *option_value);
+void bgpstream_set_data_interface_option(
+  bgpstream_t *bs, bgpstream_data_interface_option_t *option_type,
+  const char *option_value);
 
 /** Get the ID of the currently active data interface
  *
@@ -273,8 +318,7 @@ void bgpstream_set_data_interface_option(bgpstream_t *bs,
  * If no data interface has been explicitly set, this function will return the
  * ID of the default data interface.
  */
-bgpstream_data_interface_id_t
-bgpstream_get_data_interface_id(bgpstream_t *bs);
+bgpstream_data_interface_id_t bgpstream_get_data_interface_id(bgpstream_t *bs);
 
 /** Set the data interface that BGP Stream uses to find BGP data
  *
@@ -318,8 +362,7 @@ int bgpstream_start(bgpstream_t *bs);
  * independently of each other). If records are not processed independently,
  * then a new record must be created for each call to this function.
  */
-int bgpstream_get_next_record(bgpstream_t *bs,
-                              bgpstream_record_t *record);
+int bgpstream_get_next_record(bgpstream_t *bs, bgpstream_record_t *record);
 
 /** Stop the given BGP Stream instance
  *

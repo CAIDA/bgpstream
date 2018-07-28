@@ -24,14 +24,13 @@
 #ifndef ___PYBGPSTREAM_BGPELEM_H
 #define ___PYBGPSTREAM_BGPELEM_H
 
+#include "bgpstream_elem.h"
 #include <Python.h>
-
-#include <bgpstream_utils.h>
 
 typedef struct {
   PyObject_HEAD
 
-  bgpstream_elem_t *elem;
+    bgpstream_elem_t *elem;
 
 } BGPElemObject;
 

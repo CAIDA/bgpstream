@@ -49,8 +49,8 @@
  * @return pointer to the start of the buffer if successful, NULL otherwise
  */
 char *bgpstream_elem_custom_snprintf(char *buf, size_t len,
-                                     const bgpstream_elem_t *elem, int print_type);
-
+                                     const bgpstream_elem_t *elem,
+                                     int print_type);
 
 /** @} */
 
