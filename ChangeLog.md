@@ -1,6 +1,13 @@
 BGPStream Change Log
 ====================
 
+v1.2.1
+------
+ - Released 2018-07-30
+
+### Bug Fixes
+ - Fixed IPv6 address parsing failure caused by `getaddrinfo` (#34)
+
 v1.2.0
 ------
  - Released 2018-05-08

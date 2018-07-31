@@ -181,36 +181,23 @@ bgpstream_addr_storage_t *bgpstream_str2addr(char *addr_str,
     return NULL;
   }
 
-  /* http://man7.org/linux/man-pages/man3/getaddrinfo.3.html */
-
-  struct addrinfo *result;
-  int s;
-  s = getaddrinfo(addr_str, NULL /*service*/, NULL /*hints*/, &result);
-  if (s != 0) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
-    return NULL;
-  }
-
-  /* selecting the first result */
-  if (result != NULL) {
-    addr->version = result->ai_family;
-    switch (addr->version) {
-    case BGPSTREAM_ADDR_VERSION_IPV4:
-      addr->ipv4 = ((struct sockaddr_in *)result->ai_addr)->sin_addr;
-      break;
-    case BGPSTREAM_ADDR_VERSION_IPV6:
-      addr->ipv6 = ((struct sockaddr_in6 *)result->ai_addr)->sin6_addr;
-      break;
-    default:
-      fprintf(stderr, "Unknown family\n");
-      freeaddrinfo(result);
+  if (strchr(addr_str, ':') != NULL) {
+    /* this looks like it will be an IPv6 address */
+    if (inet_pton(AF_INET6, addr_str, &addr->ipv6) != 1) {
+      fprintf(stderr, "ERROR: Could not parse address string %s\n", addr_str);
       return NULL;
     }
-    freeaddrinfo(result);
-    return addr;
+    addr->version = BGPSTREAM_ADDR_VERSION_IPV6;
+  } else {
+    /* probably a v4 address */
+    if (inet_pton(AF_INET, addr_str, &addr->ipv4) != 1) {
+      fprintf(stderr, "ERROR: Could not parse address string %s\n", addr_str);
+      return NULL;
+    }
+    addr->version = BGPSTREAM_ADDR_VERSION_IPV4;
   }
 
-  return NULL;
+  return addr;
 }
 
 uint8_t bgpstream_ipv2idx(bgpstream_addr_version_t v)
