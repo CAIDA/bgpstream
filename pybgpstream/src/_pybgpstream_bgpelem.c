@@ -45,11 +45,25 @@ static PyObject *get_pfx_pystr(bgpstream_pfx_t *pfx)
 
 static PyObject *get_aspath_pystr(bgpstream_as_path_t *aspath)
 {
-  // assuming 10 char per ASN, then this will hold >400 hops
+  // assuming 10 char per ASN, then this will hold >400 hops, if we
+  // see a longer AS path we resort to dynamically allocating the
+  // string
   char buf[4096] = "";
-  if (bgpstream_as_path_snprintf(buf, 4096, aspath) >= 4096)
-    return NULL;
-  return PYSTR_FROMSTR(buf);
+  PyObject *pystr = NULL;
+  int len = 0;
+  if ((len = bgpstream_as_path_snprintf(buf, sizeof(buf), aspath)) >=
+      sizeof(buf)) {
+    char *bufp = NULL;
+    if ((bufp = malloc(len*2)) == NULL ||
+        bgpstream_as_path_snprintf(bufp, len*2, aspath) >= len*2) {
+      return NULL;
+    }
+    pystr = PYSTR_FROMSTR(bufp);
+    free(bufp);
+  } else {
+    pystr = PYSTR_FROMSTR(buf);
+  }
+  return pystr;
 }
 
 static PyObject *get_communities_pylist(bgpstream_community_set_t *communities)
