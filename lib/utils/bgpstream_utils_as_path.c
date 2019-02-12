@@ -84,7 +84,7 @@ seg_set_dup(bgpstream_as_path_seg_set_t *src)
 
 #define ADD_CHAR(chr)                                                          \
   do {                                                                         \
-    if ((len - written) > 0) {                                                 \
+    if (written < len) {                                                       \
       *bufp = chr;                                                             \
       bufp++;                                                                  \
     }                                                                          \
@@ -98,14 +98,15 @@ seg_set_dup(bgpstream_as_path_seg_set_t *src)
     ADD_CHAR(fchr);                                                            \
     int i;                                                                     \
     for (i = 0; i < segset->asn_cnt; i++) {                                    \
-      written += snprintf(bufp, (len - written), "%" PRIu32, segset->asn[i]);  \
+      remain = (len <= written) ? 0 : len - written;                           \
+      written += snprintf(bufp, remain, "%" PRIu32, segset->asn[i]);           \
       bufp = buf + written;                                                    \
       if (i < segset->asn_cnt - 1) {                                           \
         ADD_CHAR(schr);                                                        \
       }                                                                        \
     }                                                                          \
     ADD_CHAR(lchr);                                                            \
-    if ((len - written) > 0)                                                   \
+    if (written < len)                                                         \
       *bufp = '\0';                                                            \
   } while (0)
 
@@ -119,6 +120,7 @@ int bgpstream_as_path_seg_snprintf(char *buf, size_t len,
                                    bgpstream_as_path_seg_t *seg)
 {
   size_t written = 0;
+  size_t remain = 0;
 
   if (seg == NULL) {
     if (len > 0) {
@@ -155,7 +157,7 @@ int bgpstream_as_path_seg_snprintf(char *buf, size_t len,
     break;
   }
 
-  if (written > len) {
+  if (written >= len && len > 0) {
     buf[len - 1] = '\0';
   }
 
@@ -231,9 +233,9 @@ int bgpstream_as_path_seg_equal(bgpstream_as_path_seg_t *seg1,
 static inline int bgpstream_as_path_snprintf_custom_separator(
   char *buf, size_t len, bgpstream_as_path_t *path, char separator)
 {
-
   bgpstream_as_path_iter_t iter;
   size_t written = 0;
+  size_t remain = 0;
   bgpstream_as_path_seg_t *seg;
   int need_sep = 0;
   char *bufp = buf;
@@ -245,13 +247,16 @@ static inline int bgpstream_as_path_snprintf_custom_separator(
       ADD_CHAR(separator);
     }
     need_sep = 1;
-    written += bgpstream_as_path_seg_snprintf(bufp, (len - written), seg);
+    remain = (len <= written) ? 0 : len - written;
+    written += bgpstream_as_path_seg_snprintf(bufp, remain, seg);
     bufp = buf + written;
   }
-  *bufp = '\0';
-
-  if (written > len) {
-    buf[len - 1] = '\0';
+  if (len > 0) {
+    if (written == 0) {
+      buf[0] = '\0';
+    } else if (written >= len) {
+      buf[len - 1] = '\0';
+    }
   }
   return written;
 }
