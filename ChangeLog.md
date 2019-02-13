@@ -1,6 +1,13 @@
 BGPStream Change Log
 ====================
 
+v1.2.2
+------
+ - Released 2019-02-13
+
+### Bug Fixes
+ - Fixed pybgpstream element parsing failure for updates with very large AS path fields (#82)
+
 v1.2.1
 ------
  - Released 2018-07-30
