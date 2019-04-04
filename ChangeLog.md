@@ -1,6 +1,13 @@
 BGPStream Change Log
 ====================
 
+v1.2.3
+------
+ - Released 2019-04-04
+
+### Bug Fixes
+ - Fixed an issue where BGPStream would crash when parsing MRT records that are larger than 64k (#79)
+
 v1.2.2
 ------
  - Released 2019-02-13
