@@ -33,7 +33,7 @@ Original Author: Dan Ardelean (dan@ripe.net)
 
 typedef struct mstream {
   u_char *start;
-  u_int16_t position;
+  u_int32_t position;
   u_int32_t len;
 } mstream_t;
 
