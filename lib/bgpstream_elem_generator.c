@@ -380,7 +380,7 @@ static int table_line_announce_1(bgpstream_elem_generator_t *self,
     ri->prefix.mask_len = prefix->nlri[idx].len;
     // nexthop (ipv4)
     ri->nexthop.version = BGPSTREAM_ADDR_VERSION_IPV4;
-    ri->nexthop.ipv4 = entry->attr->nexthop;
+    ri->nexthop.ipv4 = prefix->nexthop.v4_addr;
     // as path
     if (entry->attr->flag & ATTR_FLAG_BIT(BGP_ATTR_AS_PATH) &&
         entry->attr->aspath) {
