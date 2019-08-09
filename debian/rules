@@ -15,7 +15,7 @@
 
 
 %:
-	dh $@  --with autotools_dev
+	dh $@  --with autoreconf
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
 

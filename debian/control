@@ -2,7 +2,7 @@ Source: bgpstream1
 Section: net
 Priority: optional
 Maintainer: BGPStream <bgpstream-info@caida.org>
-Build-Depends: debhelper (>=9),autotools-dev,libwandio1-dev (>=4.0.0)
+Build-Depends: debhelper (>=9),libwandio1-dev (>=4.0.0),dh-autoreconf
 Standards-Version: 3.9.6
 Homepage: https://bgpstream.caida.org
 
@@ -10,19 +10,16 @@ Package: bgpstream1-tools
 Architecture: any
 Depends: libwandio1 (>=4.0.0), ${shlibs:Depends}, ${misc:Depends}
 Conflicts: bgpstream2-tools, libbgpstream2, libbgpstream2-dev
-Description: BGPStream
-BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
+Description: BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
 
 Package: libbgpstream1
 Architecture: any
 Depends: libwandio1 (>=4.0.0), ${shlibs:Depends}, ${misc:Depends}
 Conflicts: bgpstream2-tools, libbgpstream2, libbgpstream2-dev
-Description: BGPStream
-BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
+Description: BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
 
 Package: libbgpstream1-dev
 Architecture: any
 Depends: libwandio1 (>=4.0.0), ${shlibs:Depends}, ${misc:Depends}
 Conflicts: bgpstream2-tools, libbgpstream2, libbgpstream2-dev
-Description: BGPStream
-BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
+Description: BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
