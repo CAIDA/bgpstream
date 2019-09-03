@@ -1,3 +1,9 @@
+bgpstream1 (1.2.3) unstable; urgency=medium
+
+  * This is a minor version update that fixes an issue where BGPStream would crash when parsing MRT records that are larger than 64k (#79).
+
+ -- Alistair King <bgpstream-info@caida.org>   Tue, 03 Sep 2019 11:46:34 -0700
+
 bgpstream1 (1.2.0) precise; urgency=medium
 
   * Overall
