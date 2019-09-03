@@ -11,20 +11,20 @@ Homepage: https://bgpstream.caida.org
 Package: bgpstream1-tools
 Architecture: any
 Depends: libwandio1 (>=4.2.0), libbgpstream1 (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Conflicts: bgpstream2-tools, libbgpstream2, libbgpstream2-dev
 Description: BGPStream
 BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
+Conflicts: bgpstream, bgpstream2-tools, libbgpstream2, libbgpstream2-dev
 
 Package: libbgpstream1
 Architecture: any
 Depends: libwandio1 (>=4.2.0), ${shlibs:Depends}, ${misc:Depends}
-Conflicts: bgpstream2-tools, libbgpstream2, libbgpstream2-dev
 Description: BGPStream
 BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
+Conflicts: bgpstream, bgpstream2-tools, libbgpstream2, libbgpstream2-dev
 
 Package: libbgpstream1-dev
 Architecture: any
 Depends: libbgpstream1 (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Conflicts: bgpstream2-tools, libbgpstream2, libbgpstream2-dev
 Description: BGPStream
 BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
+Conflicts: bgpstream, bgpstream2-tools, libbgpstream2, libbgpstream2-dev
