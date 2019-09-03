@@ -11,20 +11,31 @@ Homepage: https://bgpstream.caida.org
 Package: bgpstream1-tools
 Architecture: any
 Depends: libwandio1 (>=4.2.0), libbgpstream1 (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Description: BGPStream
-BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
 Conflicts: bgpstream, bgpstream2-tools, libbgpstream2, libbgpstream2-dev
+Description: example tools for bgpstream library
+ This package contains some example tools that uses bgpstream library.
+ .
+ BGPStream: An open-source software framework for live and historical BGP data analysis,
+ supporting scientific research, operational monitoring, and post-event analysis.
+
 
 Package: libbgpstream1
 Architecture: any
 Depends: libwandio1 (>=4.2.0), ${shlibs:Depends}, ${misc:Depends}
-Description: BGPStream
-BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
 Conflicts: bgpstream, bgpstream2-tools, libbgpstream2, libbgpstream2-dev
+Description: software framework for live and historical BGP data analysis
+ This package contains the libbgpstream1 library.
+ .
+ BGPStream: An open-source software framework for live and historical BGP data analysis,
+ supporting scientific research, operational monitoring, and post-event analysis.
+
 
 Package: libbgpstream1-dev
 Architecture: any
 Depends: libbgpstream1 (=${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Description: BGPStream
-BGPStream: An open-source software framework for live and historical BGP data analysis, supporting scientific research, operational monitoring, and post-event analysis.
 Conflicts: bgpstream, bgpstream2-tools, libbgpstream2, libbgpstream2-dev
+Description: development environment for libbgpstream1
+ This package contains development headers and shared libraries for the libbgpstream2 library.
+ .
+ BGPStream: An open-source software framework for live and historical BGP data analysis,
+ supporting scientific research, operational monitoring, and post-event analysis.
