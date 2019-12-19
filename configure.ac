@@ -155,7 +155,7 @@ fi
 AC_MSG_NOTICE([checking data interface dependencies...])
 
 if test "x$with_di_broker" == xyes; then
-  CHECK_WANDIO_HTTP("http://bgpstream.caida.org/broker")
+  CHECK_WANDIO_HTTP("https://broker.bgpstream.caida.org/v1/")
 fi
 
 if test "x$with_di_sqlite" == xyes; then
@@ -169,7 +169,7 @@ AC_MSG_NOTICE([configuring data interface parameters...])
 
 # broker options
 if test "x$with_di_broker" == xyes; then
-   BS_DI_OPT(broker-url, BROKER_URL, Broker URL, https://bgpstream.caida.org/broker)
+   BS_DI_OPT(broker-url, BROKER_URL, Broker URL, https://broker.bgpstream.caida.org/v1)
 AC_ARG_WITH([broker-debug],
         [AS_HELP_STRING([--with-broker-debug], [Enable broker debugging output])],
             [with_broker_debug=$with_broker_debug],
